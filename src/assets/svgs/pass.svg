@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="26px" height="26px" viewBox="0 0 26 26" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>unfit_unclick</title>
+    <defs>
+        <circle id="path-1" cx="12" cy="12" r="9"></circle>
+        <filter x="-33.3%" y="-33.3%" width="166.7%" height="166.7%" filterUnits="objectBoundingBox" id="filter-2">
+            <feOffset dx="0" dy="0" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="2" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feColorMatrix values="0 0 0 0 0.564705882   0 0 0 0 0.580392157   0 0 0 0 0.619607843  0 0 0 1 0" type="matrix" in="shadowBlurOuter1"></feColorMatrix>
+        </filter>
+        <linearGradient x1="50%" y1="1.29206731%" x2="50%" y2="100%" id="linearGradient-3">
+            <stop stop-color="#9FD686" offset="0%"></stop>
+            <stop stop-color="#83BD68" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="4-2-1-CV-Management-interview-feedback" transform="translate(-617, -390)">
+            <g id="unfit_unclick" transform="translate(618, 391)">
+                <g id="Oval">
+                    <use fill="black" fill-opacity="1" filter="url(#filter-2)" xlink:href="#path-1"></use>
+                    <use fill="#FFFFFF" fill-rule="evenodd" xlink:href="#path-1"></use>
+                </g>
+                <g id="fit" transform="translate(4, 4)" fill="url(#linearGradient-3)" fill-rule="nonzero">
+                    <path d="M8,0 C3.58904055,0 0,3.58904055 0,8 C0,12.4109594 3.58846734,16 8,16 C12.4115327,16 16,12.4115327 16,8 C16,3.58846734 12.4115327,0 8,0 Z M11.8604871,6.68040777 L7.26528858,11.3254915 C7.26173786,11.3275614 7.25882404,11.3304116 7.25677004,11.3338349 C7.25891958,11.3301409 7.25891958,11.3324496 7.25718403,11.333612 C7.1852303,11.3954868 7.09692417,11.44042 6.99963776,11.4610874 C7.07759427,11.4565177 7.01188216,11.4869137 6.94046979,11.5018331 C7.00788561,11.4803536 6.93368681,11.4957666 6.85590545,11.4958303 C6.77879284,11.4957825 6.70414821,11.4799078 6.63625471,11.4511996 C6.54812373,11.3982095 6.47123403,11.3279595 6.41087188,11.2449078 C6.48992704,11.3686096 6.41806884,11.3067348 6.36476035,11.2309119 C6.45250919,11.3285964 6.45192005,11.3262717 6.45075771,11.3251094 C6.44959537,11.323947 6.44727069,11.3233738 6.44612427,11.3216223 L4.1853537,8.99975718 C4.07994682,8.89564002 4.01466461,8.75109567 4.01466461,8.59131349 C4.01466461,8.2742808 4.27166951,8.0172759 4.5887022,8.0172759 C4.75420055,8.0172759 4.90334651,8.08731893 5.00811649,8.19936549 L6.86065035,10.1029628 L11.0448099,5.87318533 C11.1490385,5.76704602 11.2940605,5.70125429 11.4544477,5.70125429 C11.7714327,5.70125429 12.0283898,5.95821143 12.0283898,6.27519634 C12.0283898,6.43356142 11.964254,6.57694344 11.860519,6.68078991 L11.8604871,6.68040777 Z" id="Shape"></path>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

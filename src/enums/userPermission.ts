@@ -1,0 +1,37 @@
+export enum UserPermissionEnum {
+  RPE = 'rpe', // recruitment project edit
+  RPS = 'rps', // recruitment project search
+  JPC = 'jpc', // job position create
+  JPE = 'jpe', // job position edit
+  JPS = 'jps', // job position search
+  TPC = 'tpc', // talent pool create
+  TPE = 'tpe', // talent pool edit
+  TPS = 'tps', // talent pool search
+  CRC = 'crc', // candidate resume create
+  CRE = 'cre', // candidate resume edit
+  CRD = 'crd', // candidate resume delete
+  CRS = 'crs', // candidate resume search
+  CRM = 'crm', // candidate resume menu
+  TPM = 'tpm', // talent pool menu
+  JPM = 'jpm', // job position menu
+  RPM = 'rpm', // recruitment project menu
+  STM = 'stm', // settings menu
+  ETM = 'etm', // email template menu
+  ETC = 'etc', // email template create
+  ETE = 'ete', // email template edit
+  ETS = 'ets', // email template search
+  IPTM = 'iptm', // interview process menu
+  IPTC = 'iptc', // interview process create
+  IPTE = 'ipte', // interview process edit
+  IPTS = 'ipts', // interview process search
+  IM = 'im', // interviewer menu
+  RSM = 'rsm', // resume review menu
+  MIM = 'mim', // my review menu
+  CRFS = 'crfs', // interviewer search
+  CRES = 'cres', // cv email records
+  RDFT = 'rdft', // cv feedback tab
+  RDHT = 'rdht', // cv historical operations tab
+  WTRM = 'wtrm', // test review menu
+  UMM = 'umm', // user management
+  TMM = 'tmm' // tag menu
+}

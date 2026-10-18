@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="45px" height="154px" viewBox="0 0 45 154" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Rectangle</title>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Sprint6_interface-flow" transform="translate(-641, -540)" fill="#F0F1FF">
+            <path d="M653.553266,540 L686,540 L686,540 L686,694 L653.553266,694 C646.925849,694 641.553266,688.627417 641.553266,682 C641.553266,680.509784 641.830839,679.032605 642.371783,677.644036 L664.299892,621.355964 C665.391247,618.554525 665.391247,615.445475 664.299892,612.644036 L642.371783,556.355964 C639.96605,550.180601 643.02194,543.224248 649.197303,540.818516 C650.585871,540.277572 652.063051,540 653.553266,540 Z" id="Rectangle"></path>
+        </g>
+    </g>
+</svg>

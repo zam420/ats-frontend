@@ -1,0 +1,75 @@
+.esp-detail-wrap {
+  margin-top: 1em;
+  .esp-detail-item {
+    margin-top: 0.4em;
+    &.left {
+      .fja(flex-start, flex-start);
+      label {
+        margin-right: 0.8em;
+        white-space: nowrap;
+      }
+    }
+    .desc {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    .content {
+      background: var(--color-gray6);
+      border-radius: 12px;
+      padding: 1.2rem 1.8rem;
+      margin-top: 1rem;
+      &.high {
+        .esp-form-wrap {
+          height: 100%;
+          :deep(.quill-editor-wrap) {
+            height: 100%;
+            .ql-editor {
+              height: calc(100vh - 20rem);
+              h1 {
+                font-size: 2em;
+              }
+              h2 {
+                font-size: 1.5em;
+              }
+              h3 {
+                font-size: 1.17em;
+              }
+              h4 {
+                font-size: 1em;
+              }
+              h5 {
+                font-size: 0.83em;
+              }
+              h6 {
+                font-size: 0.67em;
+              }
+              a {
+                color: var(--el-color-primary);
+              }
+              strong {
+                font-weight: bolder !important;
+              }
+              p {
+                line-height: 1.828;
+                color: var(--color-black1);
+                font-family: Helvetica, Arial, sans-serif;
+              }
+              pre {
+                white-space: pre-wrap;
+                margin-bottom: 5px;
+                margin-top: 5px;
+                padding: 5px 10px;
+                border-radius: 3px;
+                &.ql-syntax {
+                  background-color: var(--color-gray);
+                  color: var(--color-gray5);
+                  overflow: visible;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

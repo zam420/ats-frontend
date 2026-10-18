@@ -1,0 +1,162 @@
+@font-face {
+  font-family: "iconfont"; /* Project id 4195108 */
+  src: url('iconfont.eot?t=1734940411468'); /* IE9 */
+  src: url('iconfont.eot?t=1734940411468#iefix') format('embedded-opentype'), /* IE6-IE8 */
+       url('iconfont.woff2?t=1734940411468') format('woff2'),
+       url('iconfont.woff?t=1734940411468') format('woff'),
+       url('iconfont.ttf?t=1734940411468') format('truetype'),
+       url('iconfont.svg?t=1734940411468#iconfont') format('svg');
+}
+
+.iconfont {
+  font-family: "iconfont" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-reset:before {
+  content: "\e62d";
+}
+
+.icon-drag:before {
+  content: "\e62a";
+}
+
+.icon-more:before {
+  content: "\e6ad";
+}
+
+.icon-simple-delete:before {
+  content: "\e624";
+}
+
+.icon-simple-edit:before {
+  content: "\e625";
+}
+
+.icon-notification:before {
+  content: "\e626";
+}
+
+.icon-comment:before {
+  content: "\e623";
+}
+
+.icon-create_edit:before {
+  content: "\e621";
+}
+
+.icon-keep-view:before {
+  content: "\e61d";
+}
+
+.icon-unfit:before {
+  content: "\e61b";
+}
+
+.icon-fit:before {
+  content: "\e61c";
+}
+
+.icon-interviewer:before {
+  content: "\e61e";
+}
+
+.icon-order:before {
+  content: "\e619";
+}
+
+.icon-plus:before {
+  content: "\e600";
+}
+
+.icon-active:before {
+  content: "\e617";
+}
+
+.icon-inactive:before {
+  content: "\e616";
+}
+
+.icon-share:before {
+  content: "\e618";
+}
+
+.icon-link:before {
+  content: "\e695";
+}
+
+.icon-previewPDF:before {
+  content: "\e694";
+}
+
+.icon-close:before {
+  content: "\e691";
+}
+
+.icon-print:before {
+  content: "\e692";
+}
+
+.icon-download-2:before {
+  content: "\e693";
+}
+
+.icon-edit1:before {
+  content: "\e690";
+}
+
+.icon-Publish:before {
+  content: "\e68f";
+}
+
+.icon-upload:before {
+  content: "\e7d9";
+}
+
+.icon-download:before {
+  content: "\e7da";
+}
+
+.icon-send:before {
+  content: "\e64b";
+}
+
+.icon-edit:before {
+  content: "\e674";
+}
+
+.icon-add:before {
+  content: "\e68d";
+}
+
+.icon-male:before {
+  content: "\e689";
+}
+
+.icon-female:before {
+  content: "\e68e";
+}
+
+.icon-delete:before {
+  content: "\e68a";
+}
+
+.icon-sort:before {
+  content: "\e725";
+}
+
+.icon-search:before {
+  content: "\e68b";
+}
+
+.icon-fold:before {
+  content: "\e68c";
+}
+
+.icon-expand:before {
+  content: "\e686";
+}
+

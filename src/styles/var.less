@@ -1,0 +1,265 @@
+
+@font-face {
+  font-family: "Maison Neue Bold";
+  src: url('./fonts/MaisonNeue-Bold.woff') format('woff'),
+       url('./fonts/MaisonNeue-Bold.ttf') format('truetype'),
+       url('./fonts/MaisonNeue-Bold.otf') format('opentype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Maison Neue Light";
+  src: url('./fonts/MaisonNeue-Light.woff') format('woff'),
+       url('./fonts/MaisonNeue-Light.ttf') format('truetype'),
+       url('./fonts/MaisonNeue-Light.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Maison Neue Regular";
+  src: url('./fonts/MaisonNeue-Book.woff') format('woff'),
+       url('./fonts/MaisonNeue-Book.ttf') format('truetype'),
+       url('./fonts/MaisonNeue-Book.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --color-black1: #333333;
+  --color-black2: #191a20;
+  --color-black3: #141414;
+  --color-black4: #282a35;
+  --color-black5: #292b35;
+  --color-gray: #333333;
+  --color-gray1: #62636c;
+  --color-gray2: #90949e;
+  --color-gray3: #babfc9;
+  --color-gray4: #f5f7fa;
+  --color-gray5: #f2f2f2;
+  --color-gray6: #f6f9fd;
+
+  --male-color: #669afb;
+  --female-color: #ffa3a3;
+  --shadow-color: #E9E9E9;
+
+  // 默认的主题色
+  --el-color-primary: #6672FB;
+  --el-color-primary-dark-2: #2e326c;
+  --el-color-primary-light-1: #7580fb;
+  --el-color-primary-light-2: #8A94FE;
+  --el-color-primary-light-3: #949cfc;
+  --el-color-primary-light-4: #a3aafd;
+  --el-color-primary-light-5: #b3b9fd;
+  --el-color-primary-light-6: #c2c7fd;
+  --el-color-primary-light-7: #d1d5fe;
+  --el-color-primary-light-8: #e0e2fe;
+  --el-color-primary-light-9: #f0f1ff;
+  --el-color-primary-light-10: #eff3fb;
+  --el-color-primary-light-11: #595cdd;
+  --el-color-primary-light-12: #F7F7FA;
+  --color-gray7: #9FABFD;
+
+  // Success
+  --el-color-success: #61c65f;
+  --el-color-success-light-1: #71cc6f;
+  --el-color-success-light-2: #83BD68;
+  --el-color-success-light-3: #9FD686;
+  --el-color-success-light-4: #a0dd9f;
+  --el-color-success-light-5: #b0e3af;
+  --el-color-success-light-6: #c0e8bf;
+  --el-color-success-light-7: #d0eecf;
+  --el-color-success-light-8: #dff4df;
+  --el-color-success-light-9: #eff9ef;
+
+  // Danger
+  --el-color-danger: #f56c6c;
+  --el-color-danger-light-1: #E7352C;
+  --el-color-danger-light-2: #ff754b;
+  --el-color-danger-light-3: #ee726b;
+  --el-color-danger-light-4: #f18680;
+  --el-color-danger-light-5: #f39a96;
+  --el-color-danger-light-6: #f5aeab;
+  --el-color-danger-light-7: #f8c2c0;
+  --el-color-danger-light-8: #fad7d5;
+  --el-color-danger-light-9: #fdebea;
+
+  // Waring
+  --el-color-warning: #F8B849;
+  --el-color-warning-light-1: #f9bf5b;
+  --el-color-warning-light-2: #ffd182;
+  --el-color-warning-light-3: #facd80;
+  --el-color-warning-light-4: #fbd492;
+  --el-color-warning-light-5: #fcdca4;
+  --el-color-warning-light-6: #fce3b6;
+  --el-color-warning-light-7: #fdeac8;
+  --el-color-warning-light-8: #fef1db;
+  --el-color-warning-light-9: #fef8ed;
+
+  //菜单颜色
+  --el-logo-text-color: var(--color-gray1);
+  --el-menu-bg-color: var(--el-color-primary-light-12) !important;
+  --el-menu-active-color: var(--el-color-primary-light-9) !important;
+  --el-menu-text-color: var(--color-gray1) !important;
+
+  --el-menu-hover-bg-color: var(--el-color-primary-light-9)!important;
+  --el-menu-hover-text-color: var(--color-gray1) !important;
+  --el-menu-horizontal-sub-item-height: 40px !important;
+  --el-menu-item-height: 56px !important;
+
+
+  --el-text-color-regular: var(--color-gray1) !important;
+  //
+  --esp-header-height: 90px;
+
+  //font
+  --font-h3: 22px;
+  --font-icon: 24px;
+  --font-icon2: 20px;
+  --el-font-size-extra-large: 28px;
+  --el-font-size-large: 18px;
+  --el-font-size-medium: 16px;
+  --el-font-size-base: 14px;
+  --el-font-size-small: 12px;
+  --el-font-size-extra-small: 12px;
+  --font-family-bold: HelveticaNeueBold, HelveticaNeue-Bold, "Helvetica Neue Bold", HelveticaNeue, "Helvetica Neue", Helvetica, Arial, PingFangSC-Medium, "PingFang SC Medium", 黑体, sans-serif;
+  --font-family-regular: HelveticaNeueRegular, HelveticaNeue-Regular, "Helvetica Neue Regular", HelveticaNeue, "Helvetica Neue", Helvetica, Arial, PingFangSC-Regular, "PingFang SC Regular", 黑体, sans-serif;
+  --font-family-medium: HelveticaNeueMedium, HelveticaNeue-Medium, "Helvetica Neue Medium", HelveticaNeue, "Helvetica Neue", Helvetica, Arial, PingFangSC-Regular, "PingFang SC Regular", 黑体, sans-serif;
+  --font-family-light: "Helvetica Neue", HelveticaNeue, Helvetica, Arial, "PingFangSC-Light", "PingFang SC Light", "黑体", sans-serif;
+  --font-family-maison: "Maison Neue Regular";
+
+  // 圆角和边框
+  --el-border-color-hover: var(--el-color-primary-light-8) !important;
+  --el-border-radius-medium: 8px;
+  --el-border-radius-base: 4px;
+  --el-border-radius-small: 2px;
+  --el-border-radius-round: 20px;
+  --el-border-radius-large: 12px;
+  --el-border-menu-radius: 16px;
+  --el-border-radius-extra-large: 40px;
+  --el-border-radius-circle: 50%;
+  --el-border-color-light: var(--color-gray5);
+
+  --el-table-row-height: 54px;
+
+  //
+  --esp-search-input-height: 46px;
+  --esp-checkbox-size: 18px;
+  --esp-checkbox-width: 5px;
+  --esp-checkbox-height: 9px;
+  --esp-checkbox-top: 1px;
+  --esp-checkbox-left: 5px;
+  --esp-checkbox-before-top: 7px;
+  --esp-button-height: 38px;
+  --esp-button-width: 120px;
+
+  // 输入框
+  --el-border-color: var(--el-color-primary-light-8) !important;
+  --esp-input-height: 40px;
+  --esp-pagination-input-height: 30px;
+  --esp-pagination-button-width: 30px;
+  --esp-pagination-button-height: 30px;
+  --esp-input-padding-left: 12px;
+  --el-input-number-controls-height: 19px;
+}
+
+@media (max-width: 1600px) {
+  :root {
+    --el-menu-horizontal-sub-item-height: 32px;
+    --el-menu-item-height: 48px !important;
+    //
+    --esp-header-height: 80px;
+
+    //font
+    --font-h3: 20px;
+    --font-icon: 22px;
+    --el-font-size-extra-large: 26px;
+    --el-font-size-large: 16px;
+    --el-font-size-medium: 14px;
+    --el-font-size-base: 12px;
+    --el-font-size-small: 12px;
+
+    --el-border-menu-radius: 14px;
+    --el-border-radius-extra-large: 36px;
+
+    // table 
+    --el-table-row-height: 44px;
+    
+    --esp-search-input-height: 44px;
+    --esp-checkbox-size: 16px;
+    --esp-checkbox-width: 4px;
+    --esp-checkbox-height: 8px;
+    --esp-checkbox-top: 1px;
+    --esp-checkbox-left: 5px;
+    --esp-checkbox-before-top: 6px;
+    --esp-button-height: 36px;
+    --esp-button-width: 100px;
+
+    --esp-input-height: 38px;
+    --esp-pagination-input-height: 28px;
+    --esp-pagination-button-width: 28px;
+    --esp-pagination-button-height: 28px;
+    --esp-input-padding-left: 10px;
+  }
+}
+
+// 边框
+.border(@color: var(--el-border-color-light)) {
+  border: 1px solid @color;
+}
+// 圆角
+.borderRadius(@radius: 10px) {
+  border-radius: @radius;
+}
+// 宽高
+.wh(@width: 100%, @height: auto){
+  width: @width;
+  height: @height;
+}
+// 字体大小，颜色
+.sc(@size, @color){
+  font-size: @size;
+  color: @color;
+}
+.boxSizing {
+  box-sizing: border-box;
+}
+.fja(@jc: center, @ai: center){
+  display: flex;
+  justify-content: @jc;
+  align-items: @ai;
+}
+.bg-gradient(@color1: var(--el-color-primary-light-2), @color2: var(--el-color-primary)) {
+  background: linear-gradient(180deg, @color1, @color2);
+}
+.transition(@type: all, @time: .2s) {
+  transition: @type @time linear;
+}
+.trapezoid(@color: var(--el-color-primary), @height: 1em) {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  width: 0;
+  height: @height;
+  border-left: 4px solid @color;
+  border-top: 2px solid transparent;
+  border-bottom: 2px solid transparent;
+  border-radius: 0.2em;
+}
+.triangle(@size: .8em) {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  border: @size solid transparent;
+  border-top-color: var(--el-color-primary-light-12);
+  border-bottom: 0;
+  border-left: 0;
+  z-index: 1;
+  transform: translate(-50%, -50%) rotate(-45deg);
+}

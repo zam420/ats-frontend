@@ -1,0 +1,30 @@
+.dialog-form-wrap {
+  :deep(.el-dialog) {
+    --el-dialog-margin-top: 10vh;
+    --el-dialog-width: 70%;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    .el-dialog__body {
+      flex: 1;
+      overflow: hidden;
+      overflow-y: auto;
+      .green-text {
+        color: var(--esp-color-primary);
+        font-size: var(--el-input-font-size);
+        font-weight: 600;
+      }
+    }
+  }
+
+  &.small {
+    :deep(.el-dialog) {
+      --el-dialog-width: 30em;
+    }
+  }
+  &.middle {
+    :deep(.el-dialog) {
+      --el-dialog-width: 50em;
+    }
+  }
+}

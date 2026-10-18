@@ -1,0 +1,27 @@
+.dialog-form-wrap {
+  :deep(.el-dialog) {
+    --el-dialog-margin-top: 15vh;
+    --el-dialog-width: 70%;
+    max-height: 80vh;
+    .content {
+      line-height: 1.425;
+      &.center {
+        text-align: center;
+      }
+      &.right {
+        text-align: right;
+      }
+    }
+  }
+
+  &.small {
+    :deep(.el-dialog) {
+      --el-dialog-width: 35em;
+    }
+  }
+  &.middle {
+    :deep(.el-dialog) {
+      --el-dialog-width: 45em;
+    }
+  }
+}

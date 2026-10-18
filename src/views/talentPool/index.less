@@ -1,0 +1,231 @@
+&.line {
+  position: relative;
+  &:not(:last-child):after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translate(50%, -50%);
+    width: 1px;
+    height: 80%;
+    background-color: var(--color-gray3);
+  }
+}
+
+&.title-line {
+  position: relative;
+  padding-left: 10px;
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translate(50%, -50%);
+    width: 3px;
+    height: 80%;
+    background-color: var(--el-color-primary);
+    border-radius: 0px 6px 6px 0px;
+  }
+}
+
+.talent-pool-detail {
+  padding: 20px 50px;
+}
+
+.header-base {
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--color-gray5);
+  display: flex;
+  .header-img {
+    width: 100px;
+    height: 100px;
+    border-radius: 10%;
+    margin-right: 20px;
+  }
+  .header-content {
+    flex: 1;
+  }
+  .header-end {
+    .talent-Pool-status {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      .status-point {
+        height: 8px;
+        width: 8px;
+        background-image: linear-gradient(to bottom, var(--el-color-primary-light-2), var(--el-color-primary));
+        border-radius: 4px;
+        margin-right: 5px;
+      }
+      .status {
+        font-size: 16px;
+        font-weight: bold;
+        color: var(--el-color-primary);
+      }
+    }
+    .status-date {
+      font-size: 16px;
+      color: var(--color-gray2);
+      line-height: 18px;
+      margin-top: 8px;
+    }
+  }
+  .candidate-name-base {
+    line-height: 29px;
+    height: 28px;
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--color-gray);
+    display: flex;
+    align-items: center;
+    .gender-img {
+      width: 24px;
+      height: 24px;
+      margin-left: 5px;
+    }
+  }
+  .content-base {
+    padding-top: 20px;
+    font-size: 14px;
+    color: var(--color-gray2);
+    line-height: 16px;
+    .content-first {
+      padding-bottom: 10px;
+      .first {
+        margin-right: 50px;
+      }
+    }
+    .content-second span {
+      padding-right: 10px;
+      margin-right: 10px;
+    }
+  }
+}
+
+.content-bg {
+  padding: 20px 0;
+  .content-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--color-gray);
+    line-height: 23px;
+  }
+  .content-base {
+    padding: 10px 0;
+    margin-left: 10px;
+  }
+  .content-second {
+    padding-top: 10px;
+  }
+  span {
+    padding-right: 15px;
+    margin-right: 15px;
+    font-size: 16px;
+    color: var(--color-gray1);
+    line-height: 18px;
+  }
+}
+
+.eb-content-base {
+  padding: 10px 0;
+  margin-left: 10px;
+  .eb-first {
+    padding-bottom: 10px;
+    .title {
+      font-size: 18px;
+      font-weight: bold;
+      color: var(--color-gray);
+      line-height: 23px;
+    }
+    .date {
+      font-size: 14px;
+      color: var(--color-gray2);
+      line-height: 16px;
+    }
+  }
+}
+
+.we-first {
+  padding-bottom: 10px;
+  .title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-gray);
+    line-height: 25px;
+  }
+  .date {
+    font-size: 14px;
+    color: var(--color-gray2);
+    line-height: 16px;
+  }
+}
+
+.we-second {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-gray1);
+  line-height: 22px;
+  padding-bottom: 10px;
+}
+
+.we-third {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--color-gray1);
+  line-height: 24px;
+}
+
+.we-fourth {
+  font-size: 16px;
+  color: var(--color-gray1);
+  line-height: 24px;
+}
+
+.pe-third-base {
+  padding-bottom: 10px;
+}
+
+.sp-content {
+  font-size: 16px;
+  color: var(--el-color-primary) !important;
+  background: var(--el-color-primary-light-10);
+  border-radius: var(--el-border-radius-round);
+  display: inline-block;
+  padding: 5px 20px !important;
+  margin-top: 10px;
+}
+
+.tags-base {
+  padding-bottom: 10px;
+  .tags {
+    padding-right: 0 !important;
+  }
+}
+
+.oi-title {
+  font-size: 14px;
+  color: var(--color-gray);
+  line-height: 16px;
+  padding: 10px 0;
+}
+
+.set-icon {
+  .fja();
+  color: var(--el-color-primary);
+  font-family: var(--font-family-medium);
+  cursor: pointer;
+  img {
+    display: block;
+    width: 1.6em;
+    height: auto;
+    cursor: pointer;
+    transition: opacity .2s ease-out;
+    margin-right: .5em;
+  }
+  &:hover {
+    opacity: .7;
+  }
+  & + .el-button {
+    margin-left: 0.75em !important;
+  }
+}

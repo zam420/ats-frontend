@@ -1,0 +1,6 @@
+export enum ShareTypeEnum {
+  INTERVIEW_PROCESS,
+  INTERVIEWER,
+  EMAIL_TEMPLATE,
+  FORWARD_RECEIVER
+}

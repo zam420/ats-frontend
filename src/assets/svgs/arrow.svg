@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16px" height="16px" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>notification</title>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="5-3-2--Schedule-interview(online)" transform="translate(-1038, -460)" fill="#6672FB" fill-rule="nonzero">
+            <g id="notification" transform="translate(1038, 460)">
+                <g id="back_android" transform="translate(8, 8.5) scale(-1, 1) translate(-8, -8.5)translate(0, 1)">
+                    <path d="M15.2344498,6.75 L2.52631579,6.75 L8.11483254,1.275 C8.42105263,0.975 8.42105263,0.525 8.11483254,0.225 C7.80861244,-0.075 7.3492823,-0.075 7.0430622,0.225 L0.229665072,6.975 C-0.0765550239,7.275 -0.0765550239,7.725 0.229665072,8.025 L0.306220096,8.025 L7.11961722,14.775 C7.27272727,14.925 7.50239234,15 7.65550239,15 C7.88516746,15 8.03827751,14.925 8.19138756,14.775 C8.49760766,14.475 8.49760766,14.025 8.19138756,13.725 L2.60287081,8.25 L15.2344498,8.25 C15.6937799,8.25 16,7.95 16,7.5 C16,7.05 15.6172249,6.75 15.2344498,6.75 Z" id="Path"></path>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

@@ -1,0 +1,27 @@
+.feedback-wrap {
+  &:deep(.header) {
+    .left {
+      align-items: baseline;
+      h3 {
+        margin-right: 0.6em;
+      }
+    }
+    .type {
+      font-size: var(--el-font-size-medium);
+      color: var(--el-color-white);
+      background: var(--el-color-primary);
+      border-radius: 12px 2px 12px 2px;
+      padding: 0.4em 0.8rem;
+      font-size: var(--el-font-size-small);
+    }
+  }
+  .detail {
+    display: inline-flex;
+    color: var(--color-gray2);
+    margin-top: 0.5rem;
+    margin-bottom: 1.2rem;
+    div {
+      margin-right: 1rem;
+    }
+  }
+}

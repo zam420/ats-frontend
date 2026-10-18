@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="26px" height="26px" viewBox="0 0 26 26" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>KIV</title>
+    <defs>
+        <circle id="path-1" cx="12" cy="12" r="9"></circle>
+        <filter x="-33.3%" y="-33.3%" width="166.7%" height="166.7%" filterUnits="objectBoundingBox" id="filter-2">
+            <feOffset dx="0" dy="0" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="2" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feColorMatrix values="0 0 0 0 0.564705882   0 0 0 0 0.580392157   0 0 0 0 0.619607843  0 0 0 1 0" type="matrix" in="shadowBlurOuter1"></feColorMatrix>
+        </filter>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-3">
+            <stop stop-color="#FFD182" offset="0%"></stop>
+            <stop stop-color="#F8B849" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="4-2-1-CV-Management-interview-feedback" transform="translate(-593, -840)">
+            <g id="KIV" transform="translate(594, 841)">
+                <g id="Oval">
+                    <use fill="black" fill-opacity="1" filter="url(#filter-2)" xlink:href="#path-1"></use>
+                    <use fill="#FFFFFF" fill-rule="evenodd" xlink:href="#path-1"></use>
+                </g>
+                <path d="M4,12 C4,16.4182406 7.58225817,20 12,20 C16.4182406,20 20,16.4190429 20,12 C20,7.58273522 16.4183056,4 12,4 C7.58273522,4 4,7.58201965 4,12 Z M8.11201962,12.7510508 C7.91994454,12.7513115 7.72780812,12.6781889 7.58127171,12.5316525 C7.28830623,12.238687 7.28778491,11.7639808 7.58117972,11.470586 C7.72796145,11.3238043 7.91928522,11.2510344 8.11054766,11.2514024 L15.8895809,11.2506511 C16.081334,11.2507431 16.2730871,11.3239423 16.4193935,11.4702487 C16.712221,11.7630762 16.7122057,12.2378284 16.4193935,12.5306405 C16.2720291,12.6780049 16.0801687,12.7508208 15.8885383,12.7502382 L8.11201962,12.7510508 Z" fill="url(#linearGradient-3)" fill-rule="nonzero"></path>
+            </g>
+        </g>
+    </g>
+</svg>

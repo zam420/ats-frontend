@@ -1,0 +1,123 @@
+image: ${REGISTRY}/library/docker:19.03.12
+
+stages:
+  - npm
+  - build
+  - push
+  - deploy
+
+# user pipeline id as the version of container image
+variables:
+  TAG: 1.0.$CI_PIPELINE_ID
+  ENV : "dev"
+  GIT_URL: xsystem.espressif.cn/IT/k8s-ats-frontend.git
+  IMAGE: ${REGISTRY}/${REGISTRY_PATH}/${APP_NAME}/${ENV}:1.0.${CI_PIPELINE_ID}
+  AWS_REGION: ap-east-1
+  EB_APP_NAME: ats-frontend
+  FILE: $CI_COMMIT_REF_NAME-$CI_PIPELINE_ID
+  BUCKET: elasticbeanstalk-ap-east-1-443455854268
+  AWS_PLATFORM: Docker
+
+workflow:
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "dev"
+      variables:
+        ENV: "dev"
+        IMAGE: ${REGISTRY}/${REGISTRY_PATH}/${APP_NAME}/${ENV}:1.0.$CI_PIPELINE_ID
+    - if: $CI_COMMIT_REF_NAME == "qa"
+      variables:
+        BUCKET_PREFIX: ${APP_NAME}-qa/
+        EB_ENV_NAME: Atsfrontend-qa
+    - if: $CI_COMMIT_REF_NAME == "main"
+      variables:
+        BUCKET_PREFIX: ${APP_NAME}-prod/
+        EB_ENV_NAME: Atsfrontend-prod
+    - when: always
+
+npm:
+  stage: npm
+  image: registry-mm.espressif.cn/infra/node:18-bullseye
+  # Cache modules in between jobs
+  cache:
+    key: $CI_COMMIT_REF_SLUG
+    paths:
+      - .npm/
+  before_script:
+    # - npm ci --cache .npm --prefer-offline
+    - npm install --cache .npm --registry=http://registry.npmmirror.com
+  script:
+    - |
+      if [ $CI_COMMIT_REF_NAME == "dev" ]; then
+        npm run build
+      fi
+      if [ $CI_COMMIT_REF_NAME == "qa" ]; then
+        npm run build:qa
+      fi
+      if [ $CI_COMMIT_REF_NAME == "main" ]; then
+        npm run build:prod
+      fi
+  artifacts:
+    paths:
+      - dist/*
+  only:
+    - dev
+    - qa
+    - main
+
+# build container image
+docker_build:
+  stage: build
+  dependencies:
+    - npm
+  script:
+    - echo $ENV
+    - docker build -t ${IMAGE} .
+  only:
+    - dev
+
+# tag the image and push it to registry
+push-job:
+  stage: push
+  script:
+    - docker login $REGISTRY -u$DOCKER_USERNAME -p$DOCKER_PASSWORD
+    - docker push ${IMAGE}
+    - docker rmi ${IMAGE}
+  only:
+    - dev
+
+# dev can cd automatically
+deploy:
+  stage: deploy
+  image: ${REGISTRY}/library/cnych/kustomize:v1.0
+  before_script:
+    - git config --global user.email "bot@espressif.com"
+    - git config --global user.name "bot"
+  script:
+    - git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@$GIT_URL /k8s-config
+    - cd /k8s-config/overlays/${ENV}
+    - kustomize edit set image ${IMAGE}
+    - git commit -am "tag:${TAG} commit:${CI_COMMIT_MESSAGE}"
+    - git push
+  only:
+    - dev
+
+eb-deploy:
+  stage: deploy
+  image: 
+    name: registry-mm.espressif.cn/infra/aws-tools:latest
+    entrypoint: [""]
+  script:
+    - export FILE=$FILE-$(date +%s%N).zip
+    - apk add zip
+    - zip -r  $FILE * .ebextensions/ .platform/
+    - export AWS_DEFAULT_REGION=ap-east-1
+    - aws configure set region ap-east-1
+    - aws configure list
+    - aws s3 cp $FILE s3://$BUCKET/$BUCKET_PREFIX$FILE
+    - aws elasticbeanstalk create-application-version --application-name $EB_APP_NAME --version-label $FILE --source-bundle S3Bucket=$BUCKET,S3Key=$BUCKET_PREFIX$FILE
+    - printf '\n\n\n\n\n' |eb init -i ${EB_APP_NAME} -p "${AWS_PLATFORM}" --region ${AWS_REGION}
+    - eb deploy ${EB_ENV_NAME} --version $FILE --timeout 60
+  # - aws elasticbeanstalk update-environment --application-name $APP_NAME --environment-name $ENV_NAME --version-label $FILE
+  only:
+      - qa
+      - main

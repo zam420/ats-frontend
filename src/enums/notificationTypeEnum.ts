@@ -1,0 +1,6 @@
+export enum NotificationTypeEnum {
+  RESUME,
+  INTERVIEW_TEAMS_SCHEDULE_RSP,
+  MAIL_SEND_RESULT,
+  RESUME_COMMENT
+}

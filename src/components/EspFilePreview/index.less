@@ -1,0 +1,72 @@
+.dialog-file-preview-wrap {
+  &:deep(.el-overlay) {
+    z-index: 1072;
+  }
+  &:deep(.el-overlay-dialog) {
+    overflow: hidden;
+  }
+  &:deep(.el-dialog) {
+    --el-dialog-width: 100%;
+    --el-dialog-margin-top: 0;
+    height: 100vh;
+    .el-dialog__header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background-color: #323639;
+      height: 4em;
+      padding: 0 2em;
+      z-index: 10;
+      .fja();
+    }
+    background-color: transparent;
+    .el-dialog__body {
+      padding: 4em 0 1em;
+      overflow: hidden;
+    }
+    .vue-html-preview {
+      .fja();
+    }
+    .esp-file-preview-wrap {
+      position: relative;
+      height: calc(100vh - 5em);
+      margin: 0 auto;
+    }
+    .el-scrollbar {
+      --el-scrollbar-opacity: 1 !important;
+      --el-scrollbar-bg-color: var(--color-gray1) !important;
+      --el-scrollbar-hover-opacity: 1 !important;
+      --el-scrollbar-hover-bg-color: var(--color-gray1) !important;
+    }
+    .esp-file-preview-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      min-height: 100vh;
+      // background-color: var(--el-color-white);
+      &.email-content {
+        height: 100vh;
+        .esp-html-preview-wrap {
+          height: 100%;
+        }
+      }
+    }
+    .file-preview-header {
+      flex: 1;
+      .fja(space-between);
+      color: var(--el-color-white);
+      .right {
+        .fja();
+      }
+      .el-icon {
+        font-size: var(--font-h3);
+        cursor: pointer;
+        & + .el-icon {
+          margin-left: 1em;
+        }
+      }
+    }
+  }
+}
+.esp-file-preview-iframe {
+  display: none;
+}
