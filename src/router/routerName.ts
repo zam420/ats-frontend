@@ -59,10 +59,10 @@ export const ROUTER_SETTINGS_RECRUITMENT_PROJECT = 'settings/recruitmentProject'
 export const ROUTER_SETTINGS_USER_MANAGEMENT = 'settings/userManagement'
 
 //Settings -> Interview Process
-export const ROUTER_SETTINGS_INTERVIEW_PROCESS = 'settings/interviewProcess'
-export const ROUTER_SETTINGS_INTERVIEW_PROCESS_CREATE = 'settings/interviewProcess/create'
-export const ROUTER_SETTINGS_INTERVIEW_PROCESS_EDIT = 'settings/interviewProcess/edit'
-export const ROUTER_SETTINGS_INTERVIEW_PROCESS_DETAIL = '/settings/interviewProcess/detail'
+export const ROUTER_SETTINGS_INTERVIEW_PROCESS = 'settings/interviewprocess'
+export const ROUTER_SETTINGS_INTERVIEW_PROCESS_CREATE = 'settings/interviewprocess/create'
+export const ROUTER_SETTINGS_INTERVIEW_PROCESS_EDIT = 'settings/interviewprocess/edit'
+export const ROUTER_SETTINGS_INTERVIEW_PROCESS_DETAIL = '/settings/interviewprocess/'
 
 //Settings -> Email Template
 export const ROUTER_SETTINGS_EMAIL_TEMPLATE = 'settings/emailTemplate'

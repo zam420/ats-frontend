@@ -8,11 +8,12 @@ import { isNumber } from '@/utils/is'
 
 const route = useRoute()
 const router = useRouter()
-const id = ref<number>()
+const id = ref<string>()
 onMounted(() => {
   const paramId = route.params?.id
-  if (paramId && isNumber(Number(paramId))) {
-    id.value = Number(paramId)
+  console.log("zamzamzamzamazmaz", paramId)
+  if (paramId) {
+    id.value = paramId as string
   } else {
     router.replace({
       path: `/${ROUTER_SETTINGS_INTERVIEW_PROCESS}`

@@ -8,7 +8,7 @@ export enum ApplicationNoteTypeEnum {
   VIDEO,
   HR,
   PROFESSIONAL,
-  CEO,
+  C_LEVEL,
   OFFER_MANAGEMENT,
   ONBOARD,
   TALENT_POOL
@@ -39,9 +39,9 @@ export const ApplicationNoteType: Record<string, CommonEnum.enumItem> = {
     value: ApplicationNoteTypeEnum.PROFESSIONAL,
     name: $t('candidateStatusEnum.professionalInterview')
   },
-  [ApplicationNoteTypeEnum.CEO]: {
-    value: ApplicationNoteTypeEnum.CEO,
-    name: $t('candidateStatusEnum.CEOInterview')
+  [ApplicationNoteTypeEnum.C_LEVEL]: {
+    value: ApplicationNoteTypeEnum.C_LEVEL,
+    name: $t('candidateStatusEnum.C_LEVEL_Interview')
   },
   [ApplicationNoteTypeEnum.OFFER_MANAGEMENT]: {
     value: ApplicationNoteTypeEnum.OFFER_MANAGEMENT,

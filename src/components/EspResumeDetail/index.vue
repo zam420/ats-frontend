@@ -418,7 +418,7 @@ const deleteNotes = (data: CV.Notes, index: number) => {
 const supplyNotes = (data: CV.Notes) => {
   data.commentator_name = data?.commentator_id ? data.commentator_name : $t('cv.system')
   data.notiText = data?.share_to?.length === 0 ? $t('cv.private') : data?.share_to?.length?.toString()
-  data.canOpt = data?.commentator_id === globalStore?.userInfo?.id || globalStore?.roles?.includes(UserRoleEnum.SA) || globalStore?.roles?.includes(UserRoleEnum.HRD)
+  data.canOpt = data?.commentator_id === globalStore?.userInfo?.id || globalStore?.roles?.includes(UserRoleEnum.SA) || globalStore?.roles?.includes(UserRoleEnum.HRA)
   data.initial = getFirstLetterUpperCase(data.commentator_name)
   if (data?.share_to?.length === 1 && data?.share_to?.[0]?.id === -1) {
     data.notiText = $t('cv.public')

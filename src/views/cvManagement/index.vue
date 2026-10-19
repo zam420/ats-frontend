@@ -234,7 +234,7 @@
             v-if="
               (selectTab === CandidateStatusEnum.HR ||
                 selectTab === CandidateStatusEnum.PROFESSIONAL ||
-                selectTab === CandidateStatusEnum.CEO) &&
+                selectTab === CandidateStatusEnum.C_LEVEL) &&
               !scope.row?.interview?.interview_id
             "
             class="status"
@@ -451,7 +451,7 @@ import {
   ResumeScreenStatusEnum,
   ScheduleInterviewStatusEnum,
   ScheduleInterviewStatusPro,
-  ScheduleInterviewStatusCeo,
+  ScheduleInterviewStatusCLevel,
   ScheduleInterviewStatusHr,
   OnboardingStatusEnum,
   OnlineTestStatus,
@@ -569,7 +569,7 @@ const clickButton = (item: Form.FormSelect) => {
     case BtnTypeEnum.MOVETO_ONLINE_WRITTEN:
     case BtnTypeEnum.MOVETO_HR:
     case BtnTypeEnum.MOVETO_PROFESSIONAL:
-    case BtnTypeEnum.MOVETO_CEO:
+    case BtnTypeEnum.MOVETO_C_LEVEL:
     case BtnTypeEnum.MOVETO_OFFER_MANAGEMENT:
     case BtnTypeEnum.MOVETO_ONBOARD:
     case BtnTypeEnum.MOVETO_TALENT_POOL:
@@ -869,7 +869,7 @@ const searchTable = async (type: string, status?: number | string) => {
         case ResumeScreenStatusEnum.REVIEWED:
         case ScheduleInterviewStatusEnum.RECEIVED_FEEDBACK_HR:
         case ScheduleInterviewStatusEnum.RECEIVED_FEEDBACK_PRO:
-        case ScheduleInterviewStatusEnum.RECEIVED_FEEDBACK_CEO:
+        case ScheduleInterviewStatusEnum.RECEIVED_FEEDBACK_C_LEVEL:
         case OfferStatusEnum.OFFER_SENT:
           isShowThirdStatusFilter.value = true
           break
@@ -958,9 +958,9 @@ const setSubFilterList = (statusValue: number | string) => {
       subStatusList.value = getTableTabs(ScheduleInterviewStatusPro)
       thirdStatusList.value = getTableTabs(ReceivedFeedbackStatus)
       break
-    case CandidateStatusEnum.CEO:
+    case CandidateStatusEnum.C_LEVEL:
       isShowSubStatusFilter.value = true
-      subStatusList.value = getTableTabs(ScheduleInterviewStatusCeo)
+      subStatusList.value = getTableTabs(ScheduleInterviewStatusCLevel)
       thirdStatusList.value = getTableTabs(ReceivedFeedbackStatus)
       break
     case CandidateStatusEnum.HR:

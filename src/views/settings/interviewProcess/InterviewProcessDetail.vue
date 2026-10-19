@@ -90,7 +90,7 @@ const { $t } = useLocale()
 const route = useRoute()
 const router = useRouter()
 const state = reactive<InterviewProcess.DetailInfo>({
-  id: 0,
+  id: '',
   name: '',
   status: 0,
   work_location_name: '',
@@ -102,7 +102,7 @@ const infoForm = ref<Form.FormItem[]>(cloneDeep(INTERVIEW_PROCESS_DETAIL))
 const espDialogFormRef = ref()
 const initData = () => {
   if (route.params?.id) {
-    getInterviewProcessDetail(Number(route.params?.id as string)).then(res => {
+    getInterviewProcessDetail(route.params?.id as string).then(res => {
       const result = (res.result ?? {}) as InterviewProcess.DetailInfo
       state.id = result?.id
       state.name = result?.name ?? ''

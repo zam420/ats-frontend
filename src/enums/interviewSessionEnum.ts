@@ -6,38 +6,26 @@ export enum InterviewSessionEnum {
   VIDEO,
   HR,
   PROFESSIONAL,
-  CEO
+  C_LEVEL
 }
 
 export const InterviewSession: Record<string, CommonEnum.enumItem> = {
-  // [InterviewSessionEnum.ONLINE]: {
-  //   value: InterviewSessionEnum.ONLINE,
-  //   name: $t('interviewProcess.onlineWrittenTest'),
-  //   subLabel: $t('interviewProcess.onlineWrittenTestZh'),
-  //   status: 'success'
-  // },
-  // [InterviewSessionEnum.VIDEO]: {
-  //   value: InterviewSessionEnum.VIDEO,
-  //   name: $t('interviewProcess.videoInterview'),
-  //   subLabel: $t('interviewProcess.videoInterviewZh'),
-  //   status: 'success'
-  // },
   [InterviewSessionEnum.HR]: {
     value: InterviewSessionEnum.HR,
     name: $t('interviewProcess.HRInterview'),
-    subLabel: $t('interviewProcess.HRInterviewZh'),
+    // subLabel: $t('interviewProcess.HRInterviewZh'),
     status: 'success'
   },
   [InterviewSessionEnum.PROFESSIONAL]: {
     value: InterviewSessionEnum.PROFESSIONAL,
     name: $t('interviewProcess.professionalInterview'),
-    subLabel: $t('interviewProcess.professionalInterviewZh'),
+    // subLabel: $t('interviewProcess.professionalInterviewZh'),
     status: 'success'
   },
-  [InterviewSessionEnum.CEO]: {
-    value: InterviewSessionEnum.CEO,
-    name: $t('interviewProcess.CEOInterview'),
-    subLabel: $t('interviewProcess.CEOInterviewZh'),
+  [InterviewSessionEnum.C_LEVEL]: {
+    value: InterviewSessionEnum.C_LEVEL,
+    name: $t('interviewProcess.C_Level_Interview'),
+    // subLabel: $t('interviewProcess.C_Level_InterviewZh'),
     status: 'success'
   }
 }

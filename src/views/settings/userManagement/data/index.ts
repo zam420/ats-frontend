@@ -51,32 +51,24 @@ export const rolesList: Form.FormSelect[] = [
     label: 'System Admin'
   },
   {
-    value: UserRoleEnum.HRD,
-    label: 'HR Directiors'
+    value: UserRoleEnum.HRA,
+    label: 'HR Admin'
   },
   {
-    value: UserRoleEnum.PROA,
-    label: 'Project Admins'
-  },
-  {
-    value: UserRoleEnum.HRR,
-    label: 'HR Recruiters'
-  },
-  {
-    value: UserRoleEnum.HRRC,
-    label: 'HR Recruiter Coordinators'
+    value: UserRoleEnum.REC,
+    label: 'Recruiter'
   },
   {
     value: UserRoleEnum.HM,
-    label: 'Hiring Managers'
+    label: 'Hiring Manager'
   },
   {
     value: UserRoleEnum.ITV,
-    label: 'Interviewers'
+    label: 'Interviewer'
   },
   {
     value: UserRoleEnum.CDT,
-    label: 'Candidates'
+    label: 'Candidate'
   }
 ]
 

@@ -85,7 +85,7 @@ export const moveTo = (data: CV.MoveToParam) => {
 
 // get interview process template
 export const getInterviewProcessTemplate = (job_position_id: number) => {
-  return http.get<InterviewProcess.ListInfo[]>('api/interview/processTemp/listByJob', {
+  return http.get<InterviewProcess.ListInfo[]>('api/interviewprocess/listByJob', {
     job_position_id
   })
 }

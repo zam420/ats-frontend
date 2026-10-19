@@ -18,7 +18,7 @@ export enum BtnTypeEnum {
   MOVETO_ONLINE_WRITTEN,
   MOVETO_HR,
   MOVETO_PROFESSIONAL,
-  MOVETO_CEO,
+  MOVETO_C_LEVEL,
   MOVETO_OFFER_MANAGEMENT,
   MOVETO_ONBOARD,
   MOVETO_TALENT_POOL,
@@ -89,10 +89,10 @@ export const ButtonSettings: Record<string, CommonEnum.enumItem> = {
     name: $t('candidateStatusEnum.professionalInterview'),
     group: $t('button.moveTo')
   },
-  [BtnTypeEnum.MOVETO_CEO]: {
-    value: BtnTypeEnum.MOVETO_CEO,
-    paramValue: CandidateStatusEnum.CEO,
-    name: $t('candidateStatusEnum.CEOInterview'),
+  [BtnTypeEnum.MOVETO_C_LEVEL]: {
+    value: BtnTypeEnum.MOVETO_C_LEVEL,
+    paramValue: CandidateStatusEnum.C_LEVEL,
+    name: $t('candidateStatusEnum.C_LEVEL_Interview'),
     group: $t('button.moveTo')
   },
   [BtnTypeEnum.MOVETO_OFFER_MANAGEMENT]: {
@@ -269,7 +269,7 @@ export const ButtonLists: Record<string, number[]> = {
     BtnTypeEnum.TALENT_POOL,
     BtnTypeEnum.SEND_TEST
   ],
-  [CandidateStatusEnum.CEO]: [
+  [CandidateStatusEnum.C_LEVEL]: [
     BtnTypeEnum.CONTACT_CANDIDATE,
     BtnTypeEnum.BATCH_NOTES,
     BtnTypeEnum.FORWARD,
@@ -347,7 +347,7 @@ export const ButtonSortMap: any = {
     [BtnTypeEnum.SEND_TEST]: 6,
     [BtnTypeEnum.TALENT_POOL]: 7
   },
-  [CandidateStatusEnum.CEO]: {
+  [CandidateStatusEnum.C_LEVEL]: {
     [BtnTypeEnum.SCHEDULE_INTERVIEW]: 1,
     [BtnTypeEnum.FORWARD]: 2,
     [BtnTypeEnum.MOVETO]: 3,

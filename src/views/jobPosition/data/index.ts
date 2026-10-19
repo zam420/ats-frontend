@@ -160,18 +160,8 @@ export const JOB_POSITION_OTHER_FORM: Form.FormItem[] = [
     prop: 'hr_recruiter',
     type: FormItemTypeEnum.SELECT,
     getOptions: getUserListByRole,
-    initOptionParams: { role: UserRoleEnum.HRR },
+    initOptionParams: { role: UserRoleEnum.REC },
     required: true,
-    md: 8
-  },
-  {
-    label: $t('jobPosition.HRCoordinators'),
-    prop: 'hr_coordinators',
-    type: FormItemTypeEnum.MULTIPLE_SELECT,
-    getOptions: getUserListByRole,
-    multipleLimit: 10,
-    clearable: true,
-    initOptionParams: { role: UserRoleEnum.HRRC },
     md: 8
   },
   {
@@ -335,11 +325,6 @@ export const JOB_POSITION_OTHER_DETAIL: Form.DetailItem[] = [
   {
     label: $t('jobPosition.HRRecruiter'),
     prop: 'hr_recruiter_name',
-    col: 8
-  },
-  {
-    label: $t('jobPosition.HRCoordinators'),
-    prop: 'hr_coordinators',
     col: 8
   },
   {

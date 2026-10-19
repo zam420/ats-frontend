@@ -687,7 +687,7 @@ onMounted(async () => {
     const templateResult = await getInterviewProcessTemplate(jobId)
     const interviewProcessList = templateResult?.result ?? []
     if (interviewProcessList.length > 0) {
-      state.selectInterviewProcess = interviewProcessList?.[0]?.id
+      state.selectInterviewProcess = interviewProcessList?.[0]?.id as unknown as number
       state.interviewProcessList = interviewProcessList.map(data => {
         return { label: data.name, value: data.id }
       })

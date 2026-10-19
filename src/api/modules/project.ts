@@ -8,9 +8,9 @@ import { ResultCreate } from '../interface'
 
 // 获取 Project 的列表
 export const getProjectList = (params?: any) => {
-  return http.get<Project.ProjectInfo[]>('api/recruitment/listProjectSummary', params)
+  return http.get<Project.ProjectInfo[]>('api/project/listSummary', params)
 }
 // 创建 Project
 export const createProject = () => {
-  return http.post<ResultCreate>('api/recruitment/createProject')
+  return http.post<ResultCreate>('api/project/create')
 }

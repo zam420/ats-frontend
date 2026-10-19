@@ -1299,7 +1299,7 @@ export const JOBPOSITION_FILTER_FORM: Form.FormItem[] = [
     type: FormItemTypeEnum.MULTIPLE_SELECT,
     teleported: false,
     getOptions: getUserListByRole,
-    initOptionParams: { role: UserRoleEnum.HRR },
+    initOptionParams: { role: UserRoleEnum.REC },
     clearable: true
   },
   {

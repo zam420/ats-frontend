@@ -155,7 +155,11 @@ import { INTERVIEW_PROCESS_FORM } from '../data'
 import { enumItem2arr, generateUUID, getObjectByForms } from '@/utils'
 import { useLocale } from '@/hooks/useLocale'
 import { ROUTER_SETTINGS_INTERVIEW_PROCESS } from '@/router/routerName'
-import { getInterviewProcessDetail, saveInterviewProcess } from '@/api/modules/interviewProcess'
+import {
+  getInterviewProcessDetail,
+  createInterviewProcess,
+  updateInterviewProcess
+} from '@/api/modules/interviewProcess'
 import InterviewProcess from '@/api/interface/interviewProcess'
 import Sortable from 'sortablejs'
 import { getUserList } from '@/api/modules/common'
@@ -164,7 +168,7 @@ import { InterviewSession } from '@/enums/interviewSessionEnum'
 import { FormItemTypeEnum } from '@/enums/formItemTypeEnum'
 interface ParamsProps {
   title: string // 标题
-  id?: number // 数据ID
+  id?: string // 数据ID
   isEdit: boolean // 是否编辑
 }
 
@@ -209,7 +213,7 @@ const save = async () => {
     const baseForm = getObjectByForms(state.baseForm)
     const formData: InterviewProcess.SaveParam = { ...baseForm }
     if (props.isEdit) {
-      formData.id = props.id as number
+      formData.id = props.id as string
     }
     const rounds: InterviewProcess.RoundParam[] = []
     processList.forEach((data, index) => {
@@ -221,7 +225,8 @@ const save = async () => {
     })
     formData.rounds = [...rounds]
     formData.notes = state.notes
-    saveInterviewProcess(formData).then(res => {
+    const request = props.isEdit ? updateInterviewProcess : createInterviewProcess
+    request(formData).then(res => {
       if (res?.success) {
         ElMessage.success({ message: $t('message.saveSuc') })
         goBack()

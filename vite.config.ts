@@ -39,10 +39,9 @@ export default defineConfig((mode: ConfigEnv): UserConfig => {
       // https: false,
       // 代理跨域
       proxy: {
-        '/ats': {
+        '/api': {
           target: 'http://localhost:8086',
-          changeOrigin: true,
-          rewrite: (path: string) => path.replace(/^\/ats/, '')
+          changeOrigin: true
         }
       }
     },

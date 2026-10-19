@@ -1,9 +1,7 @@
 export enum UserRoleEnum {
   SA = 'sa',
-  HRD = 'hrd',
-  PROA = 'proa',
-  HRR = 'hrr',
-  HRRC = 'hrrc',
+  HRA = 'hra',
+  REC = 'rec',
   HM = 'hm',
   ITV = 'itv',
   CDT = 'cdt'
@@ -14,32 +12,24 @@ export const UserRoleSource: Record<string, CommonEnum.enumItem> = {
     value: UserRoleEnum.SA,
     name: 'System Admin'
   },
-  [UserRoleEnum.HRD]: {
-    value: UserRoleEnum.HRD,
-    name: 'HR Directiors'
+  [UserRoleEnum.HRA]: {
+    value: UserRoleEnum.HRA,
+    name: 'HR Admin'
   },
-  [UserRoleEnum.PROA]: {
-    value: UserRoleEnum.PROA,
-    name: 'Project Admins'
-  },
-  [UserRoleEnum.HRR]: {
-    value: UserRoleEnum.HRR,
-    name: 'HR Recruiters'
-  },
-  [UserRoleEnum.HRRC]: {
-    value: UserRoleEnum.HRRC,
-    name: 'HR Recruiter Coordinators'
+  [UserRoleEnum.REC]: {
+    value: UserRoleEnum.REC,
+    name: 'Recruiter'
   },
   [UserRoleEnum.HM]: {
     value: UserRoleEnum.HM,
-    name: 'Hiring Managers'
+    name: 'Hiring Manager'
   },
   [UserRoleEnum.ITV]: {
     value: UserRoleEnum.ITV,
-    name: 'Interviewers'
+    name: 'Interviewer'
   },
   [UserRoleEnum.CDT]: {
     value: UserRoleEnum.CDT,
-    name: 'Candidates'
+    name: 'Candidate'
   }
 }

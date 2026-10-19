@@ -125,10 +125,10 @@ export enum ScheduleInterviewStatusEnum {
   SCHEDULED_PRO = 51,
   AWAITE_FEEDBACK_PRO = 52,
   RECEIVED_FEEDBACK_PRO = 53,
-  TO_BE_SCHEDULED_CEO = 60,
-  SCHEDULED_CEO = 61,
-  AWAITE_FEEDBACK_CEO = 62,
-  RECEIVED_FEEDBACK_CEO = 63
+  TO_BE_SCHEDULED_C_LEVEL = 60,
+  SCHEDULED_C_LEVEL = 61,
+  AWAITE_FEEDBACK_C_LEVEL = 62,
+  RECEIVED_FEEDBACK_C_LEVEL = 63
 }
 
 export const ScheduleInterviewStatusHr: Record<string, CommonEnum.enumItem> = {
@@ -177,24 +177,24 @@ export const ScheduleInterviewStatusPro: Record<string, CommonEnum.enumItem> = {
   }
 }
 
-export const ScheduleInterviewStatusCeo: Record<string, CommonEnum.enumItem> = {
-  [ScheduleInterviewStatusEnum.TO_BE_SCHEDULED_CEO]: {
-    value: ScheduleInterviewStatusEnum.TO_BE_SCHEDULED_CEO,
+export const ScheduleInterviewStatusCLevel: Record<string, CommonEnum.enumItem> = {
+  [ScheduleInterviewStatusEnum.TO_BE_SCHEDULED_C_LEVEL]: {
+    value: ScheduleInterviewStatusEnum.TO_BE_SCHEDULED_C_LEVEL,
     name: $t('scheduleInterviewStatusEnum.toBeScheduled'),
     status: 'warning'
   },
-  [ScheduleInterviewStatusEnum.SCHEDULED_CEO]: {
-    value: ScheduleInterviewStatusEnum.SCHEDULED_CEO,
+  [ScheduleInterviewStatusEnum.SCHEDULED_C_LEVEL]: {
+    value: ScheduleInterviewStatusEnum.SCHEDULED_C_LEVEL,
     name: $t('scheduleInterviewStatusEnum.scheduled'),
     status: 'success'
   },
-  [ScheduleInterviewStatusEnum.AWAITE_FEEDBACK_CEO]: {
-    value: ScheduleInterviewStatusEnum.AWAITE_FEEDBACK_CEO,
+  [ScheduleInterviewStatusEnum.AWAITE_FEEDBACK_C_LEVEL]: {
+    value: ScheduleInterviewStatusEnum.AWAITE_FEEDBACK_C_LEVEL,
     name: $t('scheduleInterviewStatusEnum.awaitingFeedback'),
     status: 'primary'
   },
-  [ScheduleInterviewStatusEnum.RECEIVED_FEEDBACK_CEO]: {
-    value: ScheduleInterviewStatusEnum.RECEIVED_FEEDBACK_CEO,
+  [ScheduleInterviewStatusEnum.RECEIVED_FEEDBACK_C_LEVEL]: {
+    value: ScheduleInterviewStatusEnum.RECEIVED_FEEDBACK_C_LEVEL,
     name: $t('scheduleInterviewStatusEnum.receivedFeedback'),
     status: 'primary'
   }

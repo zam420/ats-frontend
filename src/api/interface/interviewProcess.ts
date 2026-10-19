@@ -1,6 +1,6 @@
 declare namespace InterviewProcess {
   interface ListInfo {
-    id: number
+    id: string
     name: string
     work_location?: number | string
     work_location_name: string
@@ -36,7 +36,7 @@ declare namespace InterviewProcess {
   }
 
   interface ShareParam {
-    ipt_id: number
+    ipt_id: string
     share_to: number[]
   }
 
@@ -48,7 +48,7 @@ declare namespace InterviewProcess {
   }
 
   interface SaveParam {
-    id?: number
+    id?: string
     name?: string
     work_location?: number
     notes?: string

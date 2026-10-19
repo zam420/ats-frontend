@@ -80,7 +80,7 @@ const initData = (list: CV.ApplicationProgress[] = []) => {
         pro.node_type === ApplicationNoteTypeEnum.VIDEO ||
         pro.node_type === ApplicationNoteTypeEnum.HR ||
         pro.node_type === ApplicationNoteTypeEnum.PROFESSIONAL ||
-        pro.node_type === ApplicationNoteTypeEnum.CEO
+        pro.node_type === ApplicationNoteTypeEnum.C_LEVEL
       ) {
         const timeFrom = new Date(pro?.time_from!)?.getTime()
         const now = new Date()?.getTime()

@@ -9,7 +9,7 @@ import { ResultCreate } from '../interface'
 // 获取 Admin Recruitment Project 的列表
 export const getAdminRecruitmentProjectList = () => {
   return http.get<AdminRecruitmentProject.AdminRecruitmentProjectInfo[]>(
-    'api/recruitment/listProject'
+    'api/project/list'
   )
 }
 
@@ -17,12 +17,12 @@ export const getAdminRecruitmentProjectList = () => {
 export const createAdminRecruitmentProject = (
   data: AdminRecruitmentProject.AdminRecruitmentProjectInfo
 ) => {
-  return http.post<ResultCreate>('api/recruitment/saveProject', data)
+  return http.post<ResultCreate>('api/project/save', data)
 }
 
 export const getInterviewProcessTemplates = (data: { work_location: number[] | number }) => {
   return http.get<AdminRecruitmentProject.InterviewProcessTemplates[]>(
-    '/api/interview/processTemp/listBy',
+    '/api/interviewprocess/listBy',
     data
   )
 }
@@ -36,5 +36,5 @@ export const getJobPositionDetail = () => {
 
 // 更新行状态为 inactive
 export const changeRowStatusToInactive = (data: AdminRecruitmentProject.ProjectInactive) => {
-  return http.post<Record<string, any>[]>('api/recruitment/inactiveProject', data)
+  return http.post<Record<string, any>[]>('api/project/deactivate', data)
 }

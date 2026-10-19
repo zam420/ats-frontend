@@ -9,7 +9,7 @@ export enum CandidateStatusEnum {
   ONLINE_WRITTEN,
   HR,
   PROFESSIONAL,
-  CEO,
+  C_LEVEL,
   OFFER_MANAGEMENT,
   ONBOARD,
   TALENT_POOL = -1,
@@ -51,9 +51,9 @@ export const CandidateStatus: Record<string, CommonEnum.enumItem> = {
     name: $t('candidateStatusEnum.professionalInterview'),
     status: 'primary'
   },
-  [CandidateStatusEnum.CEO]: {
-    value: CandidateStatusEnum.CEO,
-    name: $t('candidateStatusEnum.CEOInterview'),
+  [CandidateStatusEnum.C_LEVEL]: {
+    value: CandidateStatusEnum.C_LEVEL,
+    name: $t('candidateStatusEnum.C_LEVEL_Interview'),
     status: 'primary'
   },
   [CandidateStatusEnum.OFFER_MANAGEMENT]: {

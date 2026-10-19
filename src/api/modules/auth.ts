@@ -46,10 +46,10 @@ const request = async (url: string, data: object): Promise<LoginRes> => {
     throw new Error(extractMessage(e?.response?.data) || e?.message || 'Request failed')
   }
 }
-export const loginApi = (data: LoginReq) => request('/auth/login', data)
+export const loginApi = (data: LoginReq) => request('/api/auth/login', data)
 
 export const registerApi = (data: RegisterReq) =>
-  request('/auth/register', {
+  request('/api/auth/register', {
     user_name: data.userName,
     email: data.email,
     password: data.password,
@@ -72,19 +72,19 @@ const postNoResult = async (url: string, data: object): Promise<void> => {
   }
 }
 
-export const forgotPasswordApi = (email: string) => postNoResult('/auth/forgotPassword', { email })
+export const forgotPasswordApi = (email: string) => postNoResult('/api/auth/forgotPassword', { email })
 
 export const resetPasswordApi = (data: ResetPasswordReq) =>
-  postNoResult('/auth/resetPassword', {
+  postNoResult('/api/auth/resetPassword', {
     email: data.email,
     reset_code: data.resetCode,
     new_password: data.newPassword
   })
 
-export const refreshApi = (refreshToken: string) => request('/auth/refresh', { refresh_token: refreshToken })
+export const refreshApi = (refreshToken: string) => request('/api/auth/refresh', { refresh_token: refreshToken })
 
 export const activateApi = (email: string, activationCode: string) =>
-  postNoResult('/auth/activate', { email, activation_code: activationCode })
+  postNoResult('/api/auth/activate', { email, activation_code: activationCode })
 
 export const logoutApi = (refreshToken: string) =>
-  authHttp.post('/auth/logout', { refresh_token: refreshToken }).catch(() => undefined)
+  authHttp.post('/api/auth/logout', { refresh_token: refreshToken }).catch(() => undefined)
