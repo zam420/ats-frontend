@@ -33,12 +33,12 @@
                 <div class="subTitle">{{ $t('emailTemplate.interviewer') }}:</div>
                 <el-tooltip class="box-item" effect="dark" placement="top-start">
                   <template #content>
-                    <div v-for="user in item.interviewers" :key="user.id">
+                    <div v-for="user in interviewerUsers(item.interviewers)" :key="user.id">
                       {{ `${user.name} (${user.email})` }}
                     </div>
                   </template>
                   <div>
-                    <div v-for="user in item?.interviewers?.slice(0, 2)" :key="user.id">
+                    <div v-for="user in interviewerUsers(item.interviewers).slice(0, 2)" :key="user.id">
                       {{ `${user.name} (${user.email})` }}
                     </div>
                     <div v-if="item?.interviewers?.length > 2">...</div>
@@ -100,6 +100,23 @@ const state = reactive<InterviewProcess.DetailInfo>({
 const share_to_ids = ref<number[]>([])
 const infoForm = ref<Form.FormItem[]>(cloneDeep(INTERVIEW_PROCESS_DETAIL))
 const espDialogFormRef = ref()
+const userMap = ref<Record<string, { id: string | number; name: string; email: string }>>({})
+
+// Backend returns interviewer ids; resolve them to name/email via the user list
+const interviewerUsers = (list: InterviewProcess.InterviewRound['interviewers'] = []) =>
+  list.map(u => {
+    if (typeof u === 'object') return u
+    return userMap.value[String(u)] ?? { id: u, name: String(u), email: '' }
+  })
+
+const loadUsers = async () => {
+  const res = await getUserList(ShareTypeEnum.INTERVIEWER)
+  const map: typeof userMap.value = {}
+  res?.result?.forEach(user => {
+    map[String(user.id)] = user
+  })
+  userMap.value = map
+}
 const initData = () => {
   if (route.params?.id) {
     getInterviewProcessDetail(route.params?.id as string).then(res => {
@@ -212,6 +229,7 @@ const messageConfirm = () => {
     })
 }
 onMounted(() => {
+  loadUsers()
   initData()
 })
 </script>

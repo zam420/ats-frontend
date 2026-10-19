@@ -268,7 +268,8 @@ const initData = () => {
       const processList: InterviewProcess.RoundParam[] = []
       result?.rounds?.forEach(data => {
         const interviewers = data?.interviewers?.map(item => {
-          return item.id
+          // Backend returns plain user ids; legacy responses returned objects
+          return typeof item === 'object' ? item.id : item
         })
         processList.push({
           id: data.id,

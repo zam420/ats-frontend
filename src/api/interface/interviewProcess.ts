@@ -20,7 +20,7 @@ declare namespace InterviewProcess {
     ipt_id: number
     round_type: number
     round_type_name: string
-    interviewers: Interviews[]
+    interviewers: (Interviews | number)[]
     order: number
   }
 

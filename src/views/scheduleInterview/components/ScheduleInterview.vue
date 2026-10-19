@@ -158,6 +158,8 @@ import {
 import { useLocale } from '@/hooks/useLocale'
 import { ROUTER_CV_MANAGEMENT } from '@/router/routerName'
 import { getInterviewProcessDetail } from '@/api/modules/interviewProcess'
+import { getUserList } from '@/api/modules/common'
+import { ShareTypeEnum } from '@/enums/shareTypeEnum'
 import InterviewProcess from '@/api/interface/interviewProcess'
 import { InterviewSession, InterviewSessionEnum } from '@/enums/interviewSessionEnum'
 import { getInterviewProcessTemplate } from '@/api/modules/cv'
@@ -757,6 +759,12 @@ const getInterviewProcessRounds = async () => {
     const interviewResult = await getInterviewProcessDetail(state.selectInterviewProcess)
     const sessionStepLists = interviewResult?.result?.rounds ?? []
     if (sessionStepLists.length > 0) {
+      // Backend returns interviewer ids; resolve them to emails via the user list
+      const userRes = await getUserList(ShareTypeEnum.INTERVIEWER)
+      const emailById: Record<string, string> = {}
+      userRes?.result?.forEach(user => {
+        emailById[String(user.id)] = user.email
+      })
       const sessionStepList: Form.FormSelect[] = []
       sessionStepLists.forEach(data => {
         sessionStepList.push({
@@ -764,7 +772,9 @@ const getInterviewProcessRounds = async () => {
           label: InterviewSession?.[data.round_type]?.name,
           subLabel: InterviewSession?.[data.round_type]?.subLabel,
           value: data.round_type,
-          interviewers: data?.interviewers?.map(info => info.email),
+          interviewers: data?.interviewers?.map(info =>
+            typeof info === 'object' ? info.email : emailById[String(info)]
+          ),
           status: ScheduleViewStatusEnum.DRAFT
         })
       })
