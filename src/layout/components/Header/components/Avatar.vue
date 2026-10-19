@@ -1,13 +1,12 @@
 <template>
   <ElPopover
       popper-class="message-popper"
-      placement="right"
-      trigger="click"
+      placement="bottom-start"
+      trigger="hover"
     >
     <template #reference>
       <div class="avatar">
         <img src="@/assets/imgs/user2.png" alt="avatar" />
-        <span class="text" v-if="!globalStore.isCollapse">{{ globalStore?.userInfo?.name ?? 'Admin' }}</span>
       </div>
     </template>
     <div @click="logout" class="sign">{{ $t('header.signOut') }}</div>

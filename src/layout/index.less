@@ -27,6 +27,11 @@
       }
     }
     &.aside-collapse-wrap {
+      .top-actions {
+        justify-content: center;
+        gap: 6px;
+        padding: 0 4px;
+      }
       .aside-wrap {
         .el-scrollbar__bar {
           &.is-horizontal {
@@ -105,12 +110,13 @@
         margin-top: 1rem;
         .logo-img {
           display: block;
-          height: calc(var(--esp-header-height) / 3.2);
+          height: calc(var(--esp-header-height) / 1.8);
           width: auto;
           object-fit: contain;
           margin-left: .5em;
           &.logo-small-img {
             margin-left: 0;
+            height: calc(var(--esp-header-height) / 3);
           }
         }
       }
@@ -131,6 +137,15 @@
       }
     }
   }
+}
+.top-actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 0 24px;
+  margin: 0.8rem 0 0.2rem;
 }
 .collapse-icon-wrap {
   .fja(flex-start);

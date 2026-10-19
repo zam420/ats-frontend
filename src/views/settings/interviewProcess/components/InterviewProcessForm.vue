@@ -47,7 +47,7 @@
                           active: state.isDragOver && state.dragIndex === index
                         }"
                       >
-                        <div class="step">
+                        <div class="stepAdded">
                           <div class="left-border"></div>
                           <div class="step-content">
                             <div class="step-title">

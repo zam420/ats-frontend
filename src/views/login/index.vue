@@ -1,63 +1,111 @@
-<template>
-  <div class="auth-page">
-    <el-card class="auth-card" shadow="always">
-      <h2 class="title">{{ $t('auth.loginTitle') }}</h2>
-      <el-form ref="formRef" :model="form" :rules="rules" label-position="top" @keyup.enter="submit">
-        <el-form-item :label="$t('auth.email')" prop="email">
-          <el-input v-model="form.email" autocomplete="username" />
-        </el-form-item>
-        <el-form-item :label="$t('auth.password')" prop="password">
-          <el-input
-            v-model="form.password"
-            type="password"
-            show-password
-            autocomplete="current-password"
+﻿<template>
+  <AuthShell :title="$t('auth.loginWelcome')" :subtitle="$t('auth.loginSubtitle')">
+      <form @submit.prevent="submit">
+
+        <label class="rp-field">
+          <span class="rp-field__label">{{ $t('auth.email') }}</span>
+          <input
+            v-model="form.email"
+            type="email"
+            autocomplete="username"
+            :placeholder="$t('auth.emailPlaceholder')"
           />
-        </el-form-item>
-        <div class="forgot">
-          <router-link :to="`/${ROUTER_FORGOT_PASSWORD}`">{{ $t('auth.forgotPassword') }}</router-link>
+        </label>
+
+        <label class="rp-field">
+          <span class="rp-field__label">{{ $t('auth.password') }}</span>
+          <span class="rp-field__password">
+            <input
+              v-model="form.password"
+              :type="showPassword ? 'text' : 'password'"
+              autocomplete="current-password"
+              :placeholder="$t('auth.passwordPlaceholder')"
+            />
+            <button type="button" class="rp-field__eye" tabindex="-1" @click="showPassword = !showPassword">
+              <svg viewBox="0 0 20 20" width="20" height="20" fill="none" aria-hidden="true">
+                <template v-if="showPassword">
+                  <path
+                    d="M1.7 10s2.9-5.8 8.3-5.8S18.3 10 18.3 10s-2.9 5.8-8.3 5.8S1.7 10 1.7 10Z"
+                    stroke="currentColor"
+                    stroke-width="1.4"
+                    stroke-linejoin="round"
+                  />
+                  <circle cx="10" cy="10" r="2.5" stroke="currentColor" stroke-width="1.4" />
+                </template>
+                <path
+                  v-else
+                  d="M2 8.5c1.6 2.6 4.6 4 8 4s6.4-1.4 8-4M5 12l-1.5 2M8.5 13.2 8 15.5M11.5 13.2l.5 2.3M15 12l1.5 2"
+                  stroke="currentColor"
+                  stroke-width="1.4"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </button>
+          </span>
+        </label>
+
+        <div class="rp-login__row">
+          <label class="rp-check">
+            <input v-model="remember" type="checkbox" />
+            <span class="rp-check__box">
+              <svg viewBox="0 0 12 12" width="12" height="12" fill="none" aria-hidden="true">
+                <path d="m2.5 6.2 2.3 2.3 4.7-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </span>
+            {{ $t('auth.rememberMe') }}
+          </label>
+          <router-link class="rp-link" :to="`/${ROUTER_FORGOT_PASSWORD}`">
+            {{ $t('auth.forgotPasswordLink') }}
+          </router-link>
         </div>
-        <el-button type="primary" class="full" :loading="loading" @click="submit">
-          {{ $t('auth.login') }}
-        </el-button>
-      </el-form>
-      <el-divider>{{ $t('auth.or') }}</el-divider>
-      <!-- Google login is not implemented yet -->
-      <el-button class="full" @click="onGoogleLogin">{{ $t('auth.googleLogin') }}</el-button>
-      <div class="link">
-        {{ $t('auth.noAccount') }}
-        <router-link :to="`/${ROUTER_REGISTER}`">{{ $t('auth.register') }}</router-link>
-      </div>
-    </el-card>
-  </div>
+
+        <button type="submit" class="rp-btn" :disabled="!canSubmit || loading">
+          {{ $t('auth.loginButton') }}
+        </button>
+
+        <div class="rp-login__or"><span>{{ $t('auth.or').toUpperCase() }}</span></div>
+
+        <div class="rp-login__signup">
+          {{ $t('auth.noAccount') }}
+          <router-link class="rp-link" :to="`/${ROUTER_REGISTER}`">{{ $t('auth.signUpNow') }}</router-link>
+        </div>
+      </form>
+  </AuthShell>
 </template>
 
 <script setup lang="ts" name="login">
 import { useRouter, useRoute } from 'vue-router'
-import { ElMessage, FormInstance, FormRules } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { loginApi } from '@/api/modules/auth'
 import { useGlobalStore } from '@/store/modules/global'
 import { ROUTER_FORGOT_PASSWORD, ROUTER_REGISTER } from '@/router/routerName'
+import AuthShell from '@/views/auth-shell/index.vue'
 
+const REMEMBER_KEY = 'rememberedEmail'
 const { t } = useI18n()
 const router = useRouter()
 const route = useRoute()
 const globalStore = useGlobalStore()
 
-const formRef = ref<FormInstance>()
 const loading = ref(false)
-const form = reactive({ email: '', password: '' })
-const rules = computed<FormRules>(() => ({
-  email: [{ required: true, message: t('auth.emailRequired'), trigger: 'blur' }],
-  password: [{ required: true, message: t('auth.passwordRequired'), trigger: 'blur' }]
-}))
+const showPassword = ref(false)
+const rememberedEmail = localStorage.getItem(REMEMBER_KEY) ?? ''
+const remember = ref(!!rememberedEmail)
+const form = reactive({ email: rememberedEmail, password: '' })
+const canSubmit = computed(() => !!form.email.trim() && !!form.password)
 
 const submit = async () => {
-  if (!(await formRef.value?.validate().catch(() => false))) return
+  if (!canSubmit.value || loading.value) return
   loading.value = true
   try {
-    const res = await loginApi({ email: form.email.trim(), password: form.password })
+    const email = form.email.trim()
+    const res = await loginApi({ email, password: form.password })
+    if (remember.value) {
+      localStorage.setItem(REMEMBER_KEY, email)
+    } else {
+      localStorage.removeItem(REMEMBER_KEY)
+    }
     await globalStore.login(res)
     router.replace((route.query.redirect as string) || '/')
   } catch (e: any) {
@@ -66,36 +114,4 @@ const submit = async () => {
     loading.value = false
   }
 }
-
-const onGoogleLogin = () => {
-  ElMessage.info(t('auth.googleNotAvailable'))
-}
 </script>
-
-<style scoped lang="less">
-.auth-page {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f5f7fa;
-}
-.auth-card {
-  width: 400px;
-  .title {
-    text-align: center;
-    margin-bottom: 1.5rem;
-  }
-  .full {
-    width: 100%;
-  }
-  .link {
-    margin-top: 1rem;
-    text-align: center;
-  }
-  .forgot {
-    text-align: right;
-    margin: -0.5rem 0 1rem;
-  }
-}
-</style>

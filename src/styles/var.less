@@ -1,104 +1,106 @@
 
+// Remote People brand: Inter for body text (via @fontsource-variable/inter), Platform for headings
 @font-face {
-  font-family: "Maison Neue Bold";
-  src: url('./fonts/MaisonNeue-Bold.woff') format('woff'),
-       url('./fonts/MaisonNeue-Bold.ttf') format('truetype'),
-       url('./fonts/MaisonNeue-Bold.otf') format('opentype');
-  font-weight: bold;
+  font-family: "Platform";
+  src: url('../assets/fonts/Platform-Regular.woff2') format('woff2');
+  font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "Maison Neue Light";
-  src: url('./fonts/MaisonNeue-Light.woff') format('woff'),
-       url('./fonts/MaisonNeue-Light.ttf') format('truetype'),
-       url('./fonts/MaisonNeue-Light.otf') format('opentype');
-  font-weight: 300;
+  font-family: "Platform";
+  src: url('../assets/fonts/Platform-Medium.woff2') format('woff2');
+  font-weight: 500;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "Maison Neue Regular";
-  src: url('./fonts/MaisonNeue-Book.woff') format('woff'),
-       url('./fonts/MaisonNeue-Book.ttf') format('truetype'),
-       url('./fonts/MaisonNeue-Book.otf') format('opentype');
-  font-weight: normal;
+  font-family: "Platform";
+  src: url('../assets/fonts/Platform-Bold.woff2') format('woff2');
+  font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
 
 :root {
-  --color-black1: #333333;
-  --color-black2: #191a20;
-  --color-black3: #141414;
-  --color-black4: #282a35;
-  --color-black5: #292b35;
-  --color-gray: #333333;
-  --color-gray1: #62636c;
-  --color-gray2: #90949e;
-  --color-gray3: #babfc9;
-  --color-gray4: #f5f7fa;
-  --color-gray5: #f2f2f2;
-  --color-gray6: #f6f9fd;
+  --color-black1: #1f1f1f;
+  --color-black2: #1f1f1f;
+  --color-black3: #12332b;
+  --color-black4: #12332b;
+  --color-black5: #12332b;
+  --color-gray: #1f1f1f;
+  --color-gray1: #3d3d37;
+  --color-gray2: #6e6e66;
+  --color-gray3: #a8a89e;
+  --color-gray4: #f2f2ed;
+  --color-gray5: #d8d8d1;
+  --color-gray6: #fafaf8;
 
-  --male-color: #669afb;
-  --female-color: #ffa3a3;
-  --shadow-color: #E9E9E9;
+  --male-color: #70d4c9;
+  --female-color: #fc9e62;
+  --shadow-color: #d8d8d1;
+
+  // Remote People brand colors
+  --rp-dark-green: #12332b;
+  --rp-green: #2f5d4b;
+  --rp-lime: #a3e059;
+  --rp-surface-muted: #f2f2ed;
+  --rp-border: #d8d8d1;
 
   // 默认的主题色
-  --el-color-primary: #6672FB;
-  --el-color-primary-dark-2: #2e326c;
-  --el-color-primary-light-1: #7580fb;
-  --el-color-primary-light-2: #8A94FE;
-  --el-color-primary-light-3: #949cfc;
-  --el-color-primary-light-4: #a3aafd;
-  --el-color-primary-light-5: #b3b9fd;
-  --el-color-primary-light-6: #c2c7fd;
-  --el-color-primary-light-7: #d1d5fe;
-  --el-color-primary-light-8: #e0e2fe;
-  --el-color-primary-light-9: #f0f1ff;
-  --el-color-primary-light-10: #eff3fb;
-  --el-color-primary-light-11: #595cdd;
-  --el-color-primary-light-12: #F7F7FA;
-  --color-gray7: #9FABFD;
+  --el-color-primary: #2f5d4b;
+  --el-color-primary-dark-2: #12332b;
+  --el-color-primary-light-1: #446d5d;
+  --el-color-primary-light-2: #597d6f;
+  --el-color-primary-light-3: #6d8e81;
+  --el-color-primary-light-4: #829e93;
+  --el-color-primary-light-5: #97aea5;
+  --el-color-primary-light-6: #acbeb7;
+  --el-color-primary-light-7: #c1cec9;
+  --el-color-primary-light-8: #d6e5e0;
+  --el-color-primary-light-9: #e8f9cc;
+  --el-color-primary-light-10: #f2f2ed;
+  --el-color-primary-light-11: #12332b;
+  --el-color-primary-light-12: #fafaf8;
+  --color-gray7: #a7c8bd;
 
   // Success
-  --el-color-success: #61c65f;
-  --el-color-success-light-1: #71cc6f;
-  --el-color-success-light-2: #83BD68;
-  --el-color-success-light-3: #9FD686;
-  --el-color-success-light-4: #a0dd9f;
-  --el-color-success-light-5: #b0e3af;
-  --el-color-success-light-6: #c0e8bf;
-  --el-color-success-light-7: #d0eecf;
-  --el-color-success-light-8: #dff4df;
-  --el-color-success-light-9: #eff9ef;
+  --el-color-success: #6aad1e;
+  --el-color-success-light-1: #7db83a;
+  --el-color-success-light-2: #8fc255;
+  --el-color-success-light-3: #a3e059;
+  --el-color-success-light-4: #addf5e;
+  --el-color-success-light-5: #bde872;
+  --el-color-success-light-6: #d4f29e;
+  --el-color-success-light-7: #deF5b6;
+  --el-color-success-light-8: #e8f9cc;
+  --el-color-success-light-9: #f7fdf0;
 
   // Danger
-  --el-color-danger: #f56c6c;
-  --el-color-danger-light-1: #E7352C;
-  --el-color-danger-light-2: #ff754b;
-  --el-color-danger-light-3: #ee726b;
-  --el-color-danger-light-4: #f18680;
-  --el-color-danger-light-5: #f39a96;
-  --el-color-danger-light-6: #f5aeab;
-  --el-color-danger-light-7: #f8c2c0;
-  --el-color-danger-light-8: #fad7d5;
-  --el-color-danger-light-9: #fdebea;
+  --el-color-danger: #ff7666;
+  --el-color-danger-light-1: #b53d31;
+  --el-color-danger-light-2: #ff8276;
+  --el-color-danger-light-3: #ff9488;
+  --el-color-danger-light-4: #ffa79c;
+  --el-color-danger-light-5: #ffbcb3;
+  --el-color-danger-light-6: #ffcbc3;
+  --el-color-danger-light-7: #ffd7d1;
+  --el-color-danger-light-8: #ffe0da;
+  --el-color-danger-light-9: #fff3f1;
 
   // Waring
-  --el-color-warning: #F8B849;
-  --el-color-warning-light-1: #f9bf5b;
-  --el-color-warning-light-2: #ffd182;
-  --el-color-warning-light-3: #facd80;
-  --el-color-warning-light-4: #fbd492;
-  --el-color-warning-light-5: #fcdca4;
-  --el-color-warning-light-6: #fce3b6;
-  --el-color-warning-light-7: #fdeac8;
-  --el-color-warning-light-8: #fef1db;
-  --el-color-warning-light-9: #fef8ed;
+  --el-color-warning: #fc8d4a;
+  --el-color-warning-light-1: #fc9e62;
+  --el-color-warning-light-2: #fcb588;
+  --el-color-warning-light-3: #fcb588;
+  --el-color-warning-light-4: #fdc39d;
+  --el-color-warning-light-5: #fdd0b3;
+  --el-color-warning-light-6: #fedcc7;
+  --el-color-warning-light-7: #fee9dc;
+  --el-color-warning-light-8: #fee9dc;
+  --el-color-warning-light-9: #fff6f1;
 
   //菜单颜色
   --el-logo-text-color: var(--color-gray1);
@@ -126,11 +128,13 @@
   --el-font-size-base: 14px;
   --el-font-size-small: 12px;
   --el-font-size-extra-small: 12px;
-  --font-family-bold: HelveticaNeueBold, HelveticaNeue-Bold, "Helvetica Neue Bold", HelveticaNeue, "Helvetica Neue", Helvetica, Arial, PingFangSC-Medium, "PingFang SC Medium", 黑体, sans-serif;
-  --font-family-regular: HelveticaNeueRegular, HelveticaNeue-Regular, "Helvetica Neue Regular", HelveticaNeue, "Helvetica Neue", Helvetica, Arial, PingFangSC-Regular, "PingFang SC Regular", 黑体, sans-serif;
-  --font-family-medium: HelveticaNeueMedium, HelveticaNeue-Medium, "Helvetica Neue Medium", HelveticaNeue, "Helvetica Neue", Helvetica, Arial, PingFangSC-Regular, "PingFang SC Regular", 黑体, sans-serif;
-  --font-family-light: "Helvetica Neue", HelveticaNeue, Helvetica, Arial, "PingFangSC-Light", "PingFang SC Light", "黑体", sans-serif;
-  --font-family-maison: "Maison Neue Regular";
+  --font-family-body: "Inter Variable", Inter, system-ui, PingFangSC-Regular, "PingFang SC", sans-serif;
+  --font-family-heading: Platform, "Inter Variable", Inter, system-ui, sans-serif;
+  --font-family-bold: Platform, "Inter Variable", Inter, system-ui, PingFangSC-Medium, sans-serif;
+  --font-family-regular: var(--font-family-body);
+  --font-family-medium: var(--font-family-body);
+  --font-family-light: var(--font-family-body);
+  --font-family-maison: var(--font-family-body);
 
   // 圆角和边框
   --el-border-color-hover: var(--el-color-primary-light-8) !important;

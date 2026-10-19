@@ -72,8 +72,13 @@ const handleClickMenu = (subItem: Menu.MenuOptions) => {
       margin-right: 1.1em;
       width: 1.85em;
       height: auto;
+      &.menu-icon-grey {
+        filter: grayscale(1) brightness(0.45);
+        opacity: 0.8;
+      }
       &.menu-icon-active {
         display: none;
+        filter: hue-rotate(-95deg) saturate(0.7) brightness(0.75);
       }
     }
     .el-menu-item,

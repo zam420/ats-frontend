@@ -1,71 +1,78 @@
-﻿<template>
-  <div class="auth-page">
-    <el-card class="auth-card" shadow="always">
-      <h2 class="title">{{ $t('auth.registerTitle') }}</h2>
-      <el-form ref="formRef" :model="form" :rules="rules" label-position="top" @keyup.enter="submit">
-        <el-form-item :label="$t('auth.email')" prop="email">
-          <el-input v-model="form.email" autocomplete="username" />
-        </el-form-item>
-        <el-form-item :label="$t('auth.password')" prop="password">
-          <el-input v-model="form.password" type="password" show-password autocomplete="new-password" />
-        </el-form-item>
-        <el-form-item :label="$t('auth.confirmPassword')" prop="confirmPassword">
-          <el-input
-            v-model="form.confirmPassword"
-            type="password"
-            show-password
-            autocomplete="new-password"
-          />
-        </el-form-item>
-        <el-button type="primary" class="full" :loading="loading" @click="submit">
-          {{ $t('auth.register') }}
-        </el-button>
-      </el-form>
-      <div class="link">
+<template>
+  <AuthShell :title="$t('auth.registerTitle')">
+    <form novalidate @submit.prevent="submit">
+      <label class="rp-field" :class="{ 'is-invalid': errors.email }">
+        <span class="rp-field__label">{{ $t('auth.email') }}</span>
+        <input
+          v-model="form.email"
+          type="email"
+          autocomplete="username"
+          :placeholder="$t('auth.emailPlaceholder')"
+        />
+        <span v-if="errors.email" class="rp-field__error">{{ errors.email }}</span>
+      </label>
+      <label class="rp-field" :class="{ 'is-invalid': errors.password }">
+        <span class="rp-field__label">{{ $t('auth.password') }}</span>
+        <input
+          v-model="form.password"
+          type="password"
+          autocomplete="new-password"
+          :placeholder="$t('auth.passwordPlaceholder')"
+        />
+        <span v-if="errors.password" class="rp-field__error">{{ errors.password }}</span>
+      </label>
+      <label class="rp-field" :class="{ 'is-invalid': errors.confirmPassword }">
+        <span class="rp-field__label">{{ $t('auth.confirmPassword') }}</span>
+        <input v-model="form.confirmPassword" type="password" autocomplete="new-password" />
+        <span v-if="errors.confirmPassword" class="rp-field__error">{{ errors.confirmPassword }}</span>
+      </label>
+      <button type="submit" class="rp-btn" :disabled="loading">{{ $t('auth.register') }}</button>
+      <div class="rp-center">
         {{ $t('auth.haveAccount') }}
-        <router-link to="/login">{{ $t('auth.login') }}</router-link>
+        <router-link class="rp-link" to="/login">{{ $t('auth.login') }}</router-link>
       </div>
-    </el-card>
-  </div>
+    </form>
+  </AuthShell>
 </template>
 
 <script setup lang="ts" name="register">
 import { useRouter } from 'vue-router'
-import { ElMessage, FormInstance, FormRules } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { registerApi } from '@/api/modules/auth'
 import { useGlobalStore } from '@/store/modules/global'
+import AuthShell from '@/views/auth-shell/index.vue'
 
 const { t } = useI18n()
 const router = useRouter()
 const globalStore = useGlobalStore()
 
-const formRef = ref<FormInstance>()
 const loading = ref(false)
 const form = reactive({
   email: '',
   password: '',
   confirmPassword: ''
 })
+const errors = reactive({ email: '', password: '', confirmPassword: '' })
 
-const rules = computed<FormRules>(() => ({
-  email: [
-    { required: true, message: t('auth.emailRequired'), trigger: 'blur' },
-    { type: 'email', message: t('auth.emailInvalid'), trigger: 'blur' }
-  ],
-  password: [{ required: true, message: t('auth.passwordRequired'), trigger: 'blur' }],
-  confirmPassword: [
-    { required: true, message: t('auth.passwordRequired'), trigger: 'blur' },
-    {
-      validator: (_rule: any, value: string, callback: (e?: Error) => void) =>
-        value === form.password ? callback() : callback(new Error(t('auth.passwordMismatch'))),
-      trigger: 'blur'
-    }
-  ]
-}))
+const validate = () => {
+  const email = form.email.trim()
+  errors.email = !email
+    ? t('auth.emailRequired')
+    : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+      ? t('auth.emailInvalid')
+      : ''
+  errors.password = form.password ? '' : t('auth.passwordRequired')
+  errors.confirmPassword = !form.confirmPassword
+    ? t('auth.passwordRequired')
+    : form.confirmPassword !== form.password
+      ? t('auth.passwordMismatch')
+      : ''
+  return !errors.email && !errors.password && !errors.confirmPassword
+}
 
 const submit = async () => {
-  if (!(await formRef.value?.validate().catch(() => false))) return
+  if (!validate()) return
   loading.value = true
   try {
     const email = form.email.trim()
@@ -84,27 +91,3 @@ const submit = async () => {
   }
 }
 </script>
-
-<style scoped lang="less">
-.auth-page {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f5f7fa;
-}
-.auth-card {
-  width: 420px;
-  .title {
-    text-align: center;
-    margin-bottom: 1.5rem;
-  }
-  .full {
-    width: 100%;
-  }
-  .link {
-    margin-top: 1rem;
-    text-align: center;
-  }
-}
-</style>

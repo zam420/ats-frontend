@@ -11,7 +11,6 @@ const router = useRouter()
 const id = ref<string>()
 onMounted(() => {
   const paramId = route.params?.id
-  console.log("zamzamzamzamazmaz", paramId)
   if (paramId) {
     id.value = paramId as string
   } else {

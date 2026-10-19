@@ -2,7 +2,7 @@
   <div class="message">
     <ElPopover
       popper-class="message-popper"
-      placement="right"
+      placement="bottom-start"
       :width="POPOVER_DEFAULT_WIDTH"
       trigger="click"
     >
@@ -11,7 +11,6 @@
           <ElBadge is-dot class="item" :class="messageList.length === 0 ? 'hidden' : ''">
             <img class="notification" src="@/assets/svgs/menu-notification.svg" />
           </ElBadge>
-          <span class="text" v-if="!globalStore.isCollapse">{{ $t('opt.message') }}</span>
         </div>
       </template>
       <ElTabs v-model="activeName">
@@ -146,9 +145,10 @@ const refreshNotification = async () => {
 <style lang="less" scoped>
 .notification {
   display: block;
-  width: 2em;
+  width: 1.7em;
   height: auto;
   cursor: pointer;
+  filter: grayscale(1) brightness(0.45);
   font-family: var(--font-family-regular);
 }
 .message {

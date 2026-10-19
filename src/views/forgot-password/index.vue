@@ -1,74 +1,65 @@
 <template>
-  <div class="auth-page">
-    <el-card class="auth-card" shadow="always">
-      <h2 class="title">{{ $t('auth.forgotPasswordTitle') }}</h2>
+  <AuthShell :title="$t('auth.forgotPasswordTitle')">
+    <!-- Step 1: request a reset code -->
+    <form v-if="step === 1" novalidate @submit.prevent="requestCode">
+      <p class="rp-hint">{{ $t('auth.forgotPasswordHint') }}</p>
+      <label class="rp-field" :class="{ 'is-invalid': errors.email }">
+        <span class="rp-field__label">{{ $t('auth.email') }}</span>
+        <input
+          v-model="form.email"
+          type="email"
+          autocomplete="username"
+          :placeholder="$t('auth.emailPlaceholder')"
+        />
+        <span v-if="errors.email" class="rp-field__error">{{ errors.email }}</span>
+      </label>
+      <button type="submit" class="rp-btn" :disabled="loading">{{ $t('auth.sendResetCode') }}</button>
+    </form>
 
-      <!-- Step 1: request a reset code -->
-      <el-form
-        v-if="step === 1"
-        ref="requestFormRef"
-        :model="form"
-        :rules="rules"
-        label-position="top"
-        @keyup.enter="requestCode"
-      >
-        <p class="hint">{{ $t('auth.forgotPasswordHint') }}</p>
-        <el-form-item :label="$t('auth.email')" prop="email">
-          <el-input v-model="form.email" autocomplete="username" />
-        </el-form-item>
-        <el-button type="primary" class="full" :loading="loading" @click="requestCode">
-          {{ $t('auth.sendResetCode') }}
-        </el-button>
-      </el-form>
-
-      <!-- Step 2: enter the code and a new password -->
-      <el-form
-        v-else
-        ref="resetFormRef"
-        :model="form"
-        :rules="rules"
-        label-position="top"
-        @keyup.enter="reset"
-      >
-        <p class="hint">{{ $t('auth.resetCodeSent') }}</p>
-        <el-form-item :label="$t('auth.email')" prop="email">
-          <el-input v-model="form.email" disabled />
-        </el-form-item>
-        <el-form-item :label="$t('auth.resetCode')" prop="resetCode">
-          <el-input v-model="form.resetCode" autocomplete="one-time-code" />
-        </el-form-item>
-        <el-form-item :label="$t('auth.newPassword')" prop="newPassword">
-          <el-input v-model="form.newPassword" type="password" show-password autocomplete="new-password" />
-        </el-form-item>
-        <el-form-item :label="$t('auth.confirmPassword')" prop="confirmPassword">
-          <el-input v-model="form.confirmPassword" type="password" show-password autocomplete="new-password" />
-        </el-form-item>
-        <el-button type="primary" class="full" :loading="loading" @click="reset">
-          {{ $t('auth.resetPassword') }}
-        </el-button>
-        <div class="link">
-          <a href="javascript:;" @click="step = 1">{{ $t('auth.resendCode') }}</a>
-        </div>
-      </el-form>
-
-      <div class="link">
-        <router-link to="/login">{{ $t('auth.backToLogin') }}</router-link>
+    <!-- Step 2: enter the code and a new password -->
+    <form v-else novalidate @submit.prevent="reset">
+      <p class="rp-hint">{{ $t('auth.resetCodeSent') }}</p>
+      <label class="rp-field">
+        <span class="rp-field__label">{{ $t('auth.email') }}</span>
+        <input v-model="form.email" disabled />
+      </label>
+      <label class="rp-field" :class="{ 'is-invalid': errors.resetCode }">
+        <span class="rp-field__label">{{ $t('auth.resetCode') }}</span>
+        <input v-model="form.resetCode" autocomplete="one-time-code" />
+        <span v-if="errors.resetCode" class="rp-field__error">{{ errors.resetCode }}</span>
+      </label>
+      <label class="rp-field" :class="{ 'is-invalid': errors.newPassword }">
+        <span class="rp-field__label">{{ $t('auth.newPassword') }}</span>
+        <input v-model="form.newPassword" type="password" autocomplete="new-password" />
+        <span v-if="errors.newPassword" class="rp-field__error">{{ errors.newPassword }}</span>
+      </label>
+      <label class="rp-field" :class="{ 'is-invalid': errors.confirmPassword }">
+        <span class="rp-field__label">{{ $t('auth.confirmPassword') }}</span>
+        <input v-model="form.confirmPassword" type="password" autocomplete="new-password" />
+        <span v-if="errors.confirmPassword" class="rp-field__error">{{ errors.confirmPassword }}</span>
+      </label>
+      <button type="submit" class="rp-btn" :disabled="loading">{{ $t('auth.resetPassword') }}</button>
+      <div class="rp-center">
+        <a class="rp-link" href="javascript:;" @click="step = 1">{{ $t('auth.resendCode') }}</a>
       </div>
-    </el-card>
-  </div>
+    </form>
+
+    <div class="rp-center">
+      <router-link class="rp-link" to="/login">{{ $t('auth.backToLogin') }}</router-link>
+    </div>
+  </AuthShell>
 </template>
 
 <script setup lang="ts" name="forgotPassword">
 import { useRouter } from 'vue-router'
-import { ElMessage, FormInstance, FormRules } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { forgotPasswordApi, resetPasswordApi } from '@/api/modules/auth'
+import AuthShell from '@/views/auth-shell/index.vue'
 
 const { t } = useI18n()
 const router = useRouter()
 
-const requestFormRef = ref<FormInstance>()
-const resetFormRef = ref<FormInstance>()
 const loading = ref(false)
 const step = ref(1)
 const form = reactive({
@@ -77,26 +68,31 @@ const form = reactive({
   newPassword: '',
   confirmPassword: ''
 })
+const errors = reactive({ email: '', resetCode: '', newPassword: '', confirmPassword: '' })
 
-const rules = computed<FormRules>(() => ({
-  email: [
-    { required: true, message: t('auth.emailRequired'), trigger: 'blur' },
-    { type: 'email', message: t('auth.emailInvalid'), trigger: 'blur' }
-  ],
-  resetCode: [{ required: true, message: t('auth.resetCodeRequired'), trigger: 'blur' }],
-  newPassword: [{ required: true, message: t('auth.passwordRequired'), trigger: 'blur' }],
-  confirmPassword: [
-    { required: true, message: t('auth.passwordRequired'), trigger: 'blur' },
-    {
-      validator: (_rule: any, value: string, callback: (e?: Error) => void) =>
-        value === form.newPassword ? callback() : callback(new Error(t('auth.passwordMismatch'))),
-      trigger: 'blur'
-    }
-  ]
-}))
+const validateEmail = () => {
+  const email = form.email.trim()
+  errors.email = !email
+    ? t('auth.emailRequired')
+    : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+      ? t('auth.emailInvalid')
+      : ''
+  return !errors.email
+}
+
+const validateReset = () => {
+  errors.resetCode = form.resetCode.trim() ? '' : t('auth.resetCodeRequired')
+  errors.newPassword = form.newPassword ? '' : t('auth.passwordRequired')
+  errors.confirmPassword = !form.confirmPassword
+    ? t('auth.passwordRequired')
+    : form.confirmPassword !== form.newPassword
+      ? t('auth.passwordMismatch')
+      : ''
+  return !errors.resetCode && !errors.newPassword && !errors.confirmPassword
+}
 
 const requestCode = async () => {
-  if (!(await requestFormRef.value?.validate().catch(() => false))) return
+  if (!validateEmail()) return
   loading.value = true
   try {
     await forgotPasswordApi(form.email.trim())
@@ -110,7 +106,7 @@ const requestCode = async () => {
 }
 
 const reset = async () => {
-  if (!(await resetFormRef.value?.validate().catch(() => false))) return
+  if (!validateReset()) return
   loading.value = true
   try {
     await resetPasswordApi({
@@ -127,31 +123,3 @@ const reset = async () => {
   }
 }
 </script>
-
-<style scoped lang="less">
-.auth-page {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f5f7fa;
-}
-.auth-card {
-  width: 420px;
-  .title {
-    text-align: center;
-    margin-bottom: 1.5rem;
-  }
-  .hint {
-    margin-bottom: 1rem;
-    color: #606266;
-  }
-  .full {
-    width: 100%;
-  }
-  .link {
-    margin-top: 1rem;
-    text-align: center;
-  }
-}
-</style>

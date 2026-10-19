@@ -9,13 +9,17 @@
           <template v-if="isCollapse">
             <img
               class="logo-img logo-small-img"
-              src="@/assets/svgs/logo-red-small.svg"
+              src="@/assets/brand/rp-mark.svg"
               alt="logo"
             />
           </template>
           <template v-else>
-            <img class="logo-img" src="@/assets/svgs/logo-red.svg" alt="logo" />
+            <img class="logo-img" src="@/assets/brand/rp-logo-stacked.svg" alt="logo" />
           </template>
+        </div>
+        <div class="top-actions">
+          <Avatar />
+          <Notification id="message" />
         </div>
         <ElScrollbar>
           <ElMenu
@@ -29,12 +33,6 @@
             <SubMenu :menu-list="menuList" />
           </ElMenu>
         </ElScrollbar>
-        <div class="collapse-icon-wrap" :class="globalStore.isCollapse ? 'expand' : 'fold'">
-          <Avatar />
-        </div>
-        <div class="collapse-icon-wrap" :class="globalStore.isCollapse ? 'expand' : 'fold'">
-          <Notification id="message" />
-        </div>
         <div
           class="collapse-icon-wrap"
           :class="globalStore.isCollapse ? 'expand' : 'fold'"
