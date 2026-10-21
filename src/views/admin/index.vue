@@ -8,9 +8,11 @@
       :tabs="tabs"
       :request-api="getAdminRecruitmentProjectList"
       :formatTable="initListData"
-      rowKey="project_id"
+      rowKey="id"
+      :initParam="initParam"
+      :activeTab="ProjectStatusEnum.ACTIVE.toString()"
       :selectable="activeSelected"
-      :isFrontPagination="true"
+      :isFrontPagination="false"
     >
       <template #header="">
         <!-- <ElButton v-if="hasPermission" @click="inactive(ids)">{{ $t('button.inactive') }}</ElButton> { ids } -->
@@ -19,25 +21,43 @@
         }}</ElButton>
       </template>
       <!-- 表格操作 -->
-      <template #operation="scope">
-        <span
-          class="operate-base"
-          :class="{ 'operate-base-disable': scope.row.status === ProjectStatusEnum.INACTIVE }"
-          @click="inactive(scope.row.project_id)"
-          >{{ $t('button.inactive') }}</span
+      <template #operation="{ row }">
+        <el-tooltip :content="$t('opt.edit')" placement="top">
+          <span
+            class="operation-icon"
+            :class="row.status === ProjectStatusEnum.ACTIVE ? '' : 'disabled'"
+          >
+            <i @click="showEdit(row)" class="iconfont icon-edit text-primary-gradient"></i>
+          </span>
+        </el-tooltip>
+        <el-tooltip
+          :content="row.status === ProjectStatusEnum.ACTIVE ? $t('opt.inActive') : $t('opt.active')"
+          placement="top"
         >
+          <span class="operation-icon">
+            <i
+              @click="changeStatus(row)"
+              class="iconfont text-primary-gradient"
+              :class="row.status === ProjectStatusEnum.ACTIVE ? 'icon-inactive' : 'icon-active'"
+            ></i>
+          </span>
+        </el-tooltip>
+      </template>
+      <template #admins="{ row }">
+        {{ (row.project_owners ?? []).map((id: string) => ownerNames[id] ?? id).join(', ') }}
       </template>
     </EspTable>
     <EspDialogForm ref="espDialogFormRef" />
   </EspMain>
 </template>
 <script setup lang="ts" name="AdminTable">
-import { ADMIN_TABLE, ADMIN_FORM } from './data'
+import { ADMIN_TABLE, ADMIN_FORM, UPDATE_ADMIN_FORM } from './data'
 import { cloneDeep } from 'lodash-es'
 import { useLocale } from '@/hooks/useLocale'
 import {
   getAdminRecruitmentProjectList,
   createAdminRecruitmentProject,
+  updateAdminRecruitmentProject,
   changeRowStatusToInactive
 } from '@/api/modules/adminRecruitmentProject'
 import AdminRecruitmentProject from '@/api/interface/adminRecruitmentProject'
@@ -47,6 +67,7 @@ import { ResultEnum } from '@/enums/httpEnum'
 import { useGlobalStore } from '@/store/modules/global'
 import mittBus from '@/utils/mittBus'
 import { OPEN_DIALOG } from '@/config'
+import { getUserListByRole } from '@/api/modules/user'
 
 // 是否有按钮操作权限
 const hasPermission = ref(false)
@@ -59,54 +80,75 @@ const tabs = ref<Form.FormSelect[]>(getTableTabs(ProjectStatus))
 // 列表表单
 interface StateObj {
   projectTableData: Table.ColumnProps[]
-  id: number
+  id: string
 }
 const state = reactive<StateObj>({
   projectTableData: cloneDeep(ADMIN_TABLE),
-  id: 0
+  id: ''
 })
 
+const ownerNames = ref<Record<string, string>>({})
+const ownerOptions = ref<{ value: string; label: string }[]>([])
+const loadOwnerNames = async () => {
+  const res = await getUserListByRole({ role: 'proa,rec' })
+  const list: any[] = res?.result ?? []
+  const map: Record<string, string> = {}
+  list.forEach((u: any) => (map[String(u.id)] = u.name))
+  ownerNames.value = map
+  ownerOptions.value = list.map((u: any) => ({ value: u.id, label: u.name }))
+}
+// dialogs reuse the owners loaded on page load instead of requesting them again
+const applyOwnerOptions = (formData: Form.FormItem[]) => {
+  formData.forEach(item => {
+    if (item.prop === 'project_owners') {
+      item.isTepRequest = false
+      item.options = ownerOptions.value
+    }
+  })
+  return formData
+}
+
 onMounted(() => {
-  console.log('globalStore.permissions: ', globalStore.permissions)
+  loadOwnerNames()
   if (globalStore.permissions.includes('rpe')) {
     hasPermission.value = true
     state.projectTableData[0].isShow = true
   }
 })
 
-const inactive = (id: number) => {
-  console.log('id: ', id)
-  if (id) {
-    state.id = id
-    mittBus.emit(OPEN_DIALOG, {
-      title: $t('admin.adminProjentTitle'),
-      content: $t('admin.adminProjentMsg'),
-      center: 'center',
-      size: 'small',
-      confirm: messageConfirm
-    })
-  }
+const initParam = ref<Record<string, any>>({ status: ProjectStatusEnum.ACTIVE })
+
+const changeStatus = (row: any) => {
+  if (!row.id) return
+  const isActive = row.status === ProjectStatusEnum.ACTIVE
+  mittBus.emit(OPEN_DIALOG, {
+    title: isActive ? $t('admin.adminProjentTitle') : $t('admin.activateProjectTitle'),
+    content: isActive ? $t('admin.adminProjentMsg') : $t('admin.activateProjectMsg'),
+    center: 'center',
+    size: 'small',
+    confirm: () => messageConfirm(row)
+  })
 }
 
-const messageConfirm = () => {
-  console.log('id: ', state.id)
-  let data: AdminRecruitmentProject.ProjectInactive = { project_id: state.id }
-  changeRowStatusToInactive(data)
+const messageConfirm = (row: any) => {
+  const status =
+    row.status === ProjectStatusEnum.ACTIVE ? ProjectStatusEnum.INACTIVE : ProjectStatusEnum.ACTIVE
+  changeRowStatusToInactive(String(row.id), status)
     .then(res => {
       if (res?.code === ResultEnum.SUCCESS) {
-        ElMessage.success({ message: $t('message.inactiveSuc') })
+        ElMessage.success({
+          message:
+            status === ProjectStatusEnum.ACTIVE
+              ? $t('message.activeSuc')
+              : $t('message.inactiveSuc')
+        })
       } else {
-        console.log('res?.message: ', res?.message)
         ElMessage.error({ message: res?.message })
       }
       refreshTable()
     })
     .catch(res => {
       console.log('res?.message: ', res)
-      // if (isArray(res?.result)) {
-      //   let resultArr = res?.result ?? []
-      //   resultMesssage(errorMessage(resultArr))
-      // }
     })
 }
 
@@ -136,13 +178,11 @@ const messageConfirm = () => {
 //   })
 // }
 
-const initListData = (tables: AdminRecruitmentProject.AdminRecruitmentProjectInfo[]) => {
-  tables.map(item => {
-    let adminArrs = item.admins as AdminRecruitmentProject.ProjectAdmins[]
-    item.admins = adminArrs.map(item => item.name).join(', ')
+const initListData = (tables: any[]) => {
+  return tables.map(item => {
+    item.project_name = item.name
     return item
   })
-  return tables
 }
 const activeSelected = (row: any) => {
   return row.status === 0
@@ -153,7 +193,22 @@ const showCreate = () => {
       title: $t('title.createRecruitmentProject'),
       isView: false,
       apiUrl: createAdminRecruitmentProject,
-      formData: cloneDeep(ADMIN_FORM),
+      formData: applyOwnerOptions(cloneDeep(ADMIN_FORM)),
+      size: 'small',
+      getTableList: refreshTable
+    })
+}
+const showEdit = (row: any) => {
+  const formData = applyOwnerOptions(cloneDeep(UPDATE_ADMIN_FORM)).map(item => {
+    item.value = row[item.prop as string]
+    return item
+  })
+  espDialogFormRef.value &&
+    espDialogFormRef.value.acceptParams({
+      title: $t('title.modifyRecruitmentProject'),
+      isView: false,
+      apiUrl: updateAdminRecruitmentProject,
+      formData,
       size: 'small',
       getTableList: refreshTable
     })

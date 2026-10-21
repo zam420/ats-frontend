@@ -24,11 +24,7 @@ export const PROJECT_TABLE: Table.ColumnProps[] = [
   },
   {
     prop: 'adminString',
-    label: $t('admin.projectAdmins')
-  },
-  {
-    prop: 'created_by_name',
-    label: $t('admin.createBy')
+    label: $t('admin.projectOwners')
   },
   {
     prop: 'work_location_name',
@@ -37,10 +33,6 @@ export const PROJECT_TABLE: Table.ColumnProps[] = [
   {
     prop: 'interview_process_templates_string',
     label: $t('admin.interviewProcessTemplate')
-  },
-  {
-    prop: 'created_at',
-    label: $t('admin.createAt')
   },
   {
     prop: 'status',
@@ -59,14 +51,14 @@ export const PROJECT_FORM: Form.FormItem[] = [
     maxlength: 50
   },
   {
-    label: $t('admin.projectAdmins'),
-    prop: 'admins',
+    label: $t('admin.projectOwners'),
+    prop: 'project_owners',
     type: FormItemTypeEnum.MULTIPLE_SELECT,
     getOptions: getUserListByRole,
     optionKey: 'id',
     optionName: 'name',
-    initOptionParams: { role: 'proa' },
-    required: true,
+    initOptionParams: { role: 'proa,rec' },
+    maxTags: 2,
     col: 24
   },
   {
@@ -95,7 +87,7 @@ export const PROJECT_FORM: Form.FormItem[] = [
 export const UPDATE_PROJECT_FORM: Form.FormItem[] = [
   {
     label: '',
-    prop: 'project_id',
+    prop: 'id',
     isHide: true
   },
   {
@@ -106,14 +98,14 @@ export const UPDATE_PROJECT_FORM: Form.FormItem[] = [
     maxlength: 50
   },
   {
-    label: $t('admin.projectAdmins'),
-    prop: 'admins',
+    label: $t('admin.projectOwners'),
+    prop: 'project_owners',
     type: FormItemTypeEnum.MULTIPLE_SELECT,
     getOptions: getUserListByRole,
     optionKey: 'id',
     optionName: 'name',
-    initOptionParams: { role: 'proa' },
-    required: true,
+    initOptionParams: { role: 'proa,rec' },
+    maxTags: 2,
     col: 24
   },
   {

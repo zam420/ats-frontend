@@ -7,9 +7,10 @@ import { ResultCreate } from '../interface'
  */
 
 // 获取 Admin Recruitment Project 的列表
-export const getAdminRecruitmentProjectList = () => {
+export const getAdminRecruitmentProjectList = (params?: Record<string, any>) => {
   return http.get<AdminRecruitmentProject.AdminRecruitmentProjectInfo[]>(
-    'api/project/list'
+    'api/project/list',
+    params
   )
 }
 
@@ -17,7 +18,14 @@ export const getAdminRecruitmentProjectList = () => {
 export const createAdminRecruitmentProject = (
   data: AdminRecruitmentProject.AdminRecruitmentProjectInfo
 ) => {
-  return http.post<ResultCreate>('api/project/save', data)
+  return http.post<ResultCreate>('api/project/create', data)
+}
+
+// 更新 Admin Recruitment Project
+export const updateAdminRecruitmentProject = (
+  data: AdminRecruitmentProject.AdminRecruitmentProjectInfo
+) => {
+  return http.post<ResultCreate>('api/project/update', data)
 }
 
 export const getInterviewProcessTemplates = (data: { work_location: number[] | number }) => {
@@ -34,7 +42,7 @@ export const getJobPositionDetail = () => {
   )
 }
 
-// 更新行状态为 inactive
-export const changeRowStatusToInactive = (data: AdminRecruitmentProject.ProjectInactive) => {
-  return http.post<Record<string, any>[]>('api/project/deactivate', data)
+export const changeRowStatusToInactive = (id: string, status: number) => {
+  return http.post<boolean>(`/api/project/deactivate/${encodeURIComponent(id)}/${status}`)
 }
+

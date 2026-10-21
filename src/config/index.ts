@@ -36,7 +36,7 @@ export const POPOVER_DEFAULT_WIDTH = 400
 export const DRAWER_DEFAULT_WIDTH = '300px'
 
 // Collapse width
-export const COLLAPSE_LG_WIDTH = '17em'
+export const COLLAPSE_LG_WIDTH = '17.6em'
 export const COLLAPSE_SM_WIDTH = '80px'
 
 // 日期格式

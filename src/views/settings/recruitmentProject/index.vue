@@ -8,9 +8,11 @@
       :tabs="tabs"
       :request-api="getAdminRecruitmentProjectList"
       :formatTable="initListData"
-      rowKey="project_id"
+      rowKey="id"
+      :initParam="initParam"
+      :activeTab="ProjectStatusEnum.ACTIVE.toString()"
       :selectable="activeSelected"
-      :isFrontPagination="true"
+      :isFrontPagination="false"
     >
       <template #header>
         <!-- <ElButton v-if="hasPermission" @click="inactive(ids)">{{ $t('button.inactive') }}</ElButton> { ids } -->
@@ -37,16 +39,20 @@
           </span>
         </el-tooltip>
         <el-tooltip
-          :content="$t('opt.inActive')"
+          :content="row.status === ProjectStatusEnum.ACTIVE ? $t('opt.inActive') : $t('opt.active')"
           placement="top"
         >
-          <span class="operation-icon" :class="row.status === ProjectStatusEnum.ACTIVE ? '' : 'disabled'">
+          <span class="operation-icon">
             <i
-              @click="inactive(row.project_id)"
-              class="iconfont text-primary-gradient icon-inactive"
+              @click="changeStatus(row)"
+              class="iconfont text-primary-gradient"
+              :class="row.status === ProjectStatusEnum.ACTIVE ? 'icon-inactive' : 'icon-active'"
             ></i>
           </span>
         </el-tooltip>
+      </template>
+      <template #adminString="{ row }">
+        {{ (row.project_owners ?? []).map((id: string) => ownerNames[id] ?? id).join(', ') }}
       </template>
       <template #project_name="scope">
         <span class="operate-base" @click="pushJobPosition(scope.row)">{{
@@ -64,6 +70,7 @@ import { useLocale } from '@/hooks/useLocale'
 import {
   getAdminRecruitmentProjectList,
   createAdminRecruitmentProject,
+  updateAdminRecruitmentProject,
   changeRowStatusToInactive,
   getInterviewProcessTemplates
 } from '@/api/modules/adminRecruitmentProject'
@@ -77,6 +84,7 @@ import { OPEN_DIALOG } from '@/config'
 import router from '@/router'
 import { ROUTER_JOB_POSITION } from '@/router/routerName'
 import { WorkLocation } from '@/enums/workLocationEnum'
+import { getUserListByRole } from '@/api/modules/user'
 
 // 是否有按钮操作权限
 const hasPermission = ref(false)
@@ -89,16 +97,39 @@ const tabs = ref<Form.FormSelect[]>(getTableTabs(ProjectStatus))
 // 列表表单
 interface StateObj {
   projectTableData: Table.ColumnProps[]
-  id: number
-  listData: AdminRecruitmentProject.AdminRecruitmentProjectInfo[]
+  id: string
+  listData: any[]
 }
 const state = reactive<StateObj>({
   projectTableData: cloneDeep(PROJECT_TABLE),
-  id: 0,
+  id: '',
   listData: []
 })
 
+// owner id -> name, used to display project owners in the table
+const ownerNames = ref<Record<string, string>>({})
+const ownerOptions = ref<{ value: string; label: string }[]>([])
+const loadOwnerNames = async () => {
+  const res = await getUserListByRole({ role: 'proa,rec' })
+  const list: any[] = res?.result ?? []
+  const map: Record<string, string> = {}
+  list.forEach((u: any) => (map[String(u.id)] = u.name))
+  ownerNames.value = map
+  ownerOptions.value = list.map((u: any) => ({ value: u.id, label: u.name }))
+}
+// dialogs reuse the owners loaded on page load instead of requesting them again
+const applyOwnerOptions = (formData: Form.FormItem[]) => {
+  formData.forEach(item => {
+    if (item.prop === 'project_owners') {
+      item.isTepRequest = false
+      item.options = ownerOptions.value
+    }
+  })
+  return formData
+}
+
 onMounted(() => {
+  loadOwnerNames()
   if (globalStore.permissions.includes('rpe')) {
     hasPermission.value = true
     state.projectTableData[0].isShow = true
@@ -110,31 +141,38 @@ const pushJobPosition = (item: any) => {
   const { href } = router.resolve({
     path: `/${ROUTER_JOB_POSITION}`,
     query: {
-      project_id: item.project_id
+      project_id: item.id
     }
   })
   window.open(href, '_blank')
 }
 
-const inactive = (id: number) => {
-  if (id) {
-    state.id = id
-    mittBus.emit(OPEN_DIALOG, {
-      title: $t('admin.adminProjentTitle'),
-      content: $t('admin.adminProjentMsg'),
-      center: 'center',
-      size: 'small',
-      confirm: messageConfirm
-    })
-  }
+const initParam = ref<Record<string, any>>({ status: ProjectStatusEnum.ACTIVE })
+
+const changeStatus = (row: any) => {
+  if (!row.id) return
+  const isActive = row.status === ProjectStatusEnum.ACTIVE
+  mittBus.emit(OPEN_DIALOG, {
+    title: isActive ? $t('admin.adminProjentTitle') : $t('admin.activateProjectTitle'),
+    content: isActive ? $t('admin.adminProjentMsg') : $t('admin.activateProjectMsg'),
+    center: 'center',
+    size: 'small',
+    confirm: () => messageConfirm(row)
+  })
 }
 
-const messageConfirm = () => {
-  let data: AdminRecruitmentProject.ProjectInactive = { project_id: state.id }
-  changeRowStatusToInactive(data)
+const messageConfirm = (row: any) => {
+  const status =
+    row.status === ProjectStatusEnum.ACTIVE ? ProjectStatusEnum.INACTIVE : ProjectStatusEnum.ACTIVE
+  changeRowStatusToInactive(String(row.id), status)
     .then(res => {
       if (res?.code === ResultEnum.SUCCESS) {
-        ElMessage.success({ message: $t('message.inactiveSuc') })
+        ElMessage.success({
+          message:
+            status === ProjectStatusEnum.ACTIVE
+              ? $t('message.activeSuc')
+              : $t('message.inactiveSuc')
+        })
       } else {
         ElMessage.error({ message: res?.message })
       }
@@ -147,19 +185,14 @@ const messageConfirm = () => {
 
 
 // 打开编辑页面
-const showEdit = async (row: AdminRecruitmentProject.AdminRecruitmentProjectInfo) => {
-  const formData = cloneDeep(UPDATE_PROJECT_FORM).map(item => {
-    const prop = item.prop as keyof AdminRecruitmentProject.AdminRecruitmentProjectInfo
-    if (prop === 'admins') {
-      const adminsArr = row[prop] as AdminRecruitmentProject.ProjectAdmins[]
-      item.value = adminsArr.map(adminItem => adminItem.id)
-    } else if (prop === 'interview_process_templates') {
-      const adminsArr = row[prop] as AdminRecruitmentProject.ProjectAdmins[]
-      item.value = adminsArr.map(adminItem => adminItem.id)
-    } else if (prop === 'name') {
-      item.value = row.project_name
+const showEdit = async (row: any) => {
+  const formData = applyOwnerOptions(cloneDeep(UPDATE_PROJECT_FORM)).map(item => {
+    if (item.prop === 'project_owners') {
+      item.value = row.project_owners ?? []
+    } else if (item.prop === 'interview_process_templates') {
+      item.value = row.interview_process_templates ?? []
     } else {
-      item.value = row[prop]
+      item.value = row[item.prop as string]
     }
     return item
   })
@@ -176,27 +209,21 @@ const showEdit = async (row: AdminRecruitmentProject.AdminRecruitmentProjectInfo
     espDialogFormRef.value.acceptParams({
       title: $t('title.modifyRecruitmentProject'),
       isView: false,
-      apiUrl: createAdminRecruitmentProject,
+      apiUrl: updateAdminRecruitmentProject,
       formData: formData,
       size: 'small',
       getTableList: refreshTable
     })
 }
 
-const initListData = (tables: AdminRecruitmentProject.AdminRecruitmentProjectInfo[]) => {
+const initListData = (tables: any[]) => {
   state.listData = tables
-  tables.map(item => {
-    let adminArrs = item.admins as AdminRecruitmentProject.ProjectAdmins[]
-    let interview_process_templates_arrs =
-      item.interview_process_templates as AdminRecruitmentProject.ProjectAdmins[]
-    item.adminString = adminArrs.map(item => item.name).join(', ')
-    item.interview_process_templates_string = interview_process_templates_arrs
-      .map(item => item.name)
-      .join(', ')
-    item.work_location_name = WorkLocation?.[item.work_location]?.name ?? item.name
+  return tables.map(item => {
+    const owners: string[] = item.project_owners ?? []
+    item.project_name = item.name
+    item.work_location_name = WorkLocation?.[item.work_location]?.name ?? ''
     return item
   })
-  return tables
 }
 const activeSelected = (row: any) => {
   return row.status === 0
@@ -207,7 +234,7 @@ const showCreate = () => {
       title: $t('title.createRecruitmentProject'),
       isView: false,
       apiUrl: createAdminRecruitmentProject,
-      formData: cloneDeep(PROJECT_FORM),
+      formData: applyOwnerOptions(cloneDeep(PROJECT_FORM)),
       size: 'small',
       getTableList: refreshTable,
       changeForm: projectChangeForm

@@ -692,13 +692,15 @@ export default {
   },
   admin: {
     projectName: 'Project Name',
-    projectAdmins: 'Project Admins',
+    projectOwners: 'Recruiters',
     interviewProcessTemplate: 'Interview Process Template',
     createBy: 'Create By',
     createAt: 'Create At',
     status: 'Status',
     adminProjentMsg: 'Are you sure to deactivate the selected project?',
     adminProjentTitle: 'Deactivate Project',
+    activateProjectMsg: 'Are you sure to activate the selected project?',
+    activateProjectTitle: 'Activate Project',
     projectStatusResult: 'Deactivate Project Result'
   },
   talentPool: {
@@ -792,7 +794,7 @@ export default {
     HRInterviewZh: '人力资源面试',
     professionalInterviewZh: '专业/技术面试',
     C_Level_InterviewZh: 'C-Level面试',
-    dragProcess: 'Click the + button to add interview rounds.',
+    dragProcess: 'Click the + button or drag-drop available rounds to add interview rounds.',
     interviewers: 'Interviewers',
     step: 'Step'
   },

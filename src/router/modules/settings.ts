@@ -1,6 +1,6 @@
 import { RouteRecordRaw } from 'vue-router'
 import { useLocale } from '@/hooks/useLocale'
-import { ROUTER_SETTINGS_RECRUITMENT_PROJECT, ROUTER_SETTINGS } from '../routerName'
+import { ROUTER_SETTINGS_INTERVIEW_PROCESS, ROUTER_SETTINGS } from '../routerName'
 import { UserPermissionEnum } from '@/enums/userPermission'
 const { $t } = useLocale()
 
@@ -24,7 +24,7 @@ const settingsRouter: Array<RouteRecordRaw> = [
   {
     path: `/${ROUTER_SETTINGS}`,
     name: ROUTER_SETTINGS,
-    redirect: `/${ROUTER_SETTINGS_RECRUITMENT_PROJECT}`,
+    redirect: `/${ROUTER_SETTINGS_INTERVIEW_PROCESS}`,
     meta: {
       icon: 'settings',
       title: $t('menu.settings'),

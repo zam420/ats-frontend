@@ -49,11 +49,11 @@ export const ROUTER_INTERVIEWER_MY_REVIEW_DETAIL = 'interviewer/myInterview/deta
 // Interviewer -> Test Review
 export const ROUTER_INTERVIEWER_TEST_REVIEW = 'interviewer/testReview'
 
+//Recruitment Project
+export const ROUTER_HIRING_PROJECT = 'project'
+
 //Settings
 export const ROUTER_SETTINGS = 'settings'
-
-//Settings -> Recruitment Project
-export const ROUTER_SETTINGS_RECRUITMENT_PROJECT = 'settings/recruitmentProject'
 
 //Settings -> User Management
 export const ROUTER_SETTINGS_USER_MANAGEMENT = 'settings/userManagement'

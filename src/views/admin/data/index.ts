@@ -20,15 +20,7 @@ export const ADMIN_TABLE: Table.ColumnProps[] = [
   },
   {
     prop: 'admins',
-    label: $t('admin.projectAdmins')
-  },
-  {
-    prop: 'created_by_name',
-    label: $t('admin.createBy')
-  },
-  {
-    prop: 'created_at',
-    label: $t('admin.createAt')
+    label: $t('admin.projectOwners')
   },
   {
     prop: 'status',
@@ -47,14 +39,16 @@ export const ADMIN_FORM: Form.FormItem[] = [
     maxlength: 50
   },
   {
-    label: $t('admin.projectAdmins'),
-    prop: 'admins',
+    label: $t('admin.projectOwners'),
+    prop: 'project_owners',
     type: FormItemTypeEnum.MULTIPLE_SELECT,
     getOptions: getUserListByRole,
     optionKey: 'id',
     optionName: 'name',
-    initOptionParams: { role: 'proa' },
-    required: true,
+    initOptionParams: { role: 'proa,rec' },
+    maxTags: 2,
     col: 24
   }
 ]
+
+export const UPDATE_ADMIN_FORM: Form.FormItem[] = [{ label: '', prop: 'id', isHide: true }, ...ADMIN_FORM]
