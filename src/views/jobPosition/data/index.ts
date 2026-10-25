@@ -193,7 +193,7 @@ export const JOB_POSITION_OTHER_FORM: Form.FormItem[] = [
     md: 8
   },
   {
-    label: $t('jobPosition.professionalInterviewFeedback'),
+    label: $t('jobPosition.functionalInterviewFeedback'),
     prop: 'public_interview_feedback',
     type: FormItemTypeEnum.SWITCH,
     value: false,
@@ -345,7 +345,7 @@ export const JOB_POSITION_OTHER_DETAIL: Form.DetailItem[] = [
     col: 8
   },
   {
-    label: $t('jobPosition.professionalInterviewFeedback'),
+    label: $t('jobPosition.functionalInterviewFeedback'),
     prop: 'public_interview_feedback',
     md: 8
   }

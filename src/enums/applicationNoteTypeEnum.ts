@@ -37,11 +37,11 @@ export const ApplicationNoteType: Record<string, CommonEnum.enumItem> = {
   },
   [ApplicationNoteTypeEnum.PROFESSIONAL]: {
     value: ApplicationNoteTypeEnum.PROFESSIONAL,
-    name: $t('candidateStatusEnum.professionalInterview')
+    name: $t('candidateStatusEnum.functionalInterview')
   },
   [ApplicationNoteTypeEnum.C_LEVEL]: {
     value: ApplicationNoteTypeEnum.C_LEVEL,
-    name: $t('candidateStatusEnum.C_LEVEL_Interview')
+    name: $t('candidateStatusEnum.executiveInterview')
   },
   [ApplicationNoteTypeEnum.OFFER_MANAGEMENT]: {
     value: ApplicationNoteTypeEnum.OFFER_MANAGEMENT,

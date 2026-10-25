@@ -86,13 +86,13 @@ export const ButtonSettings: Record<string, CommonEnum.enumItem> = {
   [BtnTypeEnum.MOVETO_PROFESSIONAL]: {
     value: BtnTypeEnum.MOVETO_PROFESSIONAL,
     paramValue: CandidateStatusEnum.PROFESSIONAL,
-    name: $t('candidateStatusEnum.professionalInterview'),
+    name: $t('candidateStatusEnum.functionalInterview'),
     group: $t('button.moveTo')
   },
   [BtnTypeEnum.MOVETO_C_LEVEL]: {
     value: BtnTypeEnum.MOVETO_C_LEVEL,
     paramValue: CandidateStatusEnum.C_LEVEL,
-    name: $t('candidateStatusEnum.C_LEVEL_Interview'),
+    name: $t('candidateStatusEnum.executiveInterview'),
     group: $t('button.moveTo')
   },
   [BtnTypeEnum.MOVETO_OFFER_MANAGEMENT]: {

@@ -48,12 +48,12 @@ export const CandidateStatus: Record<string, CommonEnum.enumItem> = {
   },
   [CandidateStatusEnum.PROFESSIONAL]: {
     value: CandidateStatusEnum.PROFESSIONAL,
-    name: $t('candidateStatusEnum.professionalInterview'),
+    name: $t('candidateStatusEnum.functionalInterview'),
     status: 'primary'
   },
   [CandidateStatusEnum.C_LEVEL]: {
     value: CandidateStatusEnum.C_LEVEL,
-    name: $t('candidateStatusEnum.C_LEVEL_Interview'),
+    name: $t('candidateStatusEnum.executiveInterview'),
     status: 'primary'
   },
   [CandidateStatusEnum.OFFER_MANAGEMENT]: {

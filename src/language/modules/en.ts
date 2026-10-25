@@ -374,8 +374,8 @@ export default {
     onlineWrittenTest: 'Online Test',
     videoInterview: 'Video Interview',
     HRInterview: 'HR Interview',
-    professionalInterview: 'Professional Interview',
-    C_Level_Interview: 'C-Level Interview',
+    functionalInterview: 'Functional Interview',
+    executiveInterview: 'Executive Interview',
     offerManagement: 'Offer Management',
     onboardingManagement: 'Onboarding Management',
     talentPool: 'Talent Pool',
@@ -525,7 +525,7 @@ export default {
     downloadTemplate: 'Click to Download Job Position Template File',
     question: 'Question { number }',
     projectStatus: 'Project Status',
-    professionalInterviewFeedback: "Public Hiring Manager's Feedback"
+    functionalInterviewFeedback: "Public Hiring Manager's Feedback"
   },
   cv: {
     resume: 'Resume',
@@ -787,13 +787,14 @@ export default {
     onlineWrittenTest: 'Online Test',
     videoInterview: 'Video Interview',
     HRInterview: 'HR Interview',
-    professionalInterview: 'Professional Interview',
-    C_Level_Interview: 'C-Level Interview',
+    functionalInterview: 'Functional Interview',
+    executiveInterview: 'Executive Interview',
     onlineWrittenTestZh: '笔试',
     videoInterviewZh: '单向视频面试',
     HRInterviewZh: '人力资源面试',
-    professionalInterviewZh: '专业/技术面试',
-    C_Level_InterviewZh: 'C-Level面试',
+    functionalInterviewZh: '专业/技术面试',
+    executiveInterviewZh: 'C-Level面试',
+    addedRounds: 'Added Rounds',
     dragProcess: 'Click the + button or drag-drop available rounds to add interview rounds.',
     interviewers: 'Interviewers',
     step: 'Step'

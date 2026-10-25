@@ -22,7 +22,7 @@
       </el-col>
       <el-col :span="18">
         <div class="process-panel">
-          <div class="title">{{ $t('menu.interviewProcess') }}</div>
+          <div class="title">{{ $t('interviewProcess.addedRounds') }}</div>
           <div>{{ $t('interviewProcess.dragProcess') }}</div>
           <div class="content">
             <div ref="processRef">

@@ -18,14 +18,14 @@ export const InterviewSession: Record<string, CommonEnum.enumItem> = {
   },
   [InterviewSessionEnum.PROFESSIONAL]: {
     value: InterviewSessionEnum.PROFESSIONAL,
-    name: $t('interviewProcess.professionalInterview'),
-    // subLabel: $t('interviewProcess.professionalInterviewZh'),
+    name: $t('interviewProcess.functionalInterview'),
+    // subLabel: $t('interviewProcess.functionalInterviewZh'),
     status: 'success'
   },
   [InterviewSessionEnum.C_LEVEL]: {
     value: InterviewSessionEnum.C_LEVEL,
-    name: $t('interviewProcess.C_Level_Interview'),
-    // subLabel: $t('interviewProcess.C_Level_InterviewZh'),
+    name: $t('interviewProcess.executiveInterview'),
+    // subLabel: $t('interviewProcess.executiveInterviewZh'),
     status: 'success'
   }
 }
