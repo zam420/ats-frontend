@@ -2,9 +2,8 @@ declare namespace InterviewProcess {
   interface ListInfo {
     id: string
     name: string
-    work_location?: number | string
-    work_location_name: string
-    notes: string
+    owner_id?: string
+    description: string
     status: number
     status_name?: string
   }
@@ -50,8 +49,8 @@ declare namespace InterviewProcess {
   interface SaveParam {
     id?: string
     name?: string
-    work_location?: number
-    notes?: string
+    description?: string
+    owner_id?: string
     rounds?: RoundParam[]
   }
 }

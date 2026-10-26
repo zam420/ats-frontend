@@ -24,6 +24,7 @@ export enum UserPermissionEnum {
   IPTC = 'iptc', // interview process create
   IPTE = 'ipte', // interview process edit
   IPTS = 'ipts', // interview process search
+  IPTA = 'ipta', // interview process plan owner assignment
   IM = 'im', // interviewer menu
   RSM = 'rsm', // resume review menu
   MIM = 'mim', // my review menu

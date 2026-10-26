@@ -6,11 +6,11 @@
       :is-set-col="false"
       :page-search="true"
       :tabs="tabs"
-      :request-api="getInterviewProcessList"
+      :request-api="requestList"
       rowKey="id"
       :initParam="initParam"
-      :activeTab="ProjectStatusEnum.ACTIVE.toString()"
-      :formatTable="initTable"
+      :activeTab="TAB_OWNED"
+      statusKey="tab"
       :is-front-pagination="false"
     >
       <template #header="">
@@ -21,23 +21,13 @@
       <!-- 表格操作 -->
       <template #operation="{ row }">
         <el-tooltip :content="$t('opt.edit')" placement="top">
-          <span
-            class="operation-icon"
-            :class="row.status === ProjectStatusEnum.ACTIVE ? '' : 'disabled'"
-          >
+          <span class="operation-icon">
             <i @click="showEdit(row.id)" class="iconfont icon-edit text-primary-gradient"></i>
           </span>
         </el-tooltip>
-        <el-tooltip
-          :content="row.status === ProjectStatusEnum.ACTIVE ? $t('opt.inActive') : $t('opt.active')"
-          placement="top"
-        >
+        <el-tooltip :content="$t('opt.delete')" placement="top">
           <span class="operation-icon">
-            <i
-              @click="changeStatus(row)"
-              class="iconfont text-primary-gradient"
-              :class="row.status === ProjectStatusEnum.ACTIVE ? 'icon-inactive' : 'icon-active'"
-            ></i>
+            <i @click="showDelete(row)" class="iconfont icon-delete text-primary-gradient"></i>
           </span>
         </el-tooltip>
       </template>
@@ -48,7 +38,6 @@
 import { cloneDeep } from 'lodash-es'
 import { useLocale } from '@/hooks/useLocale'
 import { getTableTabs, openNewWindow } from '@/utils'
-import { ProjectStatus, ProjectStatusEnum } from '@/enums/projectStatusEnum'
 import { ResultEnum } from '@/enums/httpEnum'
 import { useGlobalStore } from '@/store/modules/global'
 import mittBus from '@/utils/mittBus'
@@ -59,17 +48,29 @@ import {
   ROUTER_SETTINGS_INTERVIEW_PROCESS_CREATE,
   ROUTER_SETTINGS_INTERVIEW_PROCESS_EDIT
 } from '@/router/routerName'
-import { WorkLocation } from '@/enums/workLocationEnum'
 import InterviewProcess from '@/api/interface/interviewProcess'
 import { UserPermissionEnum } from '@/enums/userPermission'
-import { getInterviewProcessList, changeRowStatusToInactive } from '@/api/modules/interviewProcess'
+import {
+  getInterviewProcessList,
+  getSharedInterviewProcessList,
+  getTemplateInterviewProcessList,
+  deleteInterviewProcess
+} from '@/api/modules/interviewProcess'
+
+const TAB_OWNED = 'owned'
+const TAB_SHARED = 'shared'
+const TAB_TEMPLATES = 'templates'
 
 const espTable = ref()
 const globalStore = useGlobalStore()
 // 是否有按钮操作权限
 const hasPermission = ref(false)
 const { $t } = useLocale()
-const tabs = ref<Form.FormSelect[]>(getTableTabs(ProjectStatus))
+const tabs = ref<Form.FormSelect[]>([
+  { label: $t('interviewProcess.owned'), value: TAB_OWNED, count: 0 },
+  { label: $t('interviewProcess.shared'), value: TAB_SHARED, count: 0 },
+  { label: $t('interviewProcess.systemTemplates'), value: TAB_TEMPLATES, count: 0 }
+])
 // 列表表单
 interface StateObj {
   interviewProcessData: Table.ColumnProps[]
@@ -79,7 +80,15 @@ const state = reactive<StateObj>({
   interviewProcessData: cloneDeep(INTERVIEW_PROCESS_TABLE),
   id: 0
 })
-const initParam = ref<Record<string, any>>({status: ProjectStatusEnum.ACTIVE})
+const initParam = ref<Record<string, any>>({ tab: TAB_OWNED })
+
+// The selected tab decides which backend API is called; the tab key itself is not sent
+const requestList = (params: Record<string, any>) => {
+  const { tab, ...query } = params
+  if (tab === TAB_SHARED) return getSharedInterviewProcessList(query)
+  if (tab === TAB_TEMPLATES) return getTemplateInterviewProcessList(query)
+  return getInterviewProcessList(query)
+}
 onMounted(() => {
   // 有操作权限才显示表格操作栏
   if (globalStore.permissions.includes(UserPermissionEnum.IPTC)) {
@@ -87,18 +96,12 @@ onMounted(() => {
     state.interviewProcessData[0].isShow = true
   }
 })
-// 更改状态
-const changeStatus = (row: InterviewProcess.DetailInfo) => {
+// 删除
+const showDelete = (row: InterviewProcess.ListInfo) => {
   if (row.id) {
     mittBus.emit(OPEN_DIALOG, {
-      title:
-        row.status === ProjectStatusEnum.ACTIVE
-          ? $t('interviewProcess.inactiveInterviewTitle')
-          : $t('interviewProcess.activeInterviewTitle'),
-      content:
-        row.status === ProjectStatusEnum.ACTIVE
-          ? `${$t('message.ques')}${$t('interviewProcess.inactiveInterviewMsg')}`
-          : `${$t('message.ques')}${$t('interviewProcess.activeInterviewMsg')}`,
+      title: $t('interviewProcess.deleteInterviewTitle'),
+      content: `${$t('message.ques')}${$t('interviewProcess.deleteInterviewMsg')}`,
       center: 'center',
       size: 'small',
       confirm: () => messageConfirm(row)
@@ -107,18 +110,11 @@ const changeStatus = (row: InterviewProcess.DetailInfo) => {
 }
 
 // 消息弹窗
-const messageConfirm = (row: InterviewProcess.DetailInfo) => {
-  const status =
-    row.status === ProjectStatusEnum.ACTIVE ? ProjectStatusEnum.INACTIVE : ProjectStatusEnum.ACTIVE
-  changeRowStatusToInactive(row.id, status)
+const messageConfirm = (row: InterviewProcess.ListInfo) => {
+  deleteInterviewProcess(row.id)
     .then(res => {
       if (res?.code === ResultEnum.SUCCESS) {
-        ElMessage.success({
-          message:
-            status === ProjectStatusEnum.ACTIVE
-              ? $t('message.activeSuc')
-              : $t('message.inactiveSuc')
-        })
+        ElMessage.success({ message: $t('message.deleteSuc') })
       } else {
         ElMessage.error({ message: res?.message })
       }
@@ -127,14 +123,6 @@ const messageConfirm = (row: InterviewProcess.DetailInfo) => {
     .catch(res => {
       console.log('res?.message: ', res)
     })
-}
-// 处理work location名称
-const initTable = (tables: InterviewProcess.DetailInfo[]) => {
-  return tables.map(item => {
-    item.work_location =
-      WorkLocation?.[item.work_location as number]?.name ?? item.work_location_name
-    return item
-  })
 }
 // 打开编辑页面
 const showEdit = (id: number) => {

@@ -30,7 +30,7 @@ export const updateAdminRecruitmentProject = (
 
 export const getInterviewProcessTemplates = (data: { work_location: number[] | number }) => {
   return http.get<AdminRecruitmentProject.InterviewProcessTemplates[]>(
-    '/api/interviewprocess/listBy',
+    '/api/interviewplan/listBy',
     data
   )
 }

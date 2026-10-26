@@ -129,6 +129,7 @@ declare namespace Table {
     otherProp?: string // 单元格数据类型(除了默认以外备选)
     label?: string // 单元格标题（非特殊类型必填）
     width?: number | string | object // 列宽
+    minWidth?: number // 最小列宽，剩余空间按比例分配
     isShow?: boolean // 是否显示
     sortable?: boolean // 是否可排序（静态排序）
     fixed?: 'left' | 'right' // 固定列

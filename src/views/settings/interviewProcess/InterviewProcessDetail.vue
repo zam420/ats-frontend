@@ -18,10 +18,6 @@
     </template>
     <div class="esp-detail-wrap">
       <el-row :gutter="20">
-        <el-col :span="12" class="esp-detail-item left">
-          <label>{{ $t('jobPosition.workLocation') }}: </label>
-          <p class="desc">{{ state.work_location_name }}</p>
-        </el-col>
         <el-col :span="24">
           <div class="step-container">
             <div class="step-block" v-for="(item, index) in state.rounds" :key="item.id">
@@ -50,8 +46,8 @@
           </div>
         </el-col>
         <el-col :span="24" class="esp-detail-item">
-          <label class="bold">{{ $t('cv.notes') }}: </label>
-          <p class="desc high-panel">{{ state.notes }}</p>
+          <label class="bold">{{ $t('interviewProcess.description') }}: </label>
+          <p class="desc high-panel">{{ state.description }}</p>
         </el-col>
       </el-row>
       <div class="info-panel">
@@ -68,7 +64,6 @@ import {
 } from '@/router/routerName'
 import { UserPermissionEnum } from '@/enums/userPermission'
 import { ProjectStatus, ProjectStatusEnum } from '@/enums/projectStatusEnum'
-import { WorkLocation } from '@/enums/workLocationEnum'
 import { useLocale } from '@/hooks/useLocale'
 import { cloneDeep } from 'lodash-es'
 import { INTERVIEW_PROCESS_DETAIL, USER_FORM } from './data'
@@ -93,8 +88,7 @@ const state = reactive<InterviewProcess.DetailInfo>({
   id: '',
   name: '',
   status: 0,
-  work_location_name: '',
-  notes: '',
+  description: '',
   rounds: []
 })
 const share_to_ids = ref<number[]>([])
@@ -124,9 +118,7 @@ const initData = () => {
       state.id = result?.id
       state.name = result?.name ?? ''
       state.status = result?.status ?? 0
-      state.work_location_name =
-        WorkLocation?.[result.work_location as number]?.name ?? result.work_location_name
-      state.notes = result?.notes
+      state.description = result?.description
       state.rounds = result?.rounds ?? []
       share_to_ids.value = result?.share_to?.map(d => d.id) ?? []
       infoForm.value.forEach((d: Form.FormItem) => {

@@ -136,9 +136,9 @@
           </div>
         </div>
         <div class="esp-form-wrap">
-          <label class="el-form-item__label">{{ $t('cv.notes') }}</label>
+          <label class="el-form-item__label">{{ $t('interviewProcess.description') }}</label>
           <el-input
-            v-model="state.notes"
+            v-model="state.description"
             :rows="5"
             :clearable="true"
             type="textarea"
@@ -166,6 +166,8 @@ import { getUserList } from '@/api/modules/common'
 import { ShareTypeEnum } from '@/enums/shareTypeEnum'
 import { InterviewSession } from '@/enums/interviewSessionEnum'
 import { FormItemTypeEnum } from '@/enums/formItemTypeEnum'
+import { useGlobalStore } from '@/store/modules/global'
+import { UserPermissionEnum } from '@/enums/userPermission'
 interface ParamsProps {
   title: string // 标题
   id?: string // 数据ID
@@ -179,7 +181,7 @@ interface ReactiveParams {
   isDragOver: boolean
   dragIndex: number
   interviewSessionList: Form.FormSelect[]
-  notes: string
+  description: string
 }
 const router = useRouter()
 const { $t } = useLocale()
@@ -191,15 +193,22 @@ const interviewSessionRef = ref()
 const props = withDefaults(defineProps<ParamsProps>(), {
   isEdit: false
 })
+const globalStore = useGlobalStore()
 const state = reactive<ReactiveParams>({
-  baseForm: cloneDeep(INTERVIEW_PROCESS_FORM),
+  baseForm: cloneDeep(INTERVIEW_PROCESS_FORM).map(item => {
+    // Only users with the ipta permission can choose the plan owner
+    if (item.prop === 'owner_id') {
+      item.isHide = !globalStore.permissions.includes(UserPermissionEnum.IPTA)
+    }
+    return item
+  }),
   processList: [],
   interviewerList: [],
   isDragOver: false,
   dragIndex: 0,
   // 面试流程list
   interviewSessionList: enumItem2arr(InterviewSession),
-  notes: ''
+  description: ''
 })
 
 const save = async () => {
@@ -212,6 +221,11 @@ const save = async () => {
     }
     const baseForm = getObjectByForms(state.baseForm)
     const formData: InterviewProcess.SaveParam = { ...baseForm }
+    // the owner field may be hidden (no ipta permission), so read it from the form item
+    const ownerValue = state.baseForm.find(item => item.prop === 'owner_id')?.value
+    if (ownerValue) {
+      formData.owner_id = ownerValue
+    }
     if (props.isEdit) {
       formData.id = props.id as string
     }
@@ -224,7 +238,7 @@ const save = async () => {
       })
     })
     formData.rounds = [...rounds]
-    formData.notes = state.notes
+    formData.description = state.description
     const request = props.isEdit ? updateInterviewProcess : createInterviewProcess
     request(formData).then(res => {
       if (res?.success) {
@@ -264,7 +278,7 @@ const initData = () => {
           })
         return item
       })
-      state.notes = result?.notes ?? ''
+      state.description = result?.description ?? ''
       const processList: InterviewProcess.RoundParam[] = []
       result?.rounds?.forEach(data => {
         const interviewers = data?.interviewers?.map(item => {
@@ -323,6 +337,19 @@ onMounted(async () => {
     })
   })
   state.interviewerList = [...options]
+  // Plan owner: defaults to the signed-in user when creating
+  const ownerItem = state.baseForm.find(item => item.prop === 'owner_id')
+  if (ownerItem) {
+    ownerItem.options = [...options]
+    if (!props.isEdit) {
+      const email = (globalStore.userInfo?.email ?? globalStore.email ?? '').toLowerCase()
+      const self = result?.result?.find(user => user.email?.toLowerCase() === email)
+      if (self) {
+        ownerItem.value = self.id
+        interviewRef.value?.changeFormModel({ prop: 'owner_id', value: self.id }, true)
+      }
+    }
+  }
   // 初始化process步骤间的拖拽事件
   const interviewSessionHtml = interviewSessionRef.value
   const listWithHandle = processRef.value
