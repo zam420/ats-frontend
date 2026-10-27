@@ -1,9 +1,11 @@
 <template>
   <EspMain :title="title">
-    <template #right>
+    <template #right v-if="!readOnly">
       <ElButton @click="goBack">{{ $t('button.cancel') }}</ElButton>
+      <ElButton v-if="isEdit" @click="saveAs" class="btn-light">{{ $t('interviewProcess.saveAs') }}</ElButton>
       <ElButton @click="save" class="btn-primary-gradient">{{ $t('button.save') }}</ElButton>
     </template>
+    <div :class="{ 'read-only': readOnly }">
     <EspForm ref="interviewRef" v-model="state.baseForm" />
     <el-row :gutter="20" class="view-content">
       <el-col :span="6">
@@ -51,9 +53,9 @@
                           <div class="left-border"></div>
                           <div class="step-content">
                             <div class="step-title">
-                              {{ InterviewSession?.[item.round_type]?.name }}
+                              {{ roundTypeOf(item.round_type)?.label }}
                             </div>
-                            <div>{{ InterviewSession?.[item.round_type]?.subLabel }}</div>
+                            <div>{{ roundTypeOf(item.round_type)?.subLabel }}</div>
                           </div>
                         </div>
                       </div>
@@ -147,24 +149,27 @@
         </div>
       </el-col>
     </el-row>
+    </div>
   </EspMain>
 </template>
 <script setup lang="ts" name="InterviewProcessForm">
 import { cloneDeep } from 'lodash-es'
 import { INTERVIEW_PROCESS_FORM } from '../data'
-import { enumItem2arr, generateUUID, getObjectByForms } from '@/utils'
+import { generateUUID, getObjectByForms } from '@/utils'
 import { useLocale } from '@/hooks/useLocale'
 import { ROUTER_SETTINGS_INTERVIEW_PROCESS } from '@/router/routerName'
 import {
   getInterviewProcessDetail,
+  getInterviewRoundTypes,
   createInterviewProcess,
-  updateInterviewProcess
-} from '@/api/modules/interviewProcess'
+  createInterviewProcessTemplate,
+  saveAsInterviewProcess,
+  updateInterviewProcess,
+  updateInterviewProcessTemplate} from '@/api/modules/interviewProcess'
 import InterviewProcess from '@/api/interface/interviewProcess'
 import Sortable from 'sortablejs'
 import { getUserList } from '@/api/modules/common'
 import { ShareTypeEnum } from '@/enums/shareTypeEnum'
-import { InterviewSession } from '@/enums/interviewSessionEnum'
 import { FormItemTypeEnum } from '@/enums/formItemTypeEnum'
 import { useGlobalStore } from '@/store/modules/global'
 import { UserPermissionEnum } from '@/enums/userPermission'
@@ -172,6 +177,8 @@ interface ParamsProps {
   title: string // 标题
   id?: string // 数据ID
   isEdit: boolean // 是否编辑
+  readOnly?: boolean // 只读查看
+  isTemplate?: boolean // 创建系统模板
 }
 
 interface ReactiveParams {
@@ -191,14 +198,17 @@ const processRef = ref()
 const interviewSessionRef = ref()
 
 const props = withDefaults(defineProps<ParamsProps>(), {
-  isEdit: false
+  isEdit: false,
+  readOnly: false,
+  isTemplate: false
 })
 const globalStore = useGlobalStore()
 const state = reactive<ReactiveParams>({
   baseForm: cloneDeep(INTERVIEW_PROCESS_FORM).map(item => {
-    // Only users with the ipta permission can choose the plan owner
+    // Only users with the ipta permission can choose the plan owner; system templates have no owner
     if (item.prop === 'owner_id') {
-      item.isHide = !globalStore.permissions.includes(UserPermissionEnum.IPTA)
+      item.isHide =
+        props.isTemplate || !globalStore.permissions.includes(UserPermissionEnum.IPTA)
     }
     return item
   }),
@@ -207,47 +217,81 @@ const state = reactive<ReactiveParams>({
   isDragOver: false,
   dragIndex: 0,
   // 面试流程list
-  interviewSessionList: enumItem2arr(InterviewSession),
+  interviewSessionList: [] as Form.FormSelect[],
   description: ''
 })
 
-const save = async () => {
+const isSystemTemplate = ref(false)
+
+// Validates the form and builds the request payload; returns null when invalid
+const buildPayload = async (): Promise<InterviewProcess.SaveParam | null> => {
   const isBasicPass = interviewRef.value.validateFrom && (await interviewRef.value.validateFrom())
+  if (!isBasicPass) return null
   const processList = state.processList
-  if (isBasicPass) {
-    if (processList.length === 0) {
-      ElMessage.error($t('message.processLimit'))
+  if (processList.length === 0) {
+    ElMessage.error($t('message.processLimit'))
+    return null
+  }
+  const baseForm = getObjectByForms(state.baseForm)
+  const formData: InterviewProcess.SaveParam = { ...baseForm }
+  // the owner field may be hidden (no ipta permission), so read it from the form item
+  const ownerValue = state.baseForm.find(item => item.prop === 'owner_id')?.value
+  if (ownerValue && !props.isTemplate) {
+    formData.owner_id = ownerValue
+  }
+  formData.rounds = processList.map((data, index) => ({
+    round_type: data.round_type,
+    interviewers: data.interviewers,
+    order: index
+  }))
+  formData.description = state.description
+  return formData
+}
+
+const submit = (
+  request: (data: InterviewProcess.SaveParam) => Promise<any>,
+  formData: InterviewProcess.SaveParam
+) => {
+  request(formData).then(res => {
+    if (res?.success) {
+      ElMessage.success({ message: $t('message.saveSuc') })
+      goBack()
       return
     }
-    const baseForm = getObjectByForms(state.baseForm)
-    const formData: InterviewProcess.SaveParam = { ...baseForm }
-    // the owner field may be hidden (no ipta permission), so read it from the form item
-    const ownerValue = state.baseForm.find(item => item.prop === 'owner_id')?.value
-    if (ownerValue) {
-      formData.owner_id = ownerValue
-    }
-    if (props.isEdit) {
-      formData.id = props.id as string
-    }
-    const rounds: InterviewProcess.RoundParam[] = []
-    processList.forEach((data, index) => {
-      rounds.push({
-        round_type: data.round_type,
-        interviewers: data.interviewers,
-        order: index
-      })
+    ElMessage.error({ message: res?.message })
+  })
+}
+
+const save = async () => {
+  const formData = await buildPayload()
+  if (!formData) return
+  if (props.isEdit) {
+    formData.id = props.id as string
+    submit(isSystemTemplate.value ? updateInterviewProcessTemplate : updateInterviewProcess, formData)
+  } else {
+    submit(props.isTemplate ? createInterviewProcessTemplate : createInterviewProcess, formData)
+  }
+}
+
+// Save the current content as a new plan under a name entered in a dialog
+const saveAs = async () => {
+  const formData = await buildPayload()
+  if (!formData) return
+  try {
+    const { value } = await ElMessageBox.prompt($t('interviewProcess.saveAsName'), $t('interviewProcess.saveAs'), {
+      confirmButtonText: $t('button.confirm'),
+      cancelButtonText: $t('button.cancel'),
+      inputValue: '',
+      inputPlaceholder: $t('interviewProcess.interviewName'),
+      inputValidator: (val: string) =>
+        (val ?? '').trim().length > 0 || $t('form.required'),
+      inputErrorMessage: $t('form.required')
     })
-    formData.rounds = [...rounds]
-    formData.description = state.description
-    const request = props.isEdit ? updateInterviewProcess : createInterviewProcess
-    request(formData).then(res => {
-      if (res?.success) {
-        ElMessage.success({ message: $t('message.saveSuc') })
-        goBack()
-        return
-      }
-      ElMessage.error({ message: res?.message })
-    })
+    formData.name = value.trim()
+    delete formData.id
+    submit(saveAsInterviewProcess, formData)
+  } catch {
+    // dialog cancelled
   }
 }
 
@@ -265,6 +309,7 @@ const initData = () => {
   if (props.id) {
     getInterviewProcessDetail(props.id).then(res => {
       const result = (res.result ?? {}) as InterviewProcess.DetailInfo
+      isSystemTemplate.value = !!result.is_system_template
       state.baseForm.map((item: Form.FormItem) => {
         let prop = item.prop as keyof InterviewProcess.DetailInfo
         item.value = result?.[prop]
@@ -287,7 +332,7 @@ const initData = () => {
         })
         processList.push({
           id: data.id,
-          round_type: data.round_type,
+          round_type: Number(data.round_type),
           interviewers: interviewers ?? [],
           order: data.order
         })
@@ -325,7 +370,20 @@ const deleteRound = (index: number) => {
   state.processList.splice(index, 1)
 }
 
+const roundTypeOf = (value: unknown) =>
+  state.interviewSessionList.find(type => type.value === value)
+
+const loadRoundTypes = async () => {
+  const res = await getInterviewRoundTypes()
+  state.interviewSessionList = (res?.result ?? []).map(type => ({
+    value: type.value,
+    label: type.display_name,
+    subLabel: type.description
+  }))
+}
+
 onMounted(async () => {
+  await loadRoundTypes()
   // 获取interviewer下拉的值
   const result = await getUserList(ShareTypeEnum.INTERVIEWER)
   const options: Form.FormSelect[] = []
@@ -409,4 +467,16 @@ onMounted(async () => {
 </script>
 <style lang="less" scoped>
 @import '../index.less';
+.btn-light {
+  color: var(--el-color-primary);
+}
+// read-only view: block all interaction and hide the add/remove/drag affordances
+.read-only {
+  pointer-events: none;
+  .icon-delete,
+  .plus,
+  .order {
+    visibility: hidden;
+  }
+}
 </style>

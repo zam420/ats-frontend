@@ -3,9 +3,18 @@ declare namespace InterviewProcess {
     id: string
     name: string
     owner_id?: string
-    description: string
+    description?: string
+    is_system_template?: boolean
+    is_public?: boolean
     status: number
     status_name?: string
+  }
+
+  interface RoundType {
+    value: number
+    name: string
+    display_name: string
+    description: string
   }
 
   interface Interviews {

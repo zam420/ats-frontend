@@ -20,13 +20,19 @@ export const INTERVIEW_PROCESS_TABLE: Table.ColumnProps[] = [
     label: $t('interviewProcess.interviewName'),
     link: ROUTER_SETTINGS_INTERVIEW_PROCESS_DETAIL,
     filter: false,
-    minWidth: 40
+    minWidth: 30
+  },
+  {
+    prop: 'owner_id',
+    label: $t('interviewProcess.owner'),
+    filter: false,
+    minWidth: 20
   },
   {
     prop: 'description',
     label: $t('interviewProcess.description'),
     filter: false,
-    minWidth: 60
+    minWidth: 50
   }
 ]
 

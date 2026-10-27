@@ -1,5 +1,10 @@
 <template>
-  <InterviewProcessForm :title="$t('interviewProcess.editInterview')" :is-edit="true" :id="id" />
+  <InterviewProcessForm
+    :title="$t('interviewProcess.editInterview')"
+    :is-edit="true"
+    :id="id"
+    :read-only="route.query?.readonly === '1'"
+  />
 </template>
 <script setup lang="ts">
 import InterviewProcessForm from './components/InterviewProcessForm.vue'

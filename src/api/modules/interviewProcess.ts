@@ -11,6 +11,10 @@ export const getInterviewProcessList = (params: Record<string, any>) => {
   return http.get<InterviewProcess.ListInfo[]>('/api/interviewplan/all', params)
 }
 
+export const getOwnedInterviewProcessList = (params: Record<string, any>) => {
+  return http.get<InterviewProcess.ListInfo[]>('/api/interviewplan/owned', params)
+}
+
 export const getSharedInterviewProcessList = (params: Record<string, any>) => {
   return http.get<InterviewProcess.ListInfo[]>('/api/interviewplan/shared', params)
 }
@@ -22,6 +26,26 @@ export const getTemplateInterviewProcessList = (params: Record<string, any>) => 
 // 创建 Interview Process
 export const createInterviewProcess = (data: InterviewProcess.SaveParam) => {
   return http.post<ResultCreate>('/api/interviewplan/create', data)
+}
+
+// 获取所有面试环节类型
+export const getInterviewRoundTypes = () => {
+  return http.get<InterviewProcess.RoundType[]>('/api/interviewplan/roundtypes')
+}
+
+// 创建系统模板
+export const createInterviewProcessTemplate = (data: InterviewProcess.SaveParam) => {
+  return http.post<ResultCreate>('/api/interviewplan/templates/create', data)
+}
+
+// 另存为
+export const saveAsInterviewProcess = (data: InterviewProcess.SaveParam) => {
+  return http.post<ResultCreate>('/api/interviewplan/saveas', data)
+}
+
+// 修改系统模板
+export const updateInterviewProcessTemplate = (data: InterviewProcess.SaveParam) => {
+  return http.post<ResultCreate>('/api/interviewplan/templates/update', data)
 }
 
 // 修改 Interview Process

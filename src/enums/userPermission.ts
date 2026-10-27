@@ -25,6 +25,7 @@ export enum UserPermissionEnum {
   IPTE = 'ipte', // interview process edit
   IPTS = 'ipts', // interview process search
   IPTA = 'ipta', // interview process plan owner assignment
+  IPTSA = 'iptsa', // interview process system template admin
   IM = 'im', // interviewer menu
   RSM = 'rsm', // resume review menu
   MIM = 'mim', // my review menu
