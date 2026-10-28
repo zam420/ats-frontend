@@ -786,7 +786,7 @@ export default {
     activeInterviewMsg: 'active this interview process?',
     inactiveInterviewTitle: 'Inactive Interview Process',
     activeInterviewTitle: 'Active Interview Process',
-    interviewSessions: 'Available Rounds',
+    interviewSessions: 'Interview Round Types',
     onlineWrittenTest: 'Online Test',
     videoInterview: 'Video Interview',
     HRInterview: 'HR Interview',

@@ -376,8 +376,8 @@ const roundTypeOf = (value: unknown) =>
 const loadRoundTypes = async () => {
   const res = await getInterviewRoundTypes()
   state.interviewSessionList = (res?.result ?? []).map(type => ({
-    value: type.value,
-    label: type.display_name,
+    value: type.id,
+    label: type.name,
     subLabel: type.description
   }))
 }

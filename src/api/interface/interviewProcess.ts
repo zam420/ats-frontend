@@ -11,10 +11,9 @@ declare namespace InterviewProcess {
   }
 
   interface RoundType {
-    value: number
+    id: number
     name: string
-    display_name: string
-    description: string
+    description?: string
   }
 
   interface Interviews {

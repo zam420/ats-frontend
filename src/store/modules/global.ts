@@ -74,6 +74,12 @@ export const useGlobalStore = defineStore({
         await this.getUserInfo()
       }
     },
+    // Get a new access token using the refresh token; throws if the refresh token is rejected
+    async refreshAccessToken() {
+      const res = await refreshApi(this.refreshToken)
+      this.accessToken = `Bearer ${res.accessToken}`
+      this.refreshToken = res.refreshToken
+    },
     // Called after a successful activation: the current token still says "deactivated", so get a fresh one
     async onActivated() {
       const res = await refreshApi(this.refreshToken)

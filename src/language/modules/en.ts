@@ -786,7 +786,7 @@ export default {
     activeInterviewMsg: 'activate this interview plan?',
     inactiveInterviewTitle: 'Delete Interview Plan',
     activeInterviewTitle: 'Activate Interview Plan',
-    interviewSessions: 'Available Rounds',
+    interviewSessions: 'Interview Round Types',
     onlineWrittenTest: 'Online Test',
     videoInterview: 'Video Interview',
     HRInterview: 'HR Interview',

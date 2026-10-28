@@ -22,6 +22,21 @@ export interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
   loadingText?: string
 }
 
+type RetryableConfig = CustomAxiosRequestConfig & { _retry?: boolean }
+
+// Concurrent 401s share one refresh call
+let refreshPromise: Promise<void> | null = null
+const refreshAccessToken = () => {
+  if (!refreshPromise) {
+    refreshPromise = useGlobalStore()
+      .refreshAccessToken()
+      .finally(() => {
+        refreshPromise = null
+      })
+  }
+  return refreshPromise
+}
+
 const config = {
   // 默认地址请求地址，可在 .env.** 文件中修改
   baseURL: import.meta.env.VITE_API_URL as string,
@@ -136,6 +151,19 @@ class RequestHttp {
             data?.code === ResultEnum.UNAUTHORIZED ||
             response?.status === ResultEnum.NO_AUTH
           ) {
+            // Try a silent token refresh first; only go to login if that fails too
+            const original = error.config as RetryableConfig | undefined
+            if (original && !original._retry && useGlobalStore().refreshToken) {
+              original._retry = true
+              try {
+                await refreshAccessToken()
+              } catch (e) {
+                // refresh token rejected too: the session is really over
+                toLogin()
+                return Promise.reject(data)
+              }
+              return this.service(original)
+            }
             toLogin()
             return Promise.reject(data)
           }
