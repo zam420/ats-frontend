@@ -29,6 +29,8 @@ declare namespace InterviewProcess {
     round_type_name: string
     interviewers: (Interviews | number)[]
     order: number
+    name?: string
+    description?: string
   }
 
   interface DetailInfo extends ListInfo {
@@ -51,6 +53,8 @@ declare namespace InterviewProcess {
     id?: string | number
     round_type: number | string
     interviewers: number[]
+    name?: string
+    description?: string
     order?: number
   }
 

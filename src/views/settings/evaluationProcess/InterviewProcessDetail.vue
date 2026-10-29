@@ -59,8 +59,8 @@
 </template>
 <script setup lang="ts" name="InterviewProcessDetail">
 import {
-  ROUTER_SETTINGS_INTERVIEW_PROCESS,
-  ROUTER_SETTINGS_INTERVIEW_PROCESS_EDIT
+  ROUTER_SETTINGS_EVALUATION_PLAN,
+  ROUTER_SETTINGS_EVALUATION_PLAN_EDIT
 } from '@/router/routerName'
 import { UserPermissionEnum } from '@/enums/userPermission'
 import { ProjectStatus, ProjectStatusEnum } from '@/enums/projectStatusEnum'
@@ -127,13 +127,13 @@ const initData = () => {
     })
   } else {
     router.replace({
-      path: `/${ROUTER_SETTINGS_INTERVIEW_PROCESS}`
+      path: `/${ROUTER_SETTINGS_EVALUATION_PLAN}`
     })
   }
 }
 const showEdit = () => {
   router.push({
-    path: `/${ROUTER_SETTINGS_INTERVIEW_PROCESS_EDIT}/${state.id}`
+    path: `/${ROUTER_SETTINGS_EVALUATION_PLAN_EDIT}/${state.id}`
   })
 }
 

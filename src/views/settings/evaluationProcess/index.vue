@@ -15,11 +15,11 @@
       @tab-change="onTabChange"
     >
       <template #header="">
+        <ElButton v-if="hasIptsa()" class="btn-light" @click="showCreateTemplate">{{
+          $t('interviewProcess.createTemplate')
+        }}</ElButton>
         <ElButton v-if="hasPermission" @click="showCreate" class="btn-primary-gradient">{{
           $t('button.create')
-        }}</ElButton>
-        <ElButton v-if="hasIptsa()" @click="showCreateTemplate">{{
-          $t('interviewProcess.createTemplate')
         }}</ElButton>
       </template>
       <template #owner_id="{ row }">
@@ -54,8 +54,8 @@ import { OPEN_DIALOG } from '@/config'
 import { INTERVIEW_PROCESS_TABLE } from './data'
 import router from '@/router'
 import {
-  ROUTER_SETTINGS_INTERVIEW_PROCESS_CREATE,
-  ROUTER_SETTINGS_INTERVIEW_PROCESS_EDIT
+  ROUTER_SETTINGS_EVALUATION_PLAN_CREATE,
+  ROUTER_SETTINGS_EVALUATION_PLAN_EDIT
 } from '@/router/routerName'
 import InterviewProcess from '@/api/interface/interviewProcess'
 import { UserPermissionEnum } from '@/enums/userPermission'
@@ -184,19 +184,19 @@ const messageConfirm = (row: InterviewProcess.ListInfo) => {
 // 打开编辑页面; shared and system template records open read-only
 const showEdit = (id: number) => {
   const readonly = currentTab.value === TAB_SHARED || currentTab.value === TAB_TEMPLATES
-  openNewWindow(`${ROUTER_SETTINGS_INTERVIEW_PROCESS_EDIT}/${id}${readonly ? '?readonly=1' : ''}`)
+  openNewWindow(`${ROUTER_SETTINGS_EVALUATION_PLAN_EDIT}/${id}${readonly ? '?readonly=1' : ''}`)
 }
 // 打开新增页面
 const showCreateTemplate = () => {
   router.push({
-    path: `/${ROUTER_SETTINGS_INTERVIEW_PROCESS_CREATE}`,
+    path: `/${ROUTER_SETTINGS_EVALUATION_PLAN_CREATE}`,
     query: { template: '1' }
   })
 }
 
 const showCreate = () => {
   router.push({
-    path: `/${ROUTER_SETTINGS_INTERVIEW_PROCESS_CREATE}`
+    path: `/${ROUTER_SETTINGS_EVALUATION_PLAN_CREATE}`
   })
 }
 // 刷新表格
@@ -204,4 +204,8 @@ const refreshTable = () => {
   espTable.value.refresh(null, true)
 }
 </script>
-<style lang="less" scoped></style>
+<style lang="less" scoped>
+.btn-light {
+  color: var(--el-color-primary);
+}
+</style>

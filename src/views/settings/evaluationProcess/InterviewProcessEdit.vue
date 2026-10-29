@@ -8,7 +8,7 @@
 </template>
 <script setup lang="ts">
 import InterviewProcessForm from './components/InterviewProcessForm.vue'
-import { ROUTER_SETTINGS_INTERVIEW_PROCESS } from '@/router/routerName'
+import { ROUTER_SETTINGS_EVALUATION_PLAN } from '@/router/routerName'
 import { isNumber } from '@/utils/is'
 
 const route = useRoute()
@@ -20,7 +20,7 @@ onMounted(() => {
     id.value = paramId as string
   } else {
     router.replace({
-      path: `/${ROUTER_SETTINGS_INTERVIEW_PROCESS}`
+      path: `/${ROUTER_SETTINGS_EVALUATION_PLAN}`
     })
   }
 })

@@ -58,11 +58,11 @@ export const ROUTER_SETTINGS = 'settings'
 //Settings -> User Management
 export const ROUTER_SETTINGS_USER_MANAGEMENT = 'settings/userManagement'
 
-//Settings -> Interview Process
-export const ROUTER_SETTINGS_INTERVIEW_PROCESS = 'settings/interviewprocess'
-export const ROUTER_SETTINGS_INTERVIEW_PROCESS_CREATE = 'settings/interviewprocess/create'
-export const ROUTER_SETTINGS_INTERVIEW_PROCESS_EDIT = 'settings/interviewprocess/edit'
-export const ROUTER_SETTINGS_INTERVIEW_PROCESS_DETAIL = '/settings/interviewprocess/'
+//Settings -> Evaluation Plan
+export const ROUTER_SETTINGS_EVALUATION_PLAN = 'settings/evaluationplan'
+export const ROUTER_SETTINGS_EVALUATION_PLAN_CREATE = 'settings/evaluationplan/create'
+export const ROUTER_SETTINGS_EVALUATION_PLAN_EDIT = 'settings/evaluationplan/edit'
+export const ROUTER_SETTINGS_EVALUATION_PLAN_DETAIL = '/settings/evaluationplan/'
 
 //Settings -> Email Template
 export const ROUTER_SETTINGS_EMAIL_TEMPLATE = 'settings/emailTemplate'

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <EspMain :title="title">
     <template #right v-if="!readOnly">
       <ElButton @click="goBack">{{ $t('button.cancel') }}</ElButton>
@@ -51,11 +51,22 @@
                       >
                         <div class="stepAdded">
                           <div class="left-border"></div>
-                          <div class="step-content">
-                            <div class="step-title">
+                          <div class="step-content round-content" @click.stop @keydown.stop>
+                            <div class="round-type-label">
                               {{ roundTypeOf(item.round_type)?.label }}
                             </div>
-                            <div>{{ roundTypeOf(item.round_type)?.subLabel }}</div>
+                            <el-input
+                              v-model="item.name"
+                              class="inline-input inline-title"
+                              maxlength="30"
+                              :placeholder="roundTypeOf(item.round_type)?.subLabel"
+                            />
+                            <el-input
+                              v-model="item.description"
+                              class="inline-input"
+                              maxlength="100"
+                              :placeholder="$t('interviewProcess.roundDescPlaceholder')"
+                            />
                           </div>
                         </div>
                       </div>
@@ -73,11 +84,14 @@
                     </el-dropdown>
                   </el-col>
                   <el-col :span="14" v-if="item.round_type !== ''">
+                    <template v-if="!isTemplate && !isSystemTemplate">
                     <div class="select-title">{{ $t('interviewProcess.interviewers') }}</div>
                     <el-select
                       v-model="item.interviewers"
+                      class="interviewer-select"
                       multiple
                       collapse-tags
+                      :max-collapse-tags="2"
                       collapse-tags-tooltip
                       filterable
                       :clearable="true"
@@ -98,6 +112,7 @@
                         >
                       </el-option>
                     </el-select>
+                    </template>
                   </el-col>
                   <el-col :span="1" class="center" v-if="item.round_type !== ''">
                     <i class="iconfont icon-delete" @click="deleteRound(index)"></i>
@@ -157,7 +172,7 @@ import { cloneDeep } from 'lodash-es'
 import { INTERVIEW_PROCESS_FORM } from '../data'
 import { generateUUID, getObjectByForms } from '@/utils'
 import { useLocale } from '@/hooks/useLocale'
-import { ROUTER_SETTINGS_INTERVIEW_PROCESS } from '@/router/routerName'
+import { ROUTER_SETTINGS_EVALUATION_PLAN } from '@/router/routerName'
 import {
   getInterviewProcessDetail,
   getInterviewRoundTypes,
@@ -236,12 +251,14 @@ const buildPayload = async (): Promise<InterviewProcess.SaveParam | null> => {
   const formData: InterviewProcess.SaveParam = { ...baseForm }
   // the owner field may be hidden (no ipta permission), so read it from the form item
   const ownerValue = state.baseForm.find(item => item.prop === 'owner_id')?.value
-  if (ownerValue && !props.isTemplate) {
+  if (ownerValue && !props.isTemplate && !isSystemTemplate.value) {
     formData.owner_id = ownerValue
   }
   formData.rounds = processList.map((data, index) => ({
     round_type: data.round_type,
     interviewers: data.interviewers,
+    name: data.name,
+    description: data.description,
     order: index
   }))
   formData.description = state.description
@@ -301,7 +318,7 @@ const goBack = () => {
     return
   }
   router.replace({
-    path: `/${ROUTER_SETTINGS_INTERVIEW_PROCESS}`
+    path: `/${ROUTER_SETTINGS_EVALUATION_PLAN}`
   })
 }
 
@@ -310,6 +327,10 @@ const initData = () => {
     getInterviewProcessDetail(props.id).then(res => {
       const result = (res.result ?? {}) as InterviewProcess.DetailInfo
       isSystemTemplate.value = !!result.is_system_template
+      if (isSystemTemplate.value) {
+        const ownerItem = state.baseForm.find(item => item.prop === 'owner_id')
+        if (ownerItem) ownerItem.isHide = true
+      }
       state.baseForm.map((item: Form.FormItem) => {
         let prop = item.prop as keyof InterviewProcess.DetailInfo
         item.value = result?.[prop]
@@ -334,6 +355,8 @@ const initData = () => {
           id: data.id,
           round_type: Number(data.round_type),
           interviewers: interviewers ?? [],
+          name: data.name,
+          description: data.description,
           order: data.order
         })
       })
@@ -352,17 +375,29 @@ const handleDragLeave = () => {
   state.isDragOver = false
 }
 
+// A new round's name starts as the type's description; the round description starts empty
+const newRound = (value: number): InterviewProcess.RoundParam => ({
+  id: generateUUID(),
+  round_type: value,
+  interviewers: [],
+  name: roundTypeOf(value)?.subLabel,
+  description: ''
+})
+
+// Changes the type of a round; the name follows the type's description only if the user hasn't customised it
+const changeRoundType = (item: InterviewProcess.RoundParam, value: number) => {
+  const oldType = roundTypeOf(item.round_type)
+  if (!item.name || item.name === oldType?.subLabel) item.name = roundTypeOf(value)?.subLabel
+  item.round_type = value
+}
+
 // 设置面试环节类型
 const setRoundType = (item: InterviewProcess.RoundParam | null, value: number) => {
   if (!item) {
-    state.processList.push({
-      id: generateUUID(),
-      round_type: value,
-      interviewers: []
-    })
+    state.processList.push(newRound(value))
     return
   }
-  item.round_type = value
+  changeRoundType(item, value)
 }
 
 // 删除已添加的流程
@@ -443,13 +478,9 @@ onMounted(async () => {
           const newIndex = evt.newIndex as number
           const round_type = state.interviewSessionList?.[newIndex]?.value
           if (state.dragIndex === -1) {
-            state.processList.push({
-              id: generateUUID(),
-              round_type: round_type,
-              interviewers: []
-            })
+            state.processList.push(newRound(round_type as number))
           } else {
-            state.processList[state.dragIndex].round_type = round_type
+            changeRoundType(state.processList[state.dragIndex], round_type as number)
           }
           state.isDragOver = false
         }
@@ -468,6 +499,85 @@ onMounted(async () => {
 <style lang="less" scoped>
 @import '../index.less';
 .btn-light {
+  color: var(--el-color-primary);
+}
+// Inline editable round name/description inside the round card (no borders, left aligned with the title)
+.inline-input {
+  :deep(.el-input__wrapper) {
+    padding: 0 !important;
+    background: transparent;
+    box-shadow: none !important;
+    border: none;
+    border-radius: 0;
+  }
+  :deep(.el-input__inner) {
+    text-align: left;
+    padding: 0 !important;
+    height: 22px;
+    line-height: 22px;
+  }
+}
+.inline-title :deep(.el-input__inner) {
+  font-weight: bold;
+  font-size: var(--el-font-size-medium);
+}
+// Added rounds: 100px panel with title / name / description evenly spaced
+.process-box .add-select.no-border {
+  height: 100px !important;
+  .stepAdded {
+    height: 100px;
+    padding: 0.7rem 1.8rem;
+  }
+  .round-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+  }
+}
+// Interviewers: keep selected tags on a single line, truncating long names
+.interviewer-select {
+  :deep(.el-select__tags) {
+    flex-wrap: nowrap;
+  }
+  :deep(.el-select-tags-wrapper) {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    max-width: 100%;
+    min-width: 0;
+  }
+  :deep(.el-select-tags-wrapper .el-tag) {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 45%;
+    overflow: hidden;
+  }
+  :deep(.el-select-tags-wrapper .el-tag .el-tag__content) {
+    min-width: 0;
+    overflow: hidden;
+  }
+  :deep(.el-select-tags-wrapper .el-tag .el-select__tags-text) {
+    display: block;
+    max-width: 100% !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  // the "+ n" tag keeps its full width
+  :deep(.el-select-tags-wrapper .el-tag:last-child) {
+    flex-shrink: 0;
+    max-width: none;
+  }
+}
+// Added rounds: smaller round type label above the editable name
+.round-type-label {
+  padding-bottom: 3px;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 16px;
   color: var(--el-color-primary);
 }
 // read-only view: block all interaction and hide the add/remove/drag affordances
