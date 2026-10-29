@@ -89,6 +89,7 @@
                     <el-select
                       v-model="item.interviewers"
                       class="interviewer-select"
+                      @mouseover="showFullTagText"
                       multiple
                       collapse-tags
                       :max-collapse-tags="2"
@@ -152,16 +153,6 @@
             </div>
           </div>
         </div>
-        <div class="esp-form-wrap">
-          <label class="el-form-item__label">{{ $t('interviewProcess.description') }}</label>
-          <el-input
-            v-model="state.description"
-            :rows="5"
-            :clearable="true"
-            type="textarea"
-            :placeholder="`${$t('form.text')}`"
-          />
-        </div>
       </el-col>
     </el-row>
     </div>
@@ -203,7 +194,6 @@ interface ReactiveParams {
   isDragOver: boolean
   dragIndex: number
   interviewSessionList: Form.FormSelect[]
-  description: string
 }
 const router = useRouter()
 const { $t } = useLocale()
@@ -232,8 +222,7 @@ const state = reactive<ReactiveParams>({
   isDragOver: false,
   dragIndex: 0,
   // 面试流程list
-  interviewSessionList: [] as Form.FormSelect[],
-  description: ''
+  interviewSessionList: [] as Form.FormSelect[]
 })
 
 const isSystemTemplate = ref(false)
@@ -261,7 +250,6 @@ const buildPayload = async (): Promise<InterviewProcess.SaveParam | null> => {
     description: data.description,
     order: index
   }))
-  formData.description = state.description
   return formData
 }
 
@@ -322,6 +310,12 @@ const goBack = () => {
   })
 }
 
+// Truncated interviewer tags show their full text as a native tooltip on hover
+const showFullTagText = (e: MouseEvent) => {
+  const el = (e.target as HTMLElement)?.closest?.('.el-select__tags-text') as HTMLElement | null
+  if (el && !el.title) el.title = el.textContent?.trim() ?? ''
+}
+
 const initData = () => {
   if (props.id) {
     getInterviewProcessDetail(props.id).then(res => {
@@ -344,7 +338,6 @@ const initData = () => {
           })
         return item
       })
-      state.description = result?.description ?? ''
       const processList: InterviewProcess.RoundParam[] = []
       result?.rounds?.forEach(data => {
         const interviewers = data?.interviewers?.map(item => {

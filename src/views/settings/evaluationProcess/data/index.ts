@@ -1,4 +1,4 @@
-import { useLocale } from '@/hooks/useLocale'
+﻿import { useLocale } from '@/hooks/useLocale'
 import { TableColumnTypeEnum } from '@/enums/tableColumnTypeEnum'
 import { TableColumnFixedEnum } from '@/enums/tableColumnFixedEnum'
 import { FormItemTypeEnum } from '@/enums/formItemTypeEnum'
@@ -42,14 +42,22 @@ export const INTERVIEW_PROCESS_FORM: Form.FormItem[] = [
     label: $t('interviewProcess.interviewName'),
     prop: 'name',
     required: true,
-    col: 18
+    maxlength: 100,
+    col: 6
+  },
+  {
+    label: $t('interviewProcess.description'),
+    prop: 'description',
+    maxlength: 300,
+    col: 12
   },
   {
     label: $t('interviewProcess.planOwner'),
     prop: 'owner_id',
     type: FormItemTypeEnum.SELECT,
     options: [],
-    isHide: true
+    isHide: true,
+    col: 6
   }
 ]
 
