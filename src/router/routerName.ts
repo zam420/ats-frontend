@@ -64,6 +64,12 @@ export const ROUTER_SETTINGS_EVALUATION_PLAN_CREATE = 'settings/evaluationplan/c
 export const ROUTER_SETTINGS_EVALUATION_PLAN_EDIT = 'settings/evaluationplan/edit'
 export const ROUTER_SETTINGS_EVALUATION_PLAN_DETAIL = '/settings/evaluationplan/'
 
+//Settings -> Recruitment Pipeline
+export const ROUTER_SETTINGS_RECRUITMENT_PIPELINE = 'settings/recruitmentpipeline'
+export const ROUTER_SETTINGS_RECRUITMENT_PIPELINE_CREATE = 'settings/recruitmentpipeline/create'
+export const ROUTER_SETTINGS_RECRUITMENT_PIPELINE_EDIT = 'settings/recruitmentpipeline/edit'
+export const ROUTER_SETTINGS_RECRUITMENT_PIPELINE_DETAIL = '/settings/recruitmentpipeline/'
+
 //Settings -> Email Template
 export const ROUTER_SETTINGS_EMAIL_TEMPLATE = 'settings/emailTemplate'
 export const ROUTER_SETTINGS_EMAIL_TEMPLATE_CREATE = 'settings/emailTemplate/create'

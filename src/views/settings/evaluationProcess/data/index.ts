@@ -29,6 +29,12 @@ export const INTERVIEW_PROCESS_TABLE: Table.ColumnProps[] = [
     minWidth: 20
   },
   {
+    prop: 'round_sequence',
+    label: $t('interviewProcess.roundSequence'),
+    filter: false,
+    minWidth: 40
+  },
+  {
     prop: 'description',
     label: $t('interviewProcess.description'),
     filter: false,

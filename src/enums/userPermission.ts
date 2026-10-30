@@ -26,6 +26,12 @@ export enum UserPermissionEnum {
   IPTS = 'ipts', // interview process search
   IPTA = 'ipta', // interview process plan owner assignment
   IPTSA = 'iptsa', // interview process system template admin
+  RPTM = 'rptm', // recruitment pipeline menu
+  RPTC = 'rptc', // recruitment pipeline create
+  RPTE = 'rpte', // recruitment pipeline edit
+  RPTS = 'rpts', // recruitment pipeline search
+  RPTA = 'rpta', // recruitment pipeline tenant admin
+  RPTSA = 'rptsa', // recruitment pipeline system template admin
   IM = 'im', // interviewer menu
   RSM = 'rsm', // resume review menu
   MIM = 'mim', // my review menu
