@@ -30,8 +30,15 @@
             <div ref="processRef">
               <div
                 class="process-box"
+                :class="{
+                  'drop-before': state.isDragOver && state.dragIndex === index && !state.dropAfter,
+                  'drop-after': state.isDragOver && state.dragIndex === index && state.dropAfter
+                }"
                 v-for="(item, index) in state.processList"
                 :key="`${item.id} ${index}`"
+                @drop="evt => handleRoundDragOver(evt, index)"
+                @dragover.prevent="evt => handleRoundDragOver(evt, index)"
+                @dragleave="handleDragLeave"
               >
                 <el-row :gutter="20">
                   <el-col :span="1" class="center">
@@ -41,12 +48,8 @@
                     <el-dropdown trigger="click" :teleported="false">
                       <div
                         class="add-select"
-                        @drop="evt => handleDragOver(evt, index)"
-                        @dragover.prevent="evt => handleDragOver(evt, index)"
-                        @dragleave="handleDragLeave"
                         :class="{
-                          'no-border': item.round_type !== '',
-                          active: state.isDragOver && state.dragIndex === index
+                          'no-border': item.round_type !== ''
                         }"
                       >
                         <div class="stepAdded">
@@ -193,6 +196,7 @@ interface ReactiveParams {
   interviewerList: Form.FormSelect[]
   isDragOver: boolean
   dragIndex: number
+  dropAfter: boolean
   interviewSessionList: Form.FormSelect[]
 }
 const router = useRouter()
@@ -221,6 +225,7 @@ const state = reactive<ReactiveParams>({
   interviewerList: [],
   isDragOver: false,
   dragIndex: 0,
+  dropAfter: false,
   // 面试流程list
   interviewSessionList: [] as Form.FormSelect[]
 })
@@ -234,6 +239,10 @@ const buildPayload = async (): Promise<InterviewProcess.SaveParam | null> => {
   const processList = state.processList
   if (processList.length === 0) {
     ElMessage.error($t('message.processLimit'))
+    return null
+  }
+  if (processList.length > MAX_ROUNDS) {
+    ElMessage.error($t('message.roundsMaxLimit'))
     return null
   }
   const baseForm = getObjectByForms(state.baseForm)
@@ -367,8 +376,24 @@ const handleDragOver = (event: DragEvent, index: number) => {
 const handleDragLeave = () => {
   state.isDragOver = false
 }
+// Over an added round: the upper half inserts before it, the lower half after it
+const handleRoundDragOver = (event: DragEvent, index: number) => {
+  event.preventDefault()
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
+  state.isDragOver = true
+  state.dragIndex = index
+  state.dropAfter = event.clientY > rect.top + rect.height / 2
+}
 
 // A new round's name starts as the type's description; the round description starts empty
+const MAX_ROUNDS = 10
+// Shows a warning and returns true when no more rounds can be added
+const isAtMaxRounds = () => {
+  if (state.processList.length < MAX_ROUNDS) return false
+  ElMessage.warning($t('message.roundsMaxLimit'))
+  return true
+}
+
 const newRound = (value: number): InterviewProcess.RoundParam => ({
   id: generateUUID(),
   round_type: value,
@@ -387,6 +412,7 @@ const changeRoundType = (item: InterviewProcess.RoundParam, value: number) => {
 // 设置面试环节类型
 const setRoundType = (item: InterviewProcess.RoundParam | null, value: number) => {
   if (!item) {
+    if (isAtMaxRounds()) return
     state.processList.push(newRound(value))
     return
   }
@@ -444,6 +470,7 @@ onMounted(async () => {
       handle: '.order', // 按住按钮进行拖拽
       ghostClass: 'blue-background-class',
       onEnd(evt: Sortable.SortableEvent) {
+        state.isDragOver = false
         const newIndex = evt.newIndex as number
         const oldIndex = evt.oldIndex as number
         const currRow = state.processList?.splice(oldIndex, 1)[0]
@@ -467,13 +494,17 @@ onMounted(async () => {
         state.isDragOver = false
       },
       onEnd(evt: Sortable.SortableEvent) {
-        if (state.isDragOver) {
+        if (state.isDragOver && !isAtMaxRounds()) {
           const newIndex = evt.newIndex as number
           const round_type = state.interviewSessionList?.[newIndex]?.value
           if (state.dragIndex === -1) {
             state.processList.push(newRound(round_type as number))
           } else {
-            changeRoundType(state.processList[state.dragIndex], round_type as number)
+            state.processList.splice(
+              state.dragIndex + (state.dropAfter ? 1 : 0),
+              0,
+              newRound(round_type as number)
+            )
           }
           state.isDragOver = false
         }
@@ -566,6 +597,13 @@ onMounted(async () => {
   }
 }
 // Added rounds: smaller round type label above the editable name
+// Insertion line shown while dragging a round type over an added round
+.process-box.drop-before {
+  box-shadow: 0 -3px 0 0 var(--el-color-primary);
+}
+.process-box.drop-after {
+  box-shadow: 0 3px 0 0 var(--el-color-primary);
+}
 .round-type-label {
   padding-bottom: 3px;
   font-size: 12px;

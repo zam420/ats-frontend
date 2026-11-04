@@ -237,6 +237,8 @@ export default {
     noDuplicateApplication: 'No duplicate application(s)',
     shareSuc: 'Share Successfully',
     processLimit: 'Please add at least one Interview Process!',
+    roundsMaxLimit: 'An evaluation plan can have at most 10 rounds.',
+    stagesMaxLimit: 'A recruitment pipeline can have at most 10 stages.',
     groupInterviewLimit: 'Please select resumes from candidates under the same job position.',
     emptyNameLimit:
       "The selected candidate's name is empty. Do you want to proceed with scheduling the interview?",
@@ -781,6 +783,10 @@ export default {
     saveAs: 'Save As',
     roundName: 'Round Name',
     roundSequence: 'Round Sequence',
+    type: 'Type',
+    typeShared: 'Shared',
+    typeSystemTemplate: 'System Template',
+    typePrivate: 'Private',
     roundNamePlaceholder: 'Optional',
     addDescription: '+ Add description',
     roundDescPlaceholder: 'Description (optional)',
@@ -826,7 +832,9 @@ export default {
     saveAsName: 'Recruitment Pipeline Name *',
     deletePipelineTitle: 'Delete Recruitment Pipeline',
     deletePipelineMsg: 'delete this recruitment pipeline?',
-    dragProcess: 'Click the + button or drag-drop available rounds to add stages.'
+    dragProcess: 'Click the + button or drag-drop available rounds to add stages.',
+    stageTypes: 'Stage Types',
+    addedStages: 'Added Stages'
   },
   scheduleInterview: {
     oneToOneInterview: 'Schedule One-on-one Interview',

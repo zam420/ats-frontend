@@ -45,7 +45,7 @@ const recruitmentPipelineRouter: Menu.MenuOptions[] = [
     }
   },
   {
-    path: `${ROUTER_SETTINGS_RECRUITMENT_PIPELINE_DETAIL}:id`,
+    path: `${ROUTER_SETTINGS_RECRUITMENT_PIPELINE_DETAIL}/:id`,
     name: 'ROUTER_SETTINGS_RECRUITMENT_PIPELINE_DETAIL',
     component: () => import('@/views/settings/recruitmentPipeline/RecruitmentPipelineDetail.vue'),
     meta: {

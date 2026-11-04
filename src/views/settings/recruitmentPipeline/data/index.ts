@@ -33,6 +33,13 @@ export const RECRUITMENT_PIPELINE_TABLE: Table.ColumnProps[] = [
     minWidth: 40
   },
   {
+    prop: 'plan_type',
+    label: $t('interviewProcess.type'),
+    filter: false,
+    isShow: false, // only shown on the All tab
+    minWidth: 20
+  },
+  {
     prop: 'description',
     label: $t('interviewProcess.description'),
     filter: false,

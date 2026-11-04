@@ -10,7 +10,7 @@
       <el-row :gutter="20" class="view-content">
         <el-col :span="6">
           <div class="step-panel">
-            <div class="title">{{ $t('interviewProcess.interviewSessions') }}</div>
+            <div class="title">{{ $t('recruitmentPipeline.stageTypes') }}</div>
             <div class="content" ref="roundTypeRef">
               <div class="step" v-for="item in state.roundTypeList" :key="item.value">
                 <div class="left-border"></div>
@@ -24,29 +24,33 @@
         </el-col>
         <el-col :span="18">
           <div class="process-panel">
-            <div class="title">{{ $t('interviewProcess.addedRounds') }}</div>
+            <div class="title">{{ $t('recruitmentPipeline.addedStages') }}</div>
             <div>{{ $t('recruitmentPipeline.dragProcess') }}</div>
             <div class="content">
               <div ref="processRef">
                 <div
                   class="process-box"
+                  :class="{
+                    'fixed-round': !isCustomRound(item),
+                    'drop-before': state.isDragOver && state.dragIndex === index && !state.dropAfter,
+                    'drop-after': state.isDragOver && state.dragIndex === index && state.dropAfter
+                  }"
                   v-for="(item, index) in state.processList"
                   :key="`${item.id} ${index}`"
+                  @drop="evt => handleRoundDragOver(evt, index)"
+                  @dragover.prevent="evt => handleRoundDragOver(evt, index)"
+                  @dragleave="handleDragLeave"
                 >
                   <el-row :gutter="20">
                     <el-col :span="1" class="center">
-                      <div class="order" v-if="item.round_type !== ''"></div>
+                      <div class="order" v-if="item.round_type !== '' && isCustomRound(item)"></div>
                     </el-col>
                     <el-col :span="8">
-                      <el-dropdown trigger="click" :teleported="false">
+                      <el-dropdown trigger="click" :teleported="false" :disabled="!isCustomRound(item)">
                         <div
                           class="add-select"
-                          @drop="evt => handleDragOver(evt, index)"
-                          @dragover.prevent="evt => handleDragOver(evt, index)"
-                          @dragleave="handleDragLeave"
                           :class="{
-                            'no-border': item.round_type !== '',
-                            active: state.isDragOver && state.dragIndex === index
+                            'no-border': item.round_type !== ''
                           }"
                         >
                           <div class="stepAdded">
@@ -84,7 +88,7 @@
                       </el-dropdown>
                     </el-col>
                     <el-col :span="14" v-if="item.round_type !== ''"></el-col>
-                    <el-col :span="1" class="center" v-if="item.round_type !== ''">
+                    <el-col :span="1" class="center" v-if="item.round_type !== '' && isCustomRound(item)">
                       <i class="iconfont icon-delete" @click="deleteRound(index)"></i>
                     </el-col>
                   </el-row>
@@ -158,7 +162,9 @@ interface ReactiveParams {
   processList: RecruitmentPipeline.RoundParam[]
   isDragOver: boolean
   dragIndex: number
-  roundTypeList: Form.FormSelect[]
+  dropAfter: boolean
+  roundTypeList: Form.FormSelect[] // custom types only: the ones users may add
+  allRoundTypes: Form.FormSelect[]
 }
 const router = useRouter()
 const { $t } = useLocale()
@@ -177,7 +183,9 @@ const state = reactive<ReactiveParams>({
   processList: [],
   isDragOver: false,
   dragIndex: 0,
-  roundTypeList: [] as Form.FormSelect[]
+  dropAfter: false,
+  roundTypeList: [] as Form.FormSelect[],
+  allRoundTypes: [] as Form.FormSelect[]
 })
 
 const isSystemTemplate = ref(false)
@@ -189,6 +197,10 @@ const buildPayload = async (): Promise<RecruitmentPipeline.SaveParam | null> => 
   const processList = state.processList
   if (processList.length === 0) {
     ElMessage.error($t('message.processLimit'))
+    return null
+  }
+  if (processList.length > MAX_ROUNDS) {
+    ElMessage.error($t('message.stagesMaxLimit'))
     return null
   }
   const formData: RecruitmentPipeline.SaveParam = { ...getObjectByForms(state.baseForm) }
@@ -294,8 +306,24 @@ const handleDragOver = (event: DragEvent, index: number) => {
 const handleDragLeave = () => {
   state.isDragOver = false
 }
+// Over an added stage: the upper half inserts before it, the lower half after it
+const handleRoundDragOver = (event: DragEvent, index: number) => {
+  event.preventDefault()
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
+  state.isDragOver = true
+  state.dragIndex = index
+  state.dropAfter = event.clientY > rect.top + rect.height / 2
+}
 
 // A new round's name starts as the type's description; the round description starts empty
+const MAX_ROUNDS = 10
+// Shows a warning and returns true when no more stages can be added
+const isAtMaxRounds = () => {
+  if (state.processList.length < MAX_ROUNDS) return false
+  ElMessage.warning($t('message.stagesMaxLimit'))
+  return true
+}
+
 const newRound = (value: number): RecruitmentPipeline.RoundParam => ({
   id: generateUUID(),
   round_type: value,
@@ -312,6 +340,7 @@ const changeRoundType = (item: RecruitmentPipeline.RoundParam, value: number) =>
 
 const setRoundType = (item: RecruitmentPipeline.RoundParam | null, value: number) => {
   if (!item) {
+    if (isAtMaxRounds()) return
     state.processList.push(newRound(value))
     return
   }
@@ -322,15 +351,28 @@ const deleteRound = (index: number) => {
   state.processList.splice(index, 1)
 }
 
-const roundTypeOf = (value: unknown) => state.roundTypeList.find(type => type.value === value)
+const roundTypeOf = (value: unknown) => state.allRoundTypes.find(type => type.value === value)
+
+// Only custom stages can be removed, reordered or have their type changed
+const isCustomRound = (item: RecruitmentPipeline.RoundParam) =>
+  !!(roundTypeOf(item.round_type) as any)?.isCustom
 
 const loadRoundTypes = async () => {
   const res = await getRecruitmentPipelineRoundTypes()
-  state.roundTypeList = (res?.result ?? []).map(type => ({
+  const types = (res?.result ?? []).map(type => ({
     value: type.id,
     label: type.name,
-    subLabel: type.description
+    subLabel: type.description,
+    isCustom: !!(type.is_custom ?? type.isCustom)
   }))
+  state.allRoundTypes = types
+  state.roundTypeList = types.filter(type => type.isCustom)
+  // New pipelines start with every core (non-custom) stage in place
+  if (!props.isEdit) {
+    state.processList = types
+      .filter(type => !type.isCustom)
+      .map(type => newRound(type.value as number))
+  }
 }
 
 onMounted(async () => {
@@ -340,8 +382,11 @@ onMounted(async () => {
   if (!Sortable.get(listWithHandle)) {
     Sortable.create(listWithHandle, {
       handle: '.order',
+      // core stages never move themselves, but custom stages can be dropped anywhere
+      filter: '.fixed-round',
       ghostClass: 'blue-background-class',
       onEnd(evt: Sortable.SortableEvent) {
+        state.isDragOver = false
         const newIndex = evt.newIndex as number
         const oldIndex = evt.oldIndex as number
         const currRow = state.processList?.splice(oldIndex, 1)[0]
@@ -366,13 +411,17 @@ onMounted(async () => {
         state.isDragOver = false
       },
       onEnd(evt: Sortable.SortableEvent) {
-        if (state.isDragOver) {
+        if (state.isDragOver && !isAtMaxRounds()) {
           const newIndex = evt.newIndex as number
           const round_type = state.roundTypeList?.[newIndex]?.value
           if (state.dragIndex === -1) {
             state.processList.push(newRound(round_type as number))
           } else {
-            changeRoundType(state.processList[state.dragIndex], round_type as number)
+            state.processList.splice(
+              state.dragIndex + (state.dropAfter ? 1 : 0),
+              0,
+              newRound(round_type as number)
+            )
           }
           state.isDragOver = false
         }
@@ -427,6 +476,13 @@ onMounted(async () => {
     justify-content: center;
     gap: 5px;
   }
+}
+// Insertion line shown while dragging a stage type over an added stage
+.process-box.drop-before {
+  box-shadow: 0 -3px 0 0 var(--el-color-primary);
+}
+.process-box.drop-after {
+  box-shadow: 0 3px 0 0 var(--el-color-primary);
 }
 .round-type-label {
   padding-bottom: 3px;

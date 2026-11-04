@@ -45,7 +45,7 @@ const interviewProcessRouter: Menu.MenuOptions[] = [
     }
   },
   {
-    path: `${ROUTER_SETTINGS_EVALUATION_PLAN_DETAIL}:id`,
+    path: `${ROUTER_SETTINGS_EVALUATION_PLAN_DETAIL}/:id`,
     name: 'ROUTER_SETTINGS_EVALUATION_PLAN_DETAIL',
     component: () => import('@/views/settings/evaluationProcess/InterviewProcessDetail.vue'),
     meta: {

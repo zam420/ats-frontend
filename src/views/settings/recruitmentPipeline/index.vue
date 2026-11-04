@@ -25,6 +25,15 @@
       <template #owner_id="{ row }">
         {{ userNames[row.owner_id] ?? '' }}
       </template>
+      <template #plan_type="{ row }">
+        {{
+          row.is_public
+            ? $t('interviewProcess.typeShared')
+            : row.is_system_template
+              ? $t('interviewProcess.typeSystemTemplate')
+              : $t('interviewProcess.typePrivate')
+        }}
+      </template>
       <template #operation="{ row }">
         <template v-if="canOperate(row)">
           <el-tooltip :content="$t('opt.edit')" placement="top">
@@ -94,6 +103,12 @@ const tabs = ref<Form.FormSelect[]>(
 const currentTab = ref<string>(defaultTab)
 const onTabChange = (tab: string) => {
   currentTab.value = tab
+  showTypeColumn(tab)
+}
+// The Type column is only relevant on the All tab
+const showTypeColumn = (tab: string) => {
+  const col = state.pipelineData.find(c => c.prop === 'plan_type')
+  if (col) col.isShow = tab === TAB_ALL
 }
 interface StateObj {
   pipelineData: Table.ColumnProps[]
