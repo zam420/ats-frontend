@@ -1,4 +1,55 @@
 
+.share-section {
+  margin-top: 1rem;
+  align-items: center;
+  .share-controls {
+    display: flex;
+    align-items: center;
+    gap: 3rem;
+    white-space: nowrap;
+  }
+  .share-label {
+    font-weight: bold;
+  }
+  .share-users {
+    width: 100%;
+  }
+}
+// Users dropdown: keep selected tags on a single line, truncating long names
+.interviewer-select {
+  :deep(.el-select__tags) {
+    flex-wrap: nowrap;
+  }
+  :deep(.el-select-tags-wrapper) {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    max-width: 100%;
+    min-width: 0;
+  }
+  :deep(.el-select-tags-wrapper .el-tag) {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 45%;
+    overflow: hidden;
+  }
+  :deep(.el-select-tags-wrapper .el-tag .el-tag__content) {
+    min-width: 0;
+    overflow: hidden;
+  }
+  :deep(.el-select-tags-wrapper .el-tag .el-select__tags-text) {
+    display: block;
+    max-width: 100% !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  :deep(.el-select-tags-wrapper .el-tag:last-child) {
+    flex-shrink: 0;
+    max-width: none;
+  }
+}
+
 .view-content {
   margin-top: 1.5rem;
   height: 100%;

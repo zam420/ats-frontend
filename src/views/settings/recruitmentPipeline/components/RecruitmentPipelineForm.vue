@@ -7,6 +7,65 @@
     </template>
     <div :class="{ 'read-only': readOnly }">
       <EspForm ref="formRef" v-model="state.baseForm" />
+      <el-row v-if="!isTemplate && !isSystemTemplate" :gutter="20" class="share-section">
+        <el-col :span="6" class="share-controls">
+          <div class="share-label">{{ $t('interviewProcess.shareWith') }}</div>
+          <el-radio-group v-model="state.shareMode" @change="onShareModeChange">
+            <el-tooltip :content="$t('interviewProcess.shareNoneHint')" placement="top">
+              <el-radio label="none">{{ $t('interviewProcess.shareNone') }}</el-radio>
+            </el-tooltip>
+            <el-tooltip :content="$t('interviewProcess.shareUsersHint')" placement="top">
+              <el-radio label="users">{{ $t('interviewProcess.shareUsers') }}</el-radio>
+            </el-tooltip>
+          </el-radio-group>
+        </el-col>
+        <el-col :span="18">
+          <el-select
+            v-model="shareSelection"
+            class="share-users interviewer-select"
+            popper-class="share-users-popper"
+            :disabled="state.shareMode !== 'users'"
+            @mouseover="showFullTagText"
+            multiple
+            collapse-tags
+            :max-collapse-tags="2"
+            collapse-tags-tooltip
+            filterable
+            clearable
+            :placeholder="$t('interviewProcess.shareUsersPlaceholder')"
+          >
+            <el-option
+              v-if="shareUserOptions.length"
+              :key="SHARE_ALL"
+              :label="$t('interviewProcess.shareEveryone')"
+              :value="SHARE_ALL"
+            >
+              <el-checkbox
+                :model-value="state.shareEveryone"
+                :indeterminate="!state.shareEveryone && state.shareUserIds.length > 0"
+                style="pointer-events: none"
+              >
+                <span class="title">{{ $t('interviewProcess.shareEveryone') }}</span>
+              </el-checkbox>
+            </el-option>
+            <el-option
+              v-for="option in shareUserOptions"
+              :key="option.value"
+              :label="`${option.label} (${option.subLabel})`"
+              :value="option.value"
+              :class="option.subLabel ? 'form-select-li' : ''"
+            >
+              <el-checkbox
+                :value="state.shareEveryone || state.shareUserIds.includes(option.value)"
+                style="pointer-events: none"
+              >
+                <span class="title">{{ option.label }}</span>
+                <span>{{ option.subLabel }}</span></el-checkbox
+              >
+            </el-option>
+          </el-select>
+        </el-col>
+      </el-row>
       <el-row :gutter="20" class="view-content">
         <el-col :span="6">
           <div class="step-panel">
@@ -148,7 +207,8 @@ import {
 } from '@/api/modules/recruitmentPipeline'
 import RecruitmentPipeline from '@/api/interface/recruitmentPipeline'
 import Sortable from 'sortablejs'
-
+import { getUserList } from '@/api/modules/common'
+import { ShareTypeEnum } from '@/enums/shareTypeEnum'
 interface ParamsProps {
   title: string
   id?: string
@@ -165,6 +225,10 @@ interface ReactiveParams {
   dropAfter: boolean
   roundTypeList: Form.FormSelect[] // custom types only: the ones users may add
   allRoundTypes: Form.FormSelect[]
+  userList: Form.FormSelect[]
+  shareMode: 'none' | 'users'
+  shareEveryone: boolean
+  shareUserIds: number[]
 }
 const router = useRouter()
 const { $t } = useLocale()
@@ -185,10 +249,52 @@ const state = reactive<ReactiveParams>({
   dragIndex: 0,
   dropAfter: false,
   roundTypeList: [] as Form.FormSelect[],
-  allRoundTypes: [] as Form.FormSelect[]
+  allRoundTypes: [] as Form.FormSelect[],
+  userList: [] as Form.FormSelect[],
+  shareMode: 'none',
+  shareEveryone: false,
+  shareUserIds: []
 })
 
 const isSystemTemplate = ref(false)
+
+const shareUserOptions = computed(() => state.userList)
+
+const SHARE_ALL = '__all__'
+
+// "Everyone" is a pinned entry in the users dropdown; it is ticked exactly when every user is selected
+const shareSelection = computed<(number | string)[]>({
+  get: () =>
+    state.shareEveryone
+      ? [SHARE_ALL, ...shareUserOptions.value.map(u => u.value as number)]
+      : [...state.shareUserIds],
+  set: values => {
+    const allIds = shareUserOptions.value.map(u => u.value as number)
+    const hasAll = values.includes(SHARE_ALL)
+    const ids = values.filter(v => v !== SHARE_ALL) as number[]
+    if (hasAll && !state.shareEveryone) {
+      state.shareEveryone = true
+      state.shareUserIds = [...allIds]
+    } else if (!hasAll && state.shareEveryone && ids.length === allIds.length) {
+      state.shareEveryone = false
+      state.shareUserIds = []
+    } else {
+      state.shareUserIds = ids
+      state.shareEveryone = allIds.length > 0 && ids.length === allIds.length
+    }
+  }
+})
+
+const onShareModeChange = () => {
+  state.shareUserIds = []
+  state.shareEveryone = false
+}
+
+// Truncated tags show their full text as a native tooltip on hover
+const showFullTagText = (e: MouseEvent) => {
+  const el = (e.target as HTMLElement)?.closest?.('.el-select__tags-text') as HTMLElement | null
+  if (el && !el.title) el.title = el.textContent?.trim() ?? ''
+}
 
 // Validates the form and builds the request payload; returns null when invalid
 const buildPayload = async (): Promise<RecruitmentPipeline.SaveParam | null> => {
@@ -203,7 +309,17 @@ const buildPayload = async (): Promise<RecruitmentPipeline.SaveParam | null> => 
     ElMessage.error($t('message.stagesMaxLimit'))
     return null
   }
+  const sharing = !props.isTemplate && !isSystemTemplate.value
+  if (sharing && state.shareMode === 'users' && !state.shareEveryone && state.shareUserIds.length === 0) {
+    ElMessage.error($t('interviewProcess.shareUsersRequired'))
+    return null
+  }
   const formData: RecruitmentPipeline.SaveParam = { ...getObjectByForms(state.baseForm) }
+  if (sharing) {
+    formData.is_public = state.shareMode === 'users' && state.shareEveryone
+    formData.share_to =
+      state.shareMode === 'users' && !state.shareEveryone ? [...state.shareUserIds] : []
+  }
   formData.rounds = processList.map((data, index) => ({
     round_type: data.round_type,
     name: data.name,
@@ -284,6 +400,10 @@ const initData = () => {
     getRecruitmentPipelineDetail(props.id).then(res => {
       const result = (res.result ?? {}) as RecruitmentPipeline.DetailInfo
       isSystemTemplate.value = !!result.is_system_template
+      const sharedIds = (result.share_to ?? []).map(u => (typeof u === 'object' ? u.id : u)) as number[]
+      state.shareEveryone = !!result.is_public
+      state.shareUserIds = state.shareEveryone ? [] : sharedIds
+      state.shareMode = state.shareEveryone || sharedIds.length ? 'users' : 'none'
       state.baseForm.forEach((item: Form.FormItem) => {
         item.value = (result as any)?.[item.prop as string]
         formRef.value?.changeFormModel({ prop: item.prop, value: item.value })
@@ -377,6 +497,12 @@ const loadRoundTypes = async () => {
 
 onMounted(async () => {
   await loadRoundTypes()
+  const userRes = await getUserList(ShareTypeEnum.INTERVIEWER)
+  state.userList = (userRes?.result ?? []).map(user => ({
+    label: user.name,
+    value: user.id,
+    subLabel: user.email
+  }))
   // Drag to reorder the added rounds
   const listWithHandle = processRef.value
   if (!Sortable.get(listWithHandle)) {

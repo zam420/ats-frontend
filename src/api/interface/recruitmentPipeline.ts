@@ -34,6 +34,7 @@ declare namespace RecruitmentPipeline {
     modified_at?: string
     modified_by_name?: string
     rounds: PipelineRound[]
+    share_to?: ({ id: number } | number)[]
   }
 
   interface RoundParam {
@@ -48,6 +49,8 @@ declare namespace RecruitmentPipeline {
     id?: string
     name?: string
     description?: string
+    is_public?: boolean
+    share_to?: number[]
     rounds?: RoundParam[]
   }
 }

@@ -63,6 +63,8 @@ declare namespace InterviewProcess {
     name?: string
     description?: string
     owner_id?: string
+    is_public?: boolean
+    share_to?: number[]
     rounds?: RoundParam[]
   }
 }

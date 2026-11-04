@@ -54,13 +54,13 @@ export const RECRUITMENT_PIPELINE_FORM: Form.FormItem[] = [
     prop: 'name',
     required: true,
     maxlength: 100,
-    col: 8
+    col: 6
   },
   {
     label: $t('interviewProcess.description'),
     prop: 'description',
     maxlength: 300,
-    col: 16
+    col: 18
   }
 ]
 
