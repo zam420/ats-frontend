@@ -7,7 +7,7 @@
     </template>
     <div :class="{ 'read-only': isReadOnly }">
     <EspForm ref="interviewRef" v-model="state.baseForm" />
-    <el-row v-if="!isTemplate && !isSystemTemplate" :gutter="20" class="share-section">
+    <el-row v-if="!isTemplate && !isSystemTemplate && accessReady && !isReadOnly" :gutter="20" class="share-section">
       <el-col :span="6" class="share-controls">
       <div class="share-label">{{ $t('interviewProcess.shareWith') }}</div>
       <el-radio-group v-model="state.shareMode" @change="onShareModeChange">
