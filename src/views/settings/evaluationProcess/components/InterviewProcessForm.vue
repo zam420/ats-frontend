@@ -14,6 +14,9 @@
         <el-tooltip :content="$t('interviewProcess.shareNoneHint')" placement="top">
           <el-radio label="none">{{ $t('interviewProcess.shareNone') }}</el-radio>
         </el-tooltip>
+        <el-tooltip :content="$t('interviewProcess.shareEveryoneHint')" placement="top">
+          <el-radio label="everyone">{{ $t('interviewProcess.shareEveryone') }}</el-radio>
+        </el-tooltip>
         <el-tooltip :content="$t('interviewProcess.shareUsersHint')" placement="top">
           <el-radio label="users">{{ $t('interviewProcess.shareUsers') }}</el-radio>
         </el-tooltip>
@@ -21,7 +24,7 @@
       </el-col>
       <el-col :span="ownerVisible ? 12 : 18">
       <el-select
-        v-model="shareSelection"
+        v-model="state.shareUserIds"
         class="share-users interviewer-select"
         popper-class="share-users-popper"
         :disabled="state.shareMode !== 'users'"
@@ -35,20 +38,6 @@
         :placeholder="$t('interviewProcess.shareUsersPlaceholder')"
       >
         <el-option
-          v-if="shareUserOptions.length"
-          :key="SHARE_ALL"
-          :label="$t('interviewProcess.shareEveryone')"
-          :value="SHARE_ALL"
-        >
-          <el-checkbox
-            :model-value="state.shareEveryone"
-            :indeterminate="!state.shareEveryone && state.shareUserIds.length > 0"
-            style="pointer-events: none"
-          >
-            <span class="title">{{ $t('interviewProcess.shareEveryone') }}</span>
-          </el-checkbox>
-        </el-option>
-        <el-option
           v-for="option in shareUserOptions"
           :key="option.value"
           :label="`${option.label} (${option.subLabel})`"
@@ -56,7 +45,7 @@
           :class="option.subLabel ? 'form-select-li' : ''"
         >
           <el-checkbox
-            :value="state.shareEveryone || state.shareUserIds.includes(option.value)"
+            :value="state.shareUserIds.includes(option.value)"
             style="pointer-events: none"
           >
             <span class="title">{{ option.label }}</span>
@@ -257,9 +246,8 @@ interface ReactiveParams {
   dragIndex: number
   dropAfter: boolean
   interviewSessionList: Form.FormSelect[]
-  shareMode: 'none' | 'users'
-  shareEveryone: boolean
-  shareUserIds: number[]
+  shareMode: 'none' | 'everyone' | 'users'
+  shareUserIds: (string | number)[]
 }
 const router = useRouter()
 const { $t } = useLocale()
@@ -291,7 +279,6 @@ const state = reactive<ReactiveParams>({
   // 面试流程list
   interviewSessionList: [] as Form.FormSelect[],
   shareMode: 'none',
-  shareEveryone: false,
   shareUserIds: []
 })
 
@@ -333,34 +320,8 @@ const shareUserOptions = computed(() => {
   return state.interviewerList.filter(user => user.value !== ownerId)
 })
 
-const SHARE_ALL = '__all__'
-
-// "Everyone" is a pinned entry in the users dropdown; it is ticked exactly when every user is selected
-const shareSelection = computed<(number | string)[]>({
-  get: () =>
-    state.shareEveryone
-      ? [SHARE_ALL, ...shareUserOptions.value.map(u => u.value as number)]
-      : [...state.shareUserIds],
-  set: values => {
-    const allIds = shareUserOptions.value.map(u => u.value as number)
-    const hasAll = values.includes(SHARE_ALL)
-    const ids = values.filter(v => v !== SHARE_ALL) as number[]
-    if (hasAll && !state.shareEveryone) {
-      state.shareEveryone = true
-      state.shareUserIds = [...allIds]
-    } else if (!hasAll && state.shareEveryone && ids.length === allIds.length) {
-      state.shareEveryone = false
-      state.shareUserIds = []
-    } else {
-      state.shareUserIds = ids
-      state.shareEveryone = allIds.length > 0 && ids.length === allIds.length
-    }
-  }
-})
-
 const onShareModeChange = () => {
   state.shareUserIds = []
-  state.shareEveryone = false
 }
 
 // Validates the form and builds the request payload; returns null when invalid
@@ -377,16 +338,16 @@ const buildPayload = async (): Promise<InterviewProcess.SaveParam | null> => {
     return null
   }
   const sharing = !props.isTemplate && !isSystemTemplate.value
-  if (sharing && state.shareMode === 'users' && !state.shareEveryone && state.shareUserIds.length === 0) {
+  if (sharing && state.shareMode === 'users' && state.shareUserIds.length === 0) {
     ElMessage.error($t('interviewProcess.shareUsersRequired'))
     return null
   }
   const baseForm = getObjectByForms(state.baseForm)
   const formData: InterviewProcess.SaveParam = { ...baseForm }
   if (sharing) {
-    formData.is_public = state.shareMode === 'users' && state.shareEveryone
-    formData.share_to =
-      state.shareMode === 'users' && !state.shareEveryone ? [...state.shareUserIds] : []
+    formData.is_public = state.shareMode === 'everyone'
+    formData.shared_with_user_ids =
+      state.shareMode === 'users' ? state.shareUserIds.map(String) : null
   }
   // the owner field may be hidden (no ipta permission), so read it from the form item
   const ownerValue = state.baseForm.find(item => item.prop === 'owner_id')?.value
@@ -490,10 +451,11 @@ const initData = () => {
           })
         return item
       })
-      const sharedIds = (result.share_to ?? []).map(u => (typeof u === 'object' ? u.id : u)) as number[]
-      state.shareEveryone = !!result.is_public
-      state.shareUserIds = state.shareEveryone ? [] : sharedIds
-      state.shareMode = state.shareEveryone || sharedIds.length ? 'users' : 'none'
+      const sharedIds = (result.shared_with_user_ids ?? result.share_to ?? []).map(u =>
+        typeof u === 'object' ? u.id : u
+      ) as (string | number)[]
+      state.shareUserIds = result.is_public ? [] : sharedIds
+      state.shareMode = result.is_public ? 'everyone' : sharedIds.length ? 'users' : 'none'
       const processList: InterviewProcess.RoundParam[] = []
       result?.rounds?.forEach(data => {
         const interviewers = data?.interviewers?.map(item => {

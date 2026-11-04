@@ -790,7 +790,7 @@ export default {
     shareWith: 'Share With',
     shareNone: 'None',
     shareEveryone: 'Everyone',
-    shareUsers: 'Specific users',
+    shareUsers: 'Users',
     shareUsersPlaceholder: 'Select users',
     shareNoneHint: 'Only you (the owner) can view and use this plan',
     shareEveryoneHint: 'Everyone can view and use this plan',

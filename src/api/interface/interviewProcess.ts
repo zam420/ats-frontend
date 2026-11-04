@@ -42,6 +42,7 @@ declare namespace InterviewProcess {
     modified_by_name?: string
     rounds: InterviewRound[]
     share_to?: Interviews[]
+    shared_with_user_ids?: string[]
   }
 
   interface ShareParam {
@@ -64,7 +65,7 @@ declare namespace InterviewProcess {
     description?: string
     owner_id?: string
     is_public?: boolean
-    share_to?: number[]
+    shared_with_user_ids?: string[] | null
     rounds?: RoundParam[]
   }
 }
