@@ -2,7 +2,7 @@
 import { TableColumnTypeEnum } from '@/enums/tableColumnTypeEnum'
 import { TableColumnFixedEnum } from '@/enums/tableColumnFixedEnum'
 import { FormItemTypeEnum } from '@/enums/formItemTypeEnum'
-import { ROUTER_SETTINGS_EVALUATION_PLAN_DETAIL } from '@/router/routerName'
+import { ROUTER_SETTINGS_EVALUATION_PLAN_EDIT } from '@/router/routerName'
 const { $t } = useLocale()
 
 // 面试流程模版表格
@@ -18,7 +18,7 @@ export const INTERVIEW_PROCESS_TABLE: Table.ColumnProps[] = [
   {
     prop: 'name',
     label: $t('interviewProcess.interviewName'),
-    link: ROUTER_SETTINGS_EVALUATION_PLAN_DETAIL,
+    link: `/${ROUTER_SETTINGS_EVALUATION_PLAN_EDIT}`,
     filter: false,
     minWidth: 30
   },

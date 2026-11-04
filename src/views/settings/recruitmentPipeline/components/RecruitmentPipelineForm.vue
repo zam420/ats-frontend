@@ -1,11 +1,11 @@
 <template>
-  <EspMain :title="title">
-    <template #right v-if="!readOnly">
+  <EspMain :title="isReadOnly ? $t('recruitmentPipeline.pipelineDetail') : title">
+    <template #right v-if="accessReady && !isReadOnly">
       <ElButton @click="goBack">{{ $t('button.cancel') }}</ElButton>
       <ElButton v-if="isEdit" @click="saveAs" class="btn-light">{{ $t('interviewProcess.saveAs') }}</ElButton>
       <ElButton @click="save" class="btn-primary-gradient">{{ $t('button.save') }}</ElButton>
     </template>
-    <div :class="{ 'read-only': readOnly }">
+    <div :class="{ 'read-only': isReadOnly }">
       <EspForm ref="formRef" v-model="state.baseForm" />
       <el-row v-if="!isTemplate && !isSystemTemplate" :gutter="20" class="share-section">
         <el-col :span="6" class="share-controls">
@@ -209,6 +209,8 @@ import RecruitmentPipeline from '@/api/interface/recruitmentPipeline'
 import Sortable from 'sortablejs'
 import { getUserList } from '@/api/modules/common'
 import { ShareTypeEnum } from '@/enums/shareTypeEnum'
+import { useGlobalStore } from '@/store/modules/global'
+import { UserPermissionEnum } from '@/enums/userPermission'
 interface ParamsProps {
   title: string
   id?: string
@@ -257,6 +259,26 @@ const state = reactive<ReactiveParams>({
 })
 
 const isSystemTemplate = ref(false)
+
+// A pipeline opened for editing is read-only unless the signed-in user is its owner
+const planOwnerId = ref<string | number | null>(null)
+// In edit mode the buttons stay hidden until the plan and user list have loaded, so they don't flash on read-only pages
+const detailLoaded = ref(false)
+const usersLoaded = ref(false)
+const accessReady = computed(() => !props.isEdit || (detailLoaded.value && usersLoaded.value))
+const globalStore = useGlobalStore()
+const selfUserId = computed(() => {
+  const email = (globalStore.userInfo?.email ?? globalStore.email ?? '').toLowerCase()
+  return state.userList.find(u => (u.subLabel ?? '').toLowerCase() === email)?.value
+})
+const isReadOnly = computed(() => {
+  if (props.readOnly) return true
+  if (!props.isEdit || planOwnerId.value == null || selfUserId.value == null) return false
+  if (String(planOwnerId.value) === String(selfUserId.value)) return false
+  // Admins may edit pipelines they don't own: rpta for normal pipelines, rptsa for system templates
+  const admin = isSystemTemplate.value ? UserPermissionEnum.RPTSA : UserPermissionEnum.RPTA
+  return !globalStore.permissions.includes(admin)
+})
 
 const shareUserOptions = computed(() => state.userList)
 
@@ -400,6 +422,8 @@ const initData = () => {
     getRecruitmentPipelineDetail(props.id).then(res => {
       const result = (res.result ?? {}) as RecruitmentPipeline.DetailInfo
       isSystemTemplate.value = !!result.is_system_template
+      planOwnerId.value = (result as any).owner_id ?? null
+      detailLoaded.value = true
       const sharedIds = (result.share_to ?? []).map(u => (typeof u === 'object' ? u.id : u)) as number[]
       state.shareEveryone = !!result.is_public
       state.shareUserIds = state.shareEveryone ? [] : sharedIds
@@ -503,6 +527,7 @@ onMounted(async () => {
     value: user.id,
     subLabel: user.email
   }))
+  usersLoaded.value = true
   // Drag to reorder the added rounds
   const listWithHandle = processRef.value
   if (!Sortable.get(listWithHandle)) {
@@ -620,6 +645,16 @@ onMounted(async () => {
 // read-only view: block all interaction and hide the add/remove/drag affordances
 .read-only {
   pointer-events: none;
+  // Name and description look disabled
+  :deep(.esp-form-wrap .el-input__wrapper),
+  :deep(.esp-form-wrap .el-textarea__inner) {
+    background-color: var(--el-disabled-bg-color);
+  }
+  :deep(.esp-form-wrap .el-input__inner),
+  :deep(.esp-form-wrap .el-textarea__inner) {
+    color: var(--el-text-color-placeholder);
+    -webkit-text-fill-color: var(--el-text-color-placeholder);
+  }
   .icon-delete,
   .plus,
   .order {

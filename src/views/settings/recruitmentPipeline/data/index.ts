@@ -1,7 +1,7 @@
 import { useLocale } from '@/hooks/useLocale'
 import { TableColumnTypeEnum } from '@/enums/tableColumnTypeEnum'
 import { TableColumnFixedEnum } from '@/enums/tableColumnFixedEnum'
-import { ROUTER_SETTINGS_RECRUITMENT_PIPELINE_DETAIL } from '@/router/routerName'
+import { ROUTER_SETTINGS_RECRUITMENT_PIPELINE_EDIT } from '@/router/routerName'
 const { $t } = useLocale()
 
 // Recruitment pipeline list table
@@ -16,7 +16,7 @@ export const RECRUITMENT_PIPELINE_TABLE: Table.ColumnProps[] = [
   {
     prop: 'name',
     label: $t('interviewProcess.interviewName'),
-    link: ROUTER_SETTINGS_RECRUITMENT_PIPELINE_DETAIL,
+    link: `/${ROUTER_SETTINGS_RECRUITMENT_PIPELINE_EDIT}`,
     filter: false,
     minWidth: 30
   },

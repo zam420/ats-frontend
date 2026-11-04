@@ -1,11 +1,11 @@
 ﻿<template>
-  <EspMain :title="title">
-    <template #right v-if="!readOnly">
+  <EspMain :title="isReadOnly ? $t('interviewProcess.interviewDetail') : title">
+    <template #right v-if="accessReady && !isReadOnly">
       <ElButton @click="goBack">{{ $t('button.cancel') }}</ElButton>
       <ElButton v-if="isEdit" @click="saveAs" class="btn-light">{{ $t('interviewProcess.saveAs') }}</ElButton>
       <ElButton @click="save" class="btn-primary-gradient">{{ $t('button.save') }}</ElButton>
     </template>
-    <div :class="{ 'read-only': readOnly }">
+    <div :class="{ 'read-only': isReadOnly }">
     <EspForm ref="interviewRef" v-model="state.baseForm" />
     <el-row v-if="!isTemplate && !isSystemTemplate" :gutter="20" class="share-section">
       <el-col :span="6" class="share-controls">
@@ -297,6 +297,25 @@ const state = reactive<ReactiveParams>({
 
 const isSystemTemplate = ref(false)
 
+// A plan opened for editing is read-only unless the signed-in user is its owner
+const planOwnerId = ref<string | number | null>(null)
+// In edit mode the buttons stay hidden until the plan and user list have loaded, so they don't flash on read-only pages
+const detailLoaded = ref(false)
+const usersLoaded = ref(false)
+const accessReady = computed(() => !props.isEdit || (detailLoaded.value && usersLoaded.value))
+const selfUserId = computed(() => {
+  const email = (globalStore.userInfo?.email ?? globalStore.email ?? '').toLowerCase()
+  return state.interviewerList.find(u => (u.subLabel ?? '').toLowerCase() === email)?.value
+})
+const isReadOnly = computed(() => {
+  if (props.readOnly) return true
+  if (!props.isEdit || planOwnerId.value == null || selfUserId.value == null) return false
+  if (String(planOwnerId.value) === String(selfUserId.value)) return false
+  // Admins may edit plans they don't own: ipta for normal plans, iptsa for system templates
+  const admin = isSystemTemplate.value ? UserPermissionEnum.IPTSA : UserPermissionEnum.IPTA
+  return !globalStore.permissions.includes(admin)
+})
+
 // Description takes the Plan Owner's space when the owner dropdown is hidden; the users dropdown follows it
 const ownerVisible = computed(() => !state.baseForm.find(item => item.prop === 'owner_id')?.isHide)
 watch(
@@ -452,6 +471,8 @@ const initData = () => {
     getInterviewProcessDetail(props.id).then(res => {
       const result = (res.result ?? {}) as InterviewProcess.DetailInfo
       isSystemTemplate.value = !!result.is_system_template
+      planOwnerId.value = result.owner_id ?? null
+      detailLoaded.value = true
       if (isSystemTemplate.value) {
         const ownerItem = state.baseForm.find(item => item.prop === 'owner_id')
         if (ownerItem) ownerItem.isHide = true
@@ -575,6 +596,7 @@ onMounted(async () => {
     })
   })
   state.interviewerList = [...options]
+  usersLoaded.value = true
   // Plan owner: defaults to the signed-in user when creating
   const ownerItem = state.baseForm.find(item => item.prop === 'owner_id')
   if (ownerItem) {
@@ -740,6 +762,16 @@ onMounted(async () => {
 // read-only view: block all interaction and hide the add/remove/drag affordances
 .read-only {
   pointer-events: none;
+  // Name and description look disabled
+  :deep(.esp-form-wrap .el-input__wrapper),
+  :deep(.esp-form-wrap .el-textarea__inner) {
+    background-color: var(--el-disabled-bg-color);
+  }
+  :deep(.esp-form-wrap .el-input__inner),
+  :deep(.esp-form-wrap .el-textarea__inner) {
+    color: var(--el-text-color-placeholder);
+    -webkit-text-fill-color: var(--el-text-color-placeholder);
+  }
   .icon-delete,
   .plus,
   .order {
