@@ -5,7 +5,7 @@
   .share-controls {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 1.4rem;
     white-space: nowrap;
   }
   .share-label {
@@ -13,6 +13,12 @@
   }
   .share-controls :deep(.el-radio) {
     margin-right: 14px;
+  }
+  .share-controls :deep(.el-radio:last-child) {
+    margin-right: 8px;
+  }
+  .share-controls :deep(.el-radio__label) {
+    padding-left: 5px;
   }
   .share-users {
     width: 100%;
