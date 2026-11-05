@@ -310,14 +310,24 @@ export const JOB_POSITION_DETAIL_DETAIL: Form.DetailItem[] = [
     label: $t('jobPosition.jobDescription'),
     prop: 'job_desc',
     isFontBold: true,
-    col: 24
+    col: 24,
+    slotName: 'rich'
   },
   {
-    label: $t('jobPosition.jobRequirements'),
+    label: $t('jobPosition.mandatoryRequirements'),
     prop: 'job_req',
     isFontBold: true,
     isPaddingTop: true,
-    col: 24
+    col: 12,
+    slotName: 'rich'
+  },
+  {
+    label: $t('jobPosition.preferredRequirements'),
+    prop: 'job_pref_req',
+    isFontBold: true,
+    isPaddingTop: true,
+    col: 12,
+    slotName: 'rich'
   }
 ]
 // 职位其他信息详情

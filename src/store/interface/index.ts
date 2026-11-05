@@ -8,7 +8,6 @@ export type LanguageType = 'zh' | 'en'
 /* GlobalStore */
 export interface GlobalState {
   accessToken: string
-  refreshToken: string
   email: string
   activationRequired: boolean
   loginFailedNum: number

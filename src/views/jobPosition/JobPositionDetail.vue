@@ -14,7 +14,14 @@
       :title="$t('jobPosition.basicInformation')"
       :data="state.basicDetailForm"
     />
-    <EspDetail label-position="top" :title="$t('jobPosition.jobDetail')" :data="state.detailForm" />
+    <EspDetail label-position="top" :title="$t('jobPosition.jobDetail')" :data="state.detailForm">
+      <template #rich="{ item }">
+        <div class="rich-item">
+          <div class="rich-label">{{ item.label }}</div>
+          <div class="ql-editor rich-content" v-html="state.richText[item.prop] ?? ''"></div>
+        </div>
+      </template>
+    </EspDetail>
     <EspDetail :title="$t('jobPosition.otherInformation')" :data="state.otherDetailForm" />
     <EspDetail
       v-if="state.extendedQuestions.length"
@@ -48,6 +55,7 @@ interface ReactiveParams {
   otherDetailForm: Form.FormItem[]
   questionForm: Form.FormItem[]
   extendedQuestions: string[]
+  richText: Record<string, string>
   id: number | string
   jobTitle: string
   status: number
@@ -63,6 +71,7 @@ const state = reactive<ReactiveParams>({
   otherDetailForm: cloneDeep(JOB_POSITION_OTHER_DETAIL),
   questionForm: cloneDeep(JOB_POSITION_QUESTIONS_DETAIL),
   extendedQuestions: [],
+  richText: {},
   jobTitle: '',
   status: 0
 })
@@ -102,7 +111,16 @@ const initData = () => {
       state.status = result?.status ?? 0
       state.createdDetailForm = getFormsByRes(state.createdDetailForm, result)
       state.basicDetailForm = getFormsByRes(state.basicDetailForm, result)
-      state.detailForm = getFormsByRes(state.detailForm, result)
+      // Values saved before the rich-text editor are plain text
+      const toHtml = (text?: string) =>
+        !text || text.trim().startsWith('<')
+          ? (text ?? '')
+          : text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\n/g, '<br>')
+      state.richText = {
+        job_desc: toHtml(result?.job_desc),
+        job_req: toHtml(result?.job_req),
+        job_pref_req: toHtml(result?.job_pref_req)
+      }
       state.extendedQuestions = result?.extended_questions ?? []
       if (state.extendedQuestions?.length) {
         state.extendedQuestions.forEach((item, index) => {
@@ -140,6 +158,12 @@ onMounted(() => {
 })
 </script>
 <style scoped lang="less">
+.rich-label {
+  font-weight: bold;
+}
+.rich-content {
+  padding: 0;
+}
 :deep(.esp-detail-wrap) {
   &.first {
     margin-top: 2.2em;

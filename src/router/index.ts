@@ -52,6 +52,19 @@ routerArray.forEach(item => {
   router.addRoute('layout', item)
 })
 
+let sessionRestoreTried = false
+
+// Goes to the login page, remembering the current page so login can bring the user back to it
+export const redirectToLogin = () => {
+  const current = router.currentRoute.value
+  if (current.path === ROUTER_LOGIN) return
+  const target = current.fullPath
+  router.replace({
+    path: ROUTER_LOGIN,
+    query: target && target !== '/' ? { redirect: target } : undefined
+  })
+}
+
 /**
  * @description 路由拦截 beforeEach
  * */
@@ -60,6 +73,12 @@ router.beforeEach(async (to, from, next) => {
   const menuStore = useMenuStore()
   // 1.NProgress 开始
   NProgress.start()
+
+  // A tab opened without a session tries once to sign in with the shared refresh cookie
+  if (!globalStore.accessToken && !sessionRestoreTried) {
+    sessionRestoreTried = true
+    await globalStore.restoreSession()
+  }
 
   // 2.动态设置标题
   const title = import.meta.env.VITE_GLOB_APP_TITLE
@@ -96,7 +115,10 @@ router.beforeEach(async (to, from, next) => {
       // Token invalid/expired or user info unavailable: force a fresh login
       globalStore.clearUserInfo()
       NProgress.done()
-      return next({ path: ROUTER_LOGIN })
+      return next({
+        path: ROUTER_LOGIN,
+        query: to.fullPath && to.fullPath !== '/' ? { redirect: to.fullPath } : undefined
+      })
     }
     if (globalStore.isNotExistUser) {
       return

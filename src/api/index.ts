@@ -12,10 +12,11 @@ import { Result, ResultData } from '@/api/interface'
 import { ResultEnum } from '@/enums/httpEnum'
 import { checkStatus } from './helper/checkStatus'
 import { useGlobalStore } from '@/store/modules/global'
-import router from '@/router'
+import router, { redirectToLogin } from '@/router'
 import { unescapeHTML } from '@/utils'
 import { ROUTER_403, ROUTER_500, ROUTER_LOGIN } from '@/router/routerName'
 import { useMenuStore } from '@/store/modules/menu'
+import { broadcastLogout } from '@/utils/authChannel'
 
 export interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
   noLoading?: boolean
@@ -50,10 +51,9 @@ const config = {
 // Session is invalid or expired: drop credentials and go back to the login page
 const toLogin = () => {
   useGlobalStore().clearUserInfo()
+  broadcastLogout()
   useMenuStore().setMenuList([])
-  if (router.currentRoute.value.path !== ROUTER_LOGIN) {
-    router.replace({ path: ROUTER_LOGIN })
-  }
+  redirectToLogin()
 }
 
 class RequestHttp {
@@ -70,6 +70,10 @@ class RequestHttp {
     this.service.interceptors.request.use(
       (config: CustomAxiosRequestConfig) => {
         const globalStore = useGlobalStore()
+        // Paths like 'api/x' would resolve against the current page URL when baseURL is empty
+        if (config.url && !/^([a-z][a-z\d+\-.]*:)?\/\//i.test(config.url) && !config.url.startsWith('/')) {
+          config.url = `/${config.url}`
+        }
         // 当前请求不需要显示 loading 或者改变显示文字，在 api 服务中通过指定的第三个参数: { noLoading: true, loadingText: string } 来控制
         config.noLoading || showFullScreenLoading(config.loadingText)
         if (config.headers && typeof config.headers.set === 'function') {
@@ -153,7 +157,7 @@ class RequestHttp {
           ) {
             // Try a silent token refresh first; only go to login if that fails too
             const original = error.config as RetryableConfig | undefined
-            if (original && !original._retry && useGlobalStore().refreshToken) {
+            if (original && !original._retry) {
               original._retry = true
               try {
                 await refreshAccessToken()

@@ -29,6 +29,44 @@
     border-top-right-radius: 8px; 
   }
 
+  &.compact:deep(.ql-toolbar.ql-snow) {
+    padding: 5px 1px;
+    font-size: 16px;
+    .ql-formats {
+      margin-right: 1px;
+    }
+    button {
+      width: 22px;
+      height: 24px;
+      padding: 4px 1px;
+    }
+    button svg {
+      width: 16px;
+      height: 18px;
+    }
+    .ql-picker {
+      font-size: 14px;
+      height: 26px;
+    }
+    .ql-picker-label {
+      padding-top: 0;
+      padding-bottom: 0;
+      line-height: 20px;
+    }
+    .ql-picker-label svg {
+      width: 16px;
+      height: 24px;
+    }
+  }
+
+  &.compact:deep(.ql-container .ql-editor) {
+    height: 25rem;
+  }
+
+  &.full:deep(.ql-container .ql-editor) {
+    height: 35rem;
+  }
+
   &:deep(.ql-container) {
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;

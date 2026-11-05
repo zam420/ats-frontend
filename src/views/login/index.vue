@@ -100,7 +100,7 @@ const submit = async () => {
   loading.value = true
   try {
     const email = form.email.trim()
-    const res = await loginApi({ email, password: form.password })
+    const res = await loginApi({ email, password: form.password, rememberMe: remember.value })
     if (remember.value) {
       localStorage.setItem(REMEMBER_KEY, email)
     } else {

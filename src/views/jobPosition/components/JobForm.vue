@@ -15,7 +15,45 @@
       :changeForm="changeForm"
       v-model="state.baseForm"
     />
-    <EspForm ref="espDetailRef" :title="$t('jobPosition.jobDetail')" v-model="state.detailForm" />
+    <EspForm :title="$t('jobPosition.jobDetail')" :model-value="[]">
+      <template #info>
+        <el-row :gutter="20">
+          <el-col :span="24">
+            <EspQuillEditor
+              ref="jobDescRef"
+              v-model:content="state.jobDesc"
+              :label="$t('jobPosition.jobDescription')"
+              :select-options="[]"
+              :hide-insert-field="true"
+              :full-toolbar="true"
+            />
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <EspQuillEditor
+              ref="jobReqRef"
+              v-model:content="state.jobReq"
+              :label="$t('jobPosition.mandatoryRequirements')"
+              :select-options="[]"
+              :hide-insert-field="true"
+              :compact="true"
+            />
+          </el-col>
+          <el-col :span="12">
+            <EspQuillEditor
+              ref="jobPrefReqRef"
+              v-model:content="state.jobPrefReq"
+              :label="$t('jobPosition.preferredRequirements')"
+              :select-options="[]"
+              :hide-insert-field="true"
+              :compact="true"
+              :required="false"
+            />
+          </el-col>
+        </el-row>
+      </template>
+    </EspForm>
     <EspForm
       ref="espOtherRef"
       :title="$t('jobPosition.otherInformation')"
@@ -28,7 +66,6 @@
 import { cloneDeep } from 'lodash-es'
 import {
   JOB_POSITION_BASIC_FORM,
-  JOB_POSITION_DETAIL_FORM,
   JOB_POSITION_OTHER_FORM,
   JOB_POSITION_QUESTIONS_FORM
 } from '../data'
@@ -51,7 +88,9 @@ interface ParamsProps {
 interface ReactiveParams {
   status?: string | number // 状态
   baseForm: Form.FormItem[]
-  detailForm: Form.FormItem[]
+  jobDesc: string
+  jobReq: string
+  jobPrefReq: string
   otherForm: Form.FormItem[]
   questionForm: Form.FormItem[]
 }
@@ -64,27 +103,36 @@ const router = useRouter()
 const { $t } = useLocale()
 
 const espBasicRef = ref()
-const espDetailRef = ref()
+const jobDescRef = ref()
+const jobReqRef = ref()
+const jobPrefReqRef = ref()
 const espOtherRef = ref()
 const state = reactive<ReactiveParams>({
   status: undefined,
   baseForm: cloneDeep(JOB_POSITION_BASIC_FORM),
-  detailForm: cloneDeep(JOB_POSITION_DETAIL_FORM),
+  jobDesc: '',
+  jobReq: '',
+  jobPrefReq: '',
   otherForm: cloneDeep(JOB_POSITION_OTHER_FORM),
   questionForm: cloneDeep(JOB_POSITION_QUESTIONS_FORM)
 })
 
 const save = async () => {
   const isBasicError = espBasicRef.value.validateFrom && (await espBasicRef.value.validateFrom())
-  const isDetailError =
-    espDetailRef.value.validateFrom &&
-    (await espDetailRef.value.validateFrom(null, null, isBasicError))
+  // Validate both editors so both show their error, not just the first
+  const descValid = jobDescRef.value?.validate()
+  const reqValid = jobReqRef.value?.validate()
+  const isDetailError = !!(descValid && reqValid)
   const isOtherError =
     espOtherRef.value.validateFrom &&
     (await espOtherRef.value.validateFrom(null, null, isDetailError))
   if (isBasicError && isDetailError && isOtherError) {
     const baseForm = getObjectByForms(state.baseForm)
-    const detailForm = getObjectByForms(state.detailForm)
+    const detailForm = {
+      job_desc: jobDescRef.value.getContent(),
+      job_req: jobReqRef.value.getContent(),
+      job_pref_req: jobPrefReqRef.value.getContent()
+    }
     const otherForm = getObjectByForms(state.otherForm)
     const questionForm = getObjectByForms(state.questionForm)
     const questions = Object.values(questionForm) ?? []
@@ -212,7 +260,17 @@ const initData = () => {
       const result = (res.result ?? {}) as JobPosition.JobPositionDetail
       state.status = result?.status ?? 0
       state.baseForm = getFormsByRes(state.baseForm, result, espBasicRef.value)
-      state.detailForm = getFormsByRes(state.detailForm, result, espDetailRef.value)
+      // Values saved before the rich-text editor are plain text: keep their line breaks
+      const toHtml = (text?: string) =>
+        !text || text.trim().startsWith('<')
+          ? (text ?? '')
+          : text
+              .split('\n')
+              .map(line => `<p>${line.replace(/&/g, '&amp;').replace(/</g, '&lt;') || '<br>'}</p>`)
+              .join('')
+      state.jobDesc = toHtml(result?.job_desc)
+      state.jobReq = toHtml(result?.job_req)
+      state.jobPrefReq = toHtml(result?.job_pref_req)
       const index = state.baseForm.findIndex(item => item.prop === 'work_location')
       if (index !== -1) {
         state.baseForm[index] = disabledWorkLocation(state.baseForm[index])

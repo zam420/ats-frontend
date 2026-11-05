@@ -13,9 +13,10 @@
     <div class="el-form" v-else>
       <div class="el-form-item">
         <label class="el-form-item__label" v-if="!hideLabel"
-          >{{ $t('emailTemplate.emailContent') }}<span class="red">*</span></label
+          >{{ props.label || $t('emailTemplate.emailContent')
+          }}<span class="red" v-if="props.required">*</span></label
         >
-        <div class="quill-editor-wrap" :class="{ error: state.isError }">
+        <div class="quill-editor-wrap" :class="{ error: state.isError, compact: props.compact, full: props.fullToolbar }">
           <QuillEditor
             ref="quillEditorRef"
             theme="snow"
@@ -23,6 +24,7 @@
             contentType="html"
             :options="state.options"
             @update:content="validate"
+            @ready="initTooltips"
             @blur="updateContent"
           />
           <div class="el-form-item__error" v-if="state.isError && state.content === ''">
@@ -71,6 +73,11 @@ interface QuillEditorProps {
   updateCallback?: any
   canPreview?: boolean
   parseContent?: string
+  label?: string // overrides the default "Email content" label
+  hideInsertField?: boolean // hides the toolbar button that inserts a template field
+  required?: boolean
+  fullToolbar?: boolean // shows every standard toolbar option except image, video and formula
+  compact?: boolean // smaller toolbar icons and text
 }
 
 interface QuillEditorOption {
@@ -97,6 +104,7 @@ const props = withDefaults(defineProps<QuillEditorProps>(), {
   parseContent: '',
   selectOptions: () => [],
   readOnly: false,
+  required: true,
   canPreview: false
 })
 
@@ -106,9 +114,21 @@ const state = reactive<QuillEditorState>({
     theme: 'snow', // 主题
     modules: {
       toolbar: {
-        container: props.canPreview
+        container: props.fullToolbar
           ? [
-              [{ header: [1, 2, 3, 4, 5, 6, false] }, { font: [] }],
+              [{ header: [1, 2, 3, 4, 5, 6, false] }, { font: [] }, { size: [] }],
+              ['bold', 'italic', 'underline', 'strike'],
+              ['blockquote', 'code-block'],
+              [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
+              [{ script: 'sub' }, { script: 'super' }],
+              [{ align: [] }],
+              [{ color: [] }, { background: [] }],
+              ['link'],
+              ['clean']
+            ]
+          : props.canPreview
+          ? [
+              [{ header: [1, 2, 3, 4, 5, 6, false] }, { font: [] }, { size: [] }],
               ['bold', 'italic', 'underline', 'strike'], // toggled buttons
               [{ list: 'ordered' }, { list: 'bullet' }, { align: [] }],
               [{ color: [] }, { background: [] }], // dropdown with defaults from theme
@@ -118,13 +138,13 @@ const state = reactive<QuillEditorState>({
               ['preview']
             ]
           : [
-              [{ header: [1, 2, 3, 4, 5, 6, false] }, { font: [] }],
+              [{ header: [1, 2, 3, 4, 5, 6, false] }, { font: [] }, { size: [] }],
               ['bold', 'italic', 'underline', 'strike'], // toggled buttons
               [{ list: 'ordered' }, { list: 'bullet' }, { align: [] }],
               [{ color: [] }, { background: [] }], // dropdown with defaults from theme
-              ['code-block', 'link'],
+              [...(props.compact ? [] : ['code-block']), 'link'],
               ['clean'], // remove formatting button
-              ['select']
+              ...(props.hideInsertField ? [] : [['select']])
             ], // 自定义工具栏
         handlers: {
           select: () => {
@@ -368,10 +388,46 @@ const hideSelect = () => {
 }
 const validate = () => {
   state.isError = false
-  if (!getContent()) {
+  if (props.required && !getContent()) {
     state.isError = true
   }
   return !state.isError
+}
+
+const TOOLBAR_TIPS: Record<string, string> = {
+  '.ql-header': 'Heading',
+  '.ql-font': 'Font',
+  '.ql-size': 'Font size',
+  '.ql-blockquote': 'Quote',
+  '.ql-list[value="check"]': 'Checklist',
+  '.ql-indent[value="-1"]': 'Decrease indent',
+  '.ql-indent[value="+1"]': 'Increase indent',
+  '.ql-script[value="sub"]': 'Subscript',
+  '.ql-script[value="super"]': 'Superscript',
+  '.ql-direction': 'Text direction',
+  '.ql-bold': 'Bold',
+  '.ql-italic': 'Italic',
+  '.ql-underline': 'Underline',
+  '.ql-strike': 'Strikethrough',
+  '.ql-list[value="ordered"]': 'Numbered list',
+  '.ql-list[value="bullet"]': 'Bulleted list',
+  '.ql-align': 'Alignment',
+  '.ql-color': 'Text color',
+  '.ql-background': 'Background color',
+  '.ql-code-block': 'Code block',
+  '.ql-link': 'Link',
+  '.ql-clean': 'Clear formatting',
+  '.ql-select': 'Insert field',
+  '.ql-preview': 'Preview'
+}
+const initTooltips = () => {
+  const container: HTMLElement | undefined = quillEditorRef.value?.getQuill()?.getModule('toolbar')
+    ?.container
+  if (!container) return
+  Object.entries(TOOLBAR_TIPS).forEach(([selector, tip]) => {
+    const el = container.querySelector(`button${selector}, .ql-picker${selector}`)
+    el?.setAttribute('title', tip)
+  })
 }
 
 onMounted(() => {

@@ -520,6 +520,8 @@ export default {
     jobType: 'Job Type',
     jobDescription: 'Job Description',
     jobRequirements: 'Job Requirements',
+    mandatoryRequirements: 'Mandatory Requirements',
+    preferredRequirements: 'Preferred Requirements',
     HRRecruiter: 'Recruiter',
     interviewProcessTemplate: 'Evaluation Plan',
     interviewFeedbackTemplate: 'Interview Feedback Template',

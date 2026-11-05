@@ -3,12 +3,15 @@
 // The /auth endpoints return plain payloads (not the ApiResult wrapper), so they bypass the shared interceptors.
 const authHttp = axios.create({
   baseURL: import.meta.env.VITE_API_URL as string,
-  timeout: 60000
+  timeout: 60000,
+  // Needed for the browser to store and send the HttpOnly refresh-token cookie
+  withCredentials: true
 })
 
 export interface LoginReq {
   email: string
   password: string
+  rememberMe?: boolean
 }
 
 export interface RegisterReq {
@@ -22,7 +25,6 @@ export interface RegisterReq {
 export interface LoginRes {
   email: string
   accessToken: string
-  refreshToken: string
   activationRequired: boolean
 }
 
@@ -39,14 +41,14 @@ const request = async (url: string, data: object): Promise<LoginRes> => {
     return {
       email: res.data.email,
       accessToken: res.data.access_token,
-      refreshToken: res.data.refresh_token,
       activationRequired: !!res.data.activation_required
     }
   } catch (e: any) {
     throw new Error(extractMessage(e?.response?.data) || e?.message || 'Request failed')
   }
 }
-export const loginApi = (data: LoginReq) => request('/api/auth/login', data)
+export const loginApi = (data: LoginReq) =>
+  request('/api/auth/login', { email: data.email, password: data.password, remember_me: !!data.rememberMe })
 
 export const registerApi = (data: RegisterReq) =>
   request('/api/auth/register', {
@@ -81,10 +83,9 @@ export const resetPasswordApi = (data: ResetPasswordReq) =>
     new_password: data.newPassword
   })
 
-export const refreshApi = (refreshToken: string) => request('/api/auth/refresh', { refresh_token: refreshToken })
+export const refreshApi = () => request('/api/auth/refresh', {})
 
 export const activateApi = (email: string, activationCode: string) =>
   postNoResult('/api/auth/activate', { email, activation_code: activationCode })
 
-export const logoutApi = (refreshToken: string) =>
-  authHttp.post('/api/auth/logout', { refresh_token: refreshToken }).catch(() => undefined)
+export const logoutApi = () => authHttp.post('/api/auth/logout', {}).catch(() => undefined)
