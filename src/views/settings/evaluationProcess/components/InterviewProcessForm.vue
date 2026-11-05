@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <EspMain :title="isReadOnly ? $t('interviewProcess.interviewDetail') : title">
     <template #right v-if="accessReady && !isReadOnly">
       <ElButton @click="goBack">{{ $t('button.cancel') }}</ElButton>
@@ -222,8 +222,8 @@ import {
   createInterviewProcessTemplate,
   saveAsInterviewProcess,
   updateInterviewProcess,
-  updateInterviewProcessTemplate} from '@/api/modules/interviewProcess'
-import InterviewProcess from '@/api/interface/interviewProcess'
+  updateInterviewProcessTemplate} from '@/api/modules/evaluationPlan'
+import InterviewProcess from '@/api/interface/evaluationPlan'
 import Sortable from 'sortablejs'
 import { getUserList } from '@/api/modules/common'
 import { ShareTypeEnum } from '@/enums/shareTypeEnum'

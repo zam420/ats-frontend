@@ -131,7 +131,7 @@ const save = async () => {
     const detailForm = {
       job_desc: jobDescRef.value.getContent(),
       job_req: jobReqRef.value.getContent(),
-      job_pref_req: jobPrefReqRef.value.getContent()
+      job_req_pref: jobPrefReqRef.value.getContent()
     }
     const otherForm = getObjectByForms(state.otherForm)
     const questionForm = getObjectByForms(state.questionForm)
@@ -270,7 +270,7 @@ const initData = () => {
               .join('')
       state.jobDesc = toHtml(result?.job_desc)
       state.jobReq = toHtml(result?.job_req)
-      state.jobPrefReq = toHtml(result?.job_pref_req)
+      state.jobPrefReq = toHtml(result?.job_req_pref)
       const index = state.baseForm.findIndex(item => item.prop === 'work_location')
       if (index !== -1) {
         state.baseForm[index] = disabledWorkLocation(state.baseForm[index])

@@ -2,7 +2,7 @@ import http from '@/api'
 import { ResultCreate, ResultUpload, SearchStatusInfo } from '../interface'
 import { ContentTypeEnum } from '@/enums/httpEnum'
 import CV from '../interface/cv'
-import InterviewProcess from '../interface/interviewProcess'
+import InterviewProcess from '../interface/evaluationPlan'
 import MyInterview from '../interface/myInterview'
 
 /**

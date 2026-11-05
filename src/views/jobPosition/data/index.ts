@@ -13,6 +13,9 @@ import {
   getResumeInboxList,
   getWorkLocationList
 } from '@/api/modules/common'
+import {
+  getInterviewProcessAsList,
+} from '@/api/modules/evaluationPlan'
 import { RecruitmentType } from '@/enums/recruitmentTypeEnum'
 import { EmploymentType } from '@/enums/employmentTypeEnum'
 import { JobType } from '@/enums/jobTypeEnum'
@@ -79,17 +82,6 @@ export const JOB_POSITION_BASIC_FORM: Form.FormItem[] = [
     md: 8
   },
   {
-    label: $t('jobPosition.recruitmentProject'),
-    prop: 'project_id',
-    type: FormItemTypeEnum.SELECT,
-    getOptions: getProjectList,
-    optionKey: 'project_id',
-    optionName: 'project_name',
-    initOptionParams: { status: ProjectStatusEnum.ACTIVE },
-    required: true,
-    md: 8
-  },
-  {
     label: $t('jobPosition.recruitmentType'),
     prop: 'recruitment_type',
     type: FormItemTypeEnum.SELECT,
@@ -142,7 +134,7 @@ export const JOB_POSITION_DETAIL_FORM: Form.FormItem[] = [
     type: FormItemTypeEnum.TEXTAREA,
     required: true,
     col: 12,
-    maxlength: 5000
+    maxlength: 10000
   },
   {
     label: $t('jobPosition.jobRequirements'),
@@ -150,8 +142,15 @@ export const JOB_POSITION_DETAIL_FORM: Form.FormItem[] = [
     type: FormItemTypeEnum.TEXTAREA,
     required: true,
     col: 12,
-    maxlength: 1000
-  }
+    maxlength: 5000
+  },
+  {
+    label: $t('jobPosition.preferredRequirements'),
+    prop: 'job_req_pref',
+    type: FormItemTypeEnum.TEXTAREA,
+    col: 12,
+    maxlength: 5000
+  },
 ]
 // 职位其他信息
 export const JOB_POSITION_OTHER_FORM: Form.FormItem[] = [
@@ -167,8 +166,11 @@ export const JOB_POSITION_OTHER_FORM: Form.FormItem[] = [
   {
     label: $t('jobPosition.interviewProcessTemplate'),
     prop: 'interview_process_templates',
-    clearable: true,
-    type: FormItemTypeEnum.MULTIPLE_SELECT,
+    type: FormItemTypeEnum.SELECT,
+    getOptions: getInterviewProcessAsList,
+    optionKey: 'id',
+    optionName: 'name',
+    required: true,
     md: 8
   },
   {
@@ -323,7 +325,7 @@ export const JOB_POSITION_DETAIL_DETAIL: Form.DetailItem[] = [
   },
   {
     label: $t('jobPosition.preferredRequirements'),
-    prop: 'job_pref_req',
+    prop: 'job_req_pref',
     isFontBold: true,
     isPaddingTop: true,
     col: 12,
@@ -341,7 +343,6 @@ export const JOB_POSITION_OTHER_DETAIL: Form.DetailItem[] = [
     label: $t('jobPosition.interviewProcessTemplate'),
     prop: 'interview_process_templates',
     col: 8,
-    value: ''
   },
   {
     label: $t('jobPosition.resumeInbox'),

@@ -75,8 +75,8 @@ import {
   getInterviewProcessDetail,
   shareInterviewProcess,
   changeRowStatusToInactive
-} from '@/api/modules/interviewProcess'
-import InterviewProcess from '@/api/interface/interviewProcess'
+} from '@/api/modules/evaluationPlan'
+import InterviewProcess from '@/api/interface/evaluationPlan'
 import { InterviewSession } from '@/enums/interviewSessionEnum'
 import { ShareTypeEnum } from '@/enums/shareTypeEnum'
 import { getUserList } from '@/api/modules/common'

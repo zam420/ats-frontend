@@ -66,15 +66,15 @@ import {
   ROUTER_SETTINGS_EVALUATION_PLAN_CREATE,
   ROUTER_SETTINGS_EVALUATION_PLAN_EDIT
 } from '@/router/routerName'
-import InterviewProcess from '@/api/interface/interviewProcess'
+import InterviewProcess from '@/api/interface/evaluationPlan'
 import { UserPermissionEnum } from '@/enums/userPermission'
 import {
-  getInterviewProcessList,
-  getOwnedInterviewProcessList,
-  getSharedInterviewProcessList,
-  getTemplateInterviewProcessList,
+  getInterviewProcess,
+  getOwnedInterviewProcess,
+  getSharedInterviewProcess,
+  getTemplateInterviewProcess,
   deleteInterviewProcess
-} from '@/api/modules/interviewProcess'
+} from '@/api/modules/evaluationPlan'
 import { getUserList } from '@/api/modules/common'
 import { ShareTypeEnum } from '@/enums/shareTypeEnum'
 
@@ -118,10 +118,10 @@ const initParam = ref<Record<string, any>>({ tab: TAB_OWNED })
 // The selected tab decides which backend API is called; the tab key itself is not sent
 const requestList = (params: Record<string, any>) => {
   const { tab, ...query } = params
-  if (tab === TAB_SHARED) return getSharedInterviewProcessList(query)
-  if (tab === TAB_TEMPLATES) return getTemplateInterviewProcessList(query)
-  if (tab === TAB_ALL) return getInterviewProcessList(query)
-  return getOwnedInterviewProcessList(query)
+  if (tab === TAB_SHARED) return getSharedInterviewProcess(query)
+  if (tab === TAB_TEMPLATES) return getTemplateInterviewProcess(query)
+  if (tab === TAB_ALL) return getInterviewProcess(query)
+  return getOwnedInterviewProcess(query)
 }
 
 // owner public id -> name, and the signed-in user's public id (matched by email)

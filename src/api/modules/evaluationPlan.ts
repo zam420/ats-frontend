@@ -1,25 +1,28 @@
 import http from '@/api'
-import InterviewProcess from '../interface/interviewProcess'
+import InterviewProcess from '../interface/evaluationPlan'
 import { ResultCreate } from '../interface'
 
 /**
  * @name Interview Process 模块
  */
 
-// 获取 Interview Process 的列表: owned / shared / system templates
-export const getInterviewProcessList = (params: Record<string, any>) => {
+export const getInterviewProcess = (params: Record<string, any>) => {
   return http.get<InterviewProcess.ListInfo[]>('/api/evaluationplan/all', params)
 }
 
-export const getOwnedInterviewProcessList = (params: Record<string, any>) => {
+export const getInterviewProcessAsList = (params: Record<string, any>) => {
+  return http.get<InterviewProcess.ListInfo[]>('/api/evaluationplan/list', params)
+}
+
+export const getOwnedInterviewProcess = (params: Record<string, any>) => {
   return http.get<InterviewProcess.ListInfo[]>('/api/evaluationplan/owned', params)
 }
 
-export const getSharedInterviewProcessList = (params: Record<string, any>) => {
+export const getSharedInterviewProcess = (params: Record<string, any>) => {
   return http.get<InterviewProcess.ListInfo[]>('/api/evaluationplan/shared', params)
 }
 
-export const getTemplateInterviewProcessList = (params: Record<string, any>) => {
+export const getTemplateInterviewProcess = (params: Record<string, any>) => {
   return http.get<InterviewProcess.ListInfo[]>('/api/evaluationplan/templates', params)
 }
 

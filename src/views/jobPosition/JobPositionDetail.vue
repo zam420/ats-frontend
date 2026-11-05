@@ -119,7 +119,7 @@ const initData = () => {
       state.richText = {
         job_desc: toHtml(result?.job_desc),
         job_req: toHtml(result?.job_req),
-        job_pref_req: toHtml(result?.job_pref_req)
+        job_req_pref: toHtml(result?.job_req_pref)
       }
       state.extendedQuestions = result?.extended_questions ?? []
       if (state.extendedQuestions?.length) {

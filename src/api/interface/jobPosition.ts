@@ -9,7 +9,7 @@ declare namespace JobPosition {
     work_location: string
     job_desc: string
     job_req: string
-    job_pref_req?: string
+    job_req_pref?: string
     hr_recruiter: number
     hr_coordinators: number[]
     interview_process_template: string
@@ -39,7 +39,7 @@ declare namespace JobPosition {
     hr_recruiter_name: string
     job_desc: string
     job_req: string
-    job_pref_req?: string
+    job_req_pref?: string
     title: string
     job_type_name: string
     job_type: number
