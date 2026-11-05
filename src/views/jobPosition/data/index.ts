@@ -4,7 +4,6 @@ import { TableColumnFixedEnum } from '@/enums/tableColumnFixedEnum'
 import { FormItemTypeEnum } from '@/enums/formItemTypeEnum'
 import { JobStatus } from '@/enums/jobStatusEnum'
 import { ROUTER_JOB_POSITION_DETAIL } from '@/router/routerName'
-import { getProjectList } from '@/api/modules/project'
 import {
   getChannelTypeList,
   getEmploymentTypeList,

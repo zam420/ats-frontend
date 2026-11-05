@@ -58,9 +58,7 @@ import { RecruitmentType } from '@/enums/recruitmentTypeEnum'
 import { WorkLocation } from '@/enums/workLocationEnum'
 import { JobStatus } from '@/enums/jobStatusEnum'
 import { isArray } from '@/utils/is'
-import { getProjectList } from '@/api/modules/project'
 import { getSelectOptionsByData, getTableTabs, openNewWindow } from '@/utils'
-import Project from '@/api/interface/project'
 import mittBus from '@/utils/mittBus'
 import { OPEN_DIALOG } from '@/config'
 import { UserPermissionEnum } from '@/enums/userPermission'
@@ -76,18 +74,6 @@ const projectList = ref<Form.FormSelect[]>([])
 // const curId = ref<number>()
 
 const tabs = ref<Form.FormSelect[]>(getTableTabs(JobStatus))
-
-const initProject = () => {
-  getProjectList().then(res => {
-    projectList.value = getSelectOptionsByData<Project.ProjectInfo>(
-      res?.result ?? [],
-      'project_id',
-      'project_name'
-    )
-    console.log(projectList.value)
-    projectId.value = route.query?.project_id ? Number(route.query?.project_id) : null
-  })
-}
 
 // 上传
 const showBatch = () => {
@@ -182,7 +168,4 @@ const showEdit = (id: number) => {
 //   })
 // }
 
-onMounted(() => {
-  initProject()
-})
 </script>
