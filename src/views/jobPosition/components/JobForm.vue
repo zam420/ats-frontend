@@ -83,6 +83,7 @@ import { useLocale } from '@/hooks/useLocale'
 import { ROUTER_JOB_POSITION } from '@/router/routerName'
 import { isArray } from '@/utils/is'
 import { FormItemTypeEnum } from '@/enums/formItemTypeEnum'
+import { jobRichTextToHtml } from '../jobRichText'
 
 interface ParamsProps {
   title: string // 标题
@@ -276,17 +277,9 @@ const initData = () => {
       const result = (res.result ?? {}) as JobPosition.JobPositionDetail
       state.status = result?.status ?? 0
       state.baseForm = getFormsByRes(state.baseForm, result, espBasicRef.value)
-      // Values saved before the rich-text editor are plain text: keep their line breaks
-      const toHtml = (text?: string) =>
-        !text || text.trim().startsWith('<')
-          ? (text ?? '')
-          : text
-              .split('\n')
-              .map(line => `<p>${line.replace(/&/g, '&amp;').replace(/</g, '&lt;') || '<br>'}</p>`)
-              .join('')
-      state.jobDesc = toHtml(result?.description)
-      state.jobReq = toHtml(result?.mandatory_requirements)
-      state.jobPrefReq = toHtml(result?.preferred_requirements)
+      state.jobDesc = jobRichTextToHtml(result?.description)
+      state.jobReq = jobRichTextToHtml(result?.mandatory_requirements)
+      state.jobPrefReq = jobRichTextToHtml(result?.preferred_requirements)
       const index = state.baseForm.findIndex(item => item.prop === 'work_location')
       if (index !== -1) {
         state.baseForm[index] = disabledWorkLocation(state.baseForm[index])

@@ -47,6 +47,7 @@ import JobPosition from '@/api/interface/jobPosition'
 import { isArray, isString } from '@/utils/is'
 import { UserPermissionEnum } from '@/enums/userPermission'
 import { useLocale } from '@/hooks/useLocale'
+import { jobRichTextToHtml } from './jobRichText'
 const { $t } = useLocale()
 interface ReactiveParams {
   createdDetailForm: Form.FormItem[]
@@ -111,15 +112,10 @@ const initData = () => {
       state.status = result?.status ?? 0
       state.createdDetailForm = getFormsByRes(state.createdDetailForm, result)
       state.basicDetailForm = getFormsByRes(state.basicDetailForm, result)
-      // Values saved before the rich-text editor are plain text
-      const toHtml = (text?: string) =>
-        !text || text.trim().startsWith('<')
-          ? (text ?? '')
-          : text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\n/g, '<br>')
       state.richText = {
-        description: toHtml(result?.description),
-        mandatory_requirements: toHtml(result?.mandatory_requirements),
-        preferred_requirements: toHtml(result?.preferred_requirements)
+        description: jobRichTextToHtml(result?.description),
+        mandatory_requirements: jobRichTextToHtml(result?.mandatory_requirements),
+        preferred_requirements: jobRichTextToHtml(result?.preferred_requirements)
       }
       state.extendedQuestions = result?.extended_questions ?? []
       if (state.extendedQuestions?.length) {
