@@ -21,6 +21,7 @@ import { broadcastLogout } from '@/utils/authChannel'
 export interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
   noLoading?: boolean
   loadingText?: string
+  preserveHtml?: boolean
 }
 
 type RetryableConfig = CustomAxiosRequestConfig & { _retry?: boolean }
@@ -123,6 +124,7 @@ class RequestHttp {
         if (
           data &&
           response?.config?.method?.toLowerCase() === 'get' &&
+          !(response.config as CustomAxiosRequestConfig).preserveHtml &&
           response?.config?.responseType?.toLowerCase() !== 'blob'
         ) {
           try {
@@ -190,7 +192,11 @@ class RequestHttp {
   /**
    * @description 常用请求方法封装
    */
-  get<T>(url: string, params?: object, _object = {}): Promise<ResultData<T>> {
+  get<T>(
+    url: string,
+    params?: object,
+    _object: AxiosRequestConfig & Pick<CustomAxiosRequestConfig, 'noLoading' | 'loadingText' | 'preserveHtml'> = {}
+  ): Promise<ResultData<T>> {
     return this.service.get(url, {
       params,
       ..._object,

@@ -13,7 +13,7 @@ const interviewProcessRouter: Menu.MenuOptions[] = [
   {
     path: `/${ROUTER_SETTINGS_EVALUATION_PLAN}`,
     name: 'ROUTER_SETTINGS_EVALUATION_PLAN',
-    component: () => import('@/views/settings/evaluationProcess/index.vue'),
+    component: () => import('@/views/settings/evaluationPlan/index.vue'),
     meta: {
       title: $t('menu.interviewProcess'),
       index: 1,
@@ -23,7 +23,7 @@ const interviewProcessRouter: Menu.MenuOptions[] = [
   {
     path: `/${ROUTER_SETTINGS_EVALUATION_PLAN_CREATE}`,
     name: 'ROUTER_SETTINGS_EVALUATION_PLAN_CREATE',
-    component: () => import('@/views/settings/evaluationProcess/InterviewProcessCreate.vue'),
+    component: () => import('@/views/settings/evaluationPlan/InterviewProcessCreate.vue'),
     meta: {
       icon: '',
       title: $t('interviewProcess.createInterview'),
@@ -35,7 +35,7 @@ const interviewProcessRouter: Menu.MenuOptions[] = [
   {
     path: `/${ROUTER_SETTINGS_EVALUATION_PLAN_EDIT}/:id`,
     name: 'ROUTER_SETTINGS_EVALUATION_PLAN_EDIT',
-    component: () => import('@/views/settings/evaluationProcess/InterviewProcessEdit.vue'),
+    component: () => import('@/views/settings/evaluationPlan/InterviewProcessEdit.vue'),
     meta: {
       icon: '',
       title: $t('interviewProcess.editInterview'),
@@ -47,7 +47,7 @@ const interviewProcessRouter: Menu.MenuOptions[] = [
   {
     path: `${ROUTER_SETTINGS_EVALUATION_PLAN_DETAIL}/:id`,
     name: 'ROUTER_SETTINGS_EVALUATION_PLAN_DETAIL',
-    component: () => import('@/views/settings/evaluationProcess/InterviewProcessDetail.vue'),
+    component: () => import('@/views/settings/evaluationPlan/InterviewProcessDetail.vue'),
     meta: {
       icon: '',
       title: $t('interviewProcess.interviewDetail'),

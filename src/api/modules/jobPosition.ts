@@ -42,7 +42,9 @@ export const publishJobPosition = (data: { id: string | number; status: number }
 
 // 获取 Job Position 的详情
 export const getJobPositionDetail = (id: string | number) => {
-  return http.get<JobPosition.JobPositionDetail>(`api/job/${encodeURIComponent(id)}`)
+  return http.get<JobPosition.JobPositionDetail>(`api/job/${encodeURIComponent(id)}`, undefined, {
+    preserveHtml: true
+  })
 }
 
 // 上传 Job Position

@@ -142,19 +142,18 @@ const save = async () => {
     const questions = Object.values(questionForm) ?? []
     const formData: Record<string, any> = { ...baseForm, ...detailForm, ...otherForm }
     formData.extended_questions = questions
+    formData.employment_type = formData.employment_type_id
+    formData.evaluation_plan = formData.evaluation_plan_id
+    formData.recruitment_pipeline = formData.recruitment_pipeline_id
+    formData.work_arrangement_type = formData.work_arrangement_type_id
+    delete formData.employment_type_id
+    delete formData.evaluation_plan_id
+    delete formData.recruitment_pipeline_id
+    delete formData.work_arrangement_type_id
     let saveFun = createJobPosition
     if (props.isEdit) {
       formData.id = props.id
       saveFun = editJobPosition
-    } else {
-      formData.employment_type = formData.employment_type_id
-      formData.evaluation_plan = formData.evaluation_plan_id
-      formData.recruitment_pipeline = formData.recruitment_pipeline_id
-      formData.work_arrangement_type = formData.work_arrangement_type_id
-      delete formData.employment_type_id
-      delete formData.evaluation_plan_id
-      delete formData.recruitment_pipeline_id
-      delete formData.work_arrangement_type_id
     }
     saveFun(formData as JobPosition.JonPositionInfo).then(res => {
       if (res?.success) {

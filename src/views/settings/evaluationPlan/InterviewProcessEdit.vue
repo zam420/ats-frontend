@@ -1,5 +1,5 @@
 <template>
-  <InterviewProcessForm
+  <EvaluationForm
     :title="$t('interviewProcess.editInterview')"
     :is-edit="true"
     :id="id"
@@ -7,7 +7,7 @@
   />
 </template>
 <script setup lang="ts">
-import InterviewProcessForm from './components/InterviewProcessForm.vue'
+import EvaluationForm from './components/EvaluationForm.vue'
 import { ROUTER_SETTINGS_EVALUATION_PLAN } from '@/router/routerName'
 import { isNumber } from '@/utils/is'
 

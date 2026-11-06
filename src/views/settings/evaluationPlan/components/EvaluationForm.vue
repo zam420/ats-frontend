@@ -209,7 +209,7 @@
     </div>
   </EspMain>
 </template>
-<script setup lang="ts" name="InterviewProcessForm">
+<script setup lang="ts" name="EvaluationForm">
 import { cloneDeep } from 'lodash-es'
 import { INTERVIEW_PROCESS_FORM } from '../data'
 import { generateUUID, getObjectByForms } from '@/utils'
