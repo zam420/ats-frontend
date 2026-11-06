@@ -1,6 +1,6 @@
 export const ROUTER_ROOT = 'root'
 export const ROUTER_LAYOUT = 'layout'
-export const ROUTER_HOME = 'jobPosition'
+export const ROUTER_HOME = 'job'
 export const ROUTER_404 = '404'
 export const ROUTER_403 = '403'
 export const ROUTER_500 = '500'
@@ -15,10 +15,10 @@ export const ROUTER_DEMO1 = 'demo1'
 export const ROUTER_DEMO2 = 'demo2'
 
 // Job Position
-export const ROUTER_JOB_POSITION = 'jobPosition'
-export const ROUTER_JOB_POSITION_CREATE = 'jobPosition/create'
-export const ROUTER_JOB_POSITION_DETAIL = 'jobPosition/detail'
-export const ROUTER_JOB_POSITION_EDIT = 'jobPosition/edit'
+export const ROUTER_JOB_POSITION = 'job'
+export const ROUTER_JOB_POSITION_CREATE = 'job/create'
+export const ROUTER_JOB_POSITION_DETAIL = 'job/detail'
+export const ROUTER_JOB_POSITION_EDIT = 'job/edit'
 
 //CV Management
 export const ROUTER_CV_MANAGEMENT = 'cvManagement'

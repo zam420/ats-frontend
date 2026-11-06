@@ -36,13 +36,12 @@ export const getInterviewProcessTemplates = (data: { work_location: number[] | n
 }
 
 // 获取 Admin Recruitment Project 的详情
-export const getJobPositionDetail = () => {
+export const getJobPositionDetail = (id: string | number) => {
   return http.get<AdminRecruitmentProject.AdminRecruitmentProjectInfo>(
-    'api/recruitment/getJobPositionDetail'
+    `api/job/${encodeURIComponent(id)}`
   )
 }
 
 export const changeRowStatusToInactive = (id: string, status: number) => {
   return http.post<boolean>(`/api/project/deactivate/${encodeURIComponent(id)}/${status}`)
 }
-

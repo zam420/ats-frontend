@@ -521,6 +521,8 @@ export default {
     jobDescription: 'Job Description',
     jobRequirements: 'Job Requirements',
     mandatoryRequirements: 'Mandatory Requirements',
+    workArrangement: 'Work Arrangement',
+    recruitmentPipeline: 'Recruitment Pipeline',
     preferredRequirements: 'Preferred Requirements',
     HRRecruiter: 'Recruiter',
     interviewProcessTemplate: 'Evaluation Plan',

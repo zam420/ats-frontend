@@ -151,7 +151,7 @@ export const quickSaveNotes = (data: CV.QuickNote) => {
 
 // get job position list
 export const getJobPositionList = () => {
-  return http.get<CV.JobPosition[]>('api/recruitment/listJobPostionForCV')
+  return http.get<CV.JobPosition[]>('api/job/listJobPostionForCV')
 }
 
 // 获取笔试paper list

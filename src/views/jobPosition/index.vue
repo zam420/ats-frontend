@@ -54,7 +54,6 @@ import { useLocale } from '@/hooks/useLocale'
 // 删除接口 deleteJobPosition
 import { getJobPositionList, uploadJobPosition } from '@/api/modules/jobPosition'
 import JobPosition from '@/api/interface/jobPosition'
-import { RecruitmentType } from '@/enums/recruitmentTypeEnum'
 import { WorkLocation } from '@/enums/workLocationEnum'
 import { JobStatus } from '@/enums/jobStatusEnum'
 import { isArray } from '@/utils/is'
@@ -120,8 +119,6 @@ const uploadJob = (formData: FormData) => {
 const initTable = (tables: JobPosition.JobPositionDetail[]) => {
   searchTable()
   return tables.map(item => {
-    item.recruitment_type_name =
-      RecruitmentType?.[item?.recruitment_type]?.name ?? item.recruitment_type_name
     let work_location = item.work_location as CommonEnum.enumItem[]
     const work_locations = work_location.map((info: CommonEnum.enumItem) => {
       return WorkLocation?.[info.value]?.name ?? info.name
@@ -144,8 +141,8 @@ const searchTable = () => {
   })
 }
 
-const showEdit = (id: number) => {
-  openNewWindow(`${ROUTER_JOB_POSITION_EDIT}/${id}`)
+const showEdit = (id: string | number) => {
+  openNewWindow(`${ROUTER_JOB_POSITION_EDIT}/${encodeURIComponent(id)}`)
 }
 // const showDelete = (id: number) => {
 //   curId.value = id

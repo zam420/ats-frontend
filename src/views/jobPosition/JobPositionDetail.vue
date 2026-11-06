@@ -117,9 +117,9 @@ const initData = () => {
           ? (text ?? '')
           : text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\n/g, '<br>')
       state.richText = {
-        job_desc: toHtml(result?.job_desc),
-        job_req: toHtml(result?.job_req),
-        job_req_pref: toHtml(result?.job_req_pref)
+        description: toHtml(result?.description),
+        mandatory_requirements: toHtml(result?.mandatory_requirements),
+        preferred_requirements: toHtml(result?.preferred_requirements)
       }
       state.extendedQuestions = result?.extended_questions ?? []
       if (state.extendedQuestions?.length) {
@@ -136,10 +136,6 @@ const initData = () => {
         info => info.prop === 'interview_process_templates'
       )
       state.otherDetailForm[index].value = interviewProcessTemplates?.join(', ')
-      const feedbackIndex = state.otherDetailForm.findIndex(
-        info => info.prop === 'public_interview_feedback'
-      )
-      state.otherDetailForm[feedbackIndex].value = result?.public_interview_feedback ? $t('cv.yes') : $t('cv.no')
     })
   } else {
     router.replace({

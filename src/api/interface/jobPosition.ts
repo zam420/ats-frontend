@@ -3,13 +3,14 @@ declare namespace JobPosition {
     id: number
     title: string
     project_id: number
-    recruitment_type: number
-    employment_type: number
-    job_type: number
+    employment_type_id: number
+    work_arrangement_type_id: number
+    recruitment_pipeline_id: number | string
+    evaluation_plan_id: number | string
     work_location: string
-    job_desc: string
-    job_req: string
-    job_req_pref?: string
+    description: string
+    mandatory_requirements: string
+    preferred_requirements?: string
     hr_recruiter: number
     hr_coordinators: number[]
     interview_process_template: string
@@ -28,28 +29,32 @@ declare namespace JobPosition {
     name: string
   }
   interface JobPositionDetail {
-    id: number
+    id: string | number
     created_at: string
     created_by_id: number
     created_by_name: string
     employment_type_name: string
-    employment_type: number
+    employment_type_id: number
+    employment_type?: number
+    work_arrangement_type_id?: number
+    work_arrangement_type?: number
+    recruitment_pipeline_id?: number | string
+    recruitment_pipeline?: string
+    evaluation_plan_id?: number | string
+    evaluation_plan?: string
+    recruiters?: string[]
     hr_coordinators: CommonEnum.enumItem[] | string
     hr_recruiter_id: number
     hr_recruiter_name: string
-    job_desc: string
-    job_req: string
-    job_req_pref?: string
+    description: string
+    mandatory_requirements: string
+    preferred_requirements?: string
     title: string
-    job_type_name: string
-    job_type: number
     last_modified_at: string
     project_id: number
     project_name: string
     publish_channel: CommonEnum.enumItem[] | string
     published_at: string
-    recruitment_type_name: string
-    recruitment_type: number
     resume_inbox_name: string
     resume_inbox: number
     status_name: string
@@ -61,6 +66,18 @@ declare namespace JobPosition {
   }
   interface CrateJonPositionInfo {
     id: number
+  }
+  interface FieldOption {
+    id: number | string
+    name: string
+    email?: string
+  }
+  interface JobFieldsData {
+    employment_types: FieldOption[]
+    work_arrangement_types: FieldOption[]
+    recruitment_pipelines: FieldOption[]
+    evaluation_plans: FieldOption[]
+    recruiters: FieldOption[]
   }
 }
 export default JobPosition

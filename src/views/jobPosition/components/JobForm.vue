@@ -71,18 +71,22 @@ import {
 } from '../data'
 import { getObjectByForms, isEmpty } from '@/utils'
 import { JobStatusEnum, JobStatus } from '@/enums/jobStatusEnum'
-import { createJobPosition, editJobPosition, getJobPositionDetail } from '@/api/modules/jobPosition'
+import {
+  createJobPosition,
+  editJobPosition,
+  getJobFieldsData,
+  getJobPositionDetail
+} from '@/api/modules/jobPosition'
 import JobPosition from '@/api/interface/jobPosition'
 import { WorkLocationEnum } from '@/enums/workLocationEnum'
 import { useLocale } from '@/hooks/useLocale'
 import { ROUTER_JOB_POSITION } from '@/router/routerName'
 import { isArray } from '@/utils/is'
-import { getInterviewProcessTemplates } from '@/api/modules/adminRecruitmentProject'
 import { FormItemTypeEnum } from '@/enums/formItemTypeEnum'
 
 interface ParamsProps {
   title: string // 标题
-  id?: number // 数据ID
+  id?: string // 数据ID
   isEdit: boolean // 是否编辑
 }
 interface ReactiveParams {
@@ -129,9 +133,9 @@ const save = async () => {
   if (isBasicError && isDetailError && isOtherError) {
     const baseForm = getObjectByForms(state.baseForm)
     const detailForm = {
-      job_desc: jobDescRef.value.getContent(),
-      job_req: jobReqRef.value.getContent(),
-      job_req_pref: jobPrefReqRef.value.getContent()
+      description: jobDescRef.value.getContent(),
+      mandatory_requirements: jobReqRef.value.getContent(),
+      preferred_requirements: jobPrefReqRef.value.getContent()
     }
     const otherForm = getObjectByForms(state.otherForm)
     const questionForm = getObjectByForms(state.questionForm)
@@ -142,6 +146,15 @@ const save = async () => {
     if (props.isEdit) {
       formData.id = props.id
       saveFun = editJobPosition
+    } else {
+      formData.employment_type = formData.employment_type_id
+      formData.evaluation_plan = formData.evaluation_plan_id
+      formData.recruitment_pipeline = formData.recruitment_pipeline_id
+      formData.work_arrangement_type = formData.work_arrangement_type_id
+      delete formData.employment_type_id
+      delete formData.evaluation_plan_id
+      delete formData.recruitment_pipeline_id
+      delete formData.work_arrangement_type_id
     }
     saveFun(formData as JobPosition.JonPositionInfo).then(res => {
       if (res?.success) {
@@ -163,23 +176,24 @@ const save = async () => {
 const changeForm = (item: Form.FormItem) => {
   if (item.prop === 'work_location') {
     disabledWorkLocation(item)
-    if (item.value && item.value?.length > 0) {
-      // 获取worklocation对应的interview process模版
-      getInterviewProcessTemplates({ work_location: item.value }).then(res => {
-        const list = res?.result ?? []
-        const options = list?.map(data => {
-          return {
-            label: data.name,
-            value: data.id
-          }
-        })
-        const index = state.otherForm.findIndex(info => info.prop === 'interview_process_templates')
-        state.otherForm[index].options = [...options]
-        state.otherForm[index].value = undefined
-      })
-    }
   }
 }
+
+// Fill the dropdowns from one API call
+const setOptions = (form: Form.FormItem[], prop: string, list?: JobPosition.FieldOption[]) => {
+  const item = form.find(info => info.prop === prop)
+  if (item) {
+    item.options = (list ?? []).map(data => ({ label: data.name, value: data.id }))
+  }
+}
+getJobFieldsData().then(res => {
+  const data = res?.result
+  setOptions(state.baseForm, 'employment_type_id', data?.employment_types)
+  setOptions(state.baseForm, 'work_arrangement_type_id', data?.work_arrangement_types)
+  setOptions(state.otherForm, 'recruiters', data?.recruiters)
+  setOptions(state.otherForm, 'recruitment_pipeline_id', data?.recruitment_pipelines)
+  setOptions(state.otherForm, 'evaluation_plan_id', data?.evaluation_plans)
+})
 
 const disabledWorkLocation = (item: Form.FormItem) => {
   if (item?.value?.length > 0) {
@@ -224,16 +238,19 @@ const getFormsByRes = (
   formRef: any
 ) => {
   return forms.map((item: Form.FormItem) => {
-    let prop = item.prop as keyof JobPosition.JobPositionDetail
-    if (['hr_coordinators', 'publish_channel', 'work_location'].includes(item.prop)) {
-      const list = (res?.[prop] ?? []) as CommonEnum.enumItem[]
+    const responseFields: Record<string, keyof JobPosition.JobPositionDetail> = {
+      employment_type_id: 'employment_type',
+      work_arrangement_type_id: 'work_arrangement_type',
+      recruitment_pipeline_id: 'recruitment_pipeline',
+      evaluation_plan_id: 'evaluation_plan'
+    }
+    const prop = responseFields[item.prop] ?? (item.prop as keyof JobPosition.JobPositionDetail)
+    if (['hr_coordinators', 'publish_channel', 'work_location', 'recruiters'].includes(item.prop)) {
+      const list = (res?.[prop] ?? []) as (CommonEnum.enumItem | string | number)[]
       item.value = list.map(info => {
-        return info.value ?? info.id
+        return typeof info === 'object' ? info.value ?? info.id : info
       })
     } else {
-      if (item.prop === 'hr_recruiter') {
-        prop = 'hr_recruiter_id'
-      }
       if (isArray(res?.[prop])) {
         const arrVal = res?.[prop] as CommonEnum.enumItem[]
         item.value = arrVal.map((info: CommonEnum.enumItem) => {
@@ -268,9 +285,9 @@ const initData = () => {
               .split('\n')
               .map(line => `<p>${line.replace(/&/g, '&amp;').replace(/</g, '&lt;') || '<br>'}</p>`)
               .join('')
-      state.jobDesc = toHtml(result?.job_desc)
-      state.jobReq = toHtml(result?.job_req)
-      state.jobPrefReq = toHtml(result?.job_req_pref)
+      state.jobDesc = toHtml(result?.description)
+      state.jobReq = toHtml(result?.mandatory_requirements)
+      state.jobPrefReq = toHtml(result?.preferred_requirements)
       const index = state.baseForm.findIndex(item => item.prop === 'work_location')
       if (index !== -1) {
         state.baseForm[index] = disabledWorkLocation(state.baseForm[index])
@@ -284,24 +301,6 @@ const initData = () => {
         })
       }
       state.otherForm = getFormsByRes(state.otherForm, result, espOtherRef.value)
-      const worklocationIds = (result?.work_location as CommonEnum.enumItem[])?.map(
-        info => info.value
-      )
-      const interviewProcessTemplates =
-        result?.interview_process_templates?.map(info => info.id) ?? []
-      // 获取worklocation对应的interview process模版
-      getInterviewProcessTemplates({ work_location: worklocationIds as number[] }).then(resData => {
-        const list = resData?.result ?? []
-        const options = list?.map(data => {
-          return {
-            label: data.name,
-            value: data.id
-          }
-        })
-        const index = state.otherForm.findIndex(info => info.prop === 'interview_process_templates')
-        state.otherForm[index].options = [...options]
-        state.otherForm[index].value = [...interviewProcessTemplates]
-      })
     })
   }
 }
@@ -314,14 +313,9 @@ const goBack = () => {
     path: `/${ROUTER_JOB_POSITION}`
   })
 }
-nextTick(() => {
+onMounted(() => {
   if (props.isEdit) {
-    setTimeout(() => {
-      initData()
-    }, 100)
-    return
+    initData()
   }
 })
-
-nextTick(() => {})
 </script>

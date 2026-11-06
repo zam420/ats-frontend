@@ -6,20 +6,11 @@ import { JobStatus } from '@/enums/jobStatusEnum'
 import { ROUTER_JOB_POSITION_DETAIL } from '@/router/routerName'
 import {
   getChannelTypeList,
-  getEmploymentTypeList,
-  getJobTypeList,
-  getRecruitmentTypeList,
   getResumeInboxList,
   getWorkLocationList
 } from '@/api/modules/common'
-import {
-  getInterviewProcessAsList,
-} from '@/api/modules/evaluationPlan'
-import { RecruitmentType } from '@/enums/recruitmentTypeEnum'
 import { EmploymentType } from '@/enums/employmentTypeEnum'
-import { JobType } from '@/enums/jobTypeEnum'
 import { WorkLocation } from '@/enums/workLocationEnum'
-import { getUserListByRole } from '@/api/modules/user'
 import { UserRoleEnum } from '@/enums/userRoleEnum'
 import { ChannelType } from '@/enums/channelTypeEnum'
 import { ProjectStatusEnum } from '@/enums/projectStatusEnum'
@@ -55,10 +46,6 @@ export const JOB_POSITION_TABLE: Table.ColumnProps[] = [
     label: $t('jobPosition.recruitmentProject')
   },
   {
-    prop: 'recruitment_type_name',
-    label: $t('jobPosition.recruitmentType')
-  },
-  {
     prop: 'work_location',
     label: $t('jobPosition.workLocation')
   },
@@ -81,35 +68,18 @@ export const JOB_POSITION_BASIC_FORM: Form.FormItem[] = [
     md: 8
   },
   {
-    label: $t('jobPosition.recruitmentType'),
-    prop: 'recruitment_type',
-    type: FormItemTypeEnum.SELECT,
-    getOptions: getRecruitmentTypeList,
-    optionKey: 'value',
-    optionName: 'name',
-    enum: RecruitmentType,
-    required: true,
-    md: 8
-  },
-  {
     label: $t('jobPosition.employmentType'),
-    prop: 'employment_type',
+    prop: 'employment_type_id',
     type: FormItemTypeEnum.SELECT,
-    getOptions: getEmploymentTypeList,
-    optionKey: 'value',
-    optionName: 'name',
-    enum: EmploymentType,
+    options: [],
     required: true,
     md: 8
   },
   {
-    label: $t('jobPosition.jobType'),
-    prop: 'job_type',
+    label: $t('jobPosition.workArrangement'),
+    prop: 'work_arrangement_type_id',
     type: FormItemTypeEnum.SELECT,
-    getOptions: getJobTypeList,
-    optionKey: 'value',
-    optionName: 'name',
-    enum: JobType,
+    options: [],
     required: true,
     md: 8
   },
@@ -129,7 +99,7 @@ export const JOB_POSITION_BASIC_FORM: Form.FormItem[] = [
 export const JOB_POSITION_DETAIL_FORM: Form.FormItem[] = [
   {
     label: $t('jobPosition.jobDescription'),
-    prop: 'job_desc',
+    prop: 'description',
     type: FormItemTypeEnum.TEXTAREA,
     required: true,
     col: 12,
@@ -137,7 +107,7 @@ export const JOB_POSITION_DETAIL_FORM: Form.FormItem[] = [
   },
   {
     label: $t('jobPosition.jobRequirements'),
-    prop: 'job_req',
+    prop: 'mandatory_requirements',
     type: FormItemTypeEnum.TEXTAREA,
     required: true,
     col: 12,
@@ -145,7 +115,7 @@ export const JOB_POSITION_DETAIL_FORM: Form.FormItem[] = [
   },
   {
     label: $t('jobPosition.preferredRequirements'),
-    prop: 'job_req_pref',
+    prop: 'preferred_requirements',
     type: FormItemTypeEnum.TEXTAREA,
     col: 12,
     maxlength: 5000
@@ -155,49 +125,26 @@ export const JOB_POSITION_DETAIL_FORM: Form.FormItem[] = [
 export const JOB_POSITION_OTHER_FORM: Form.FormItem[] = [
   {
     label: $t('jobPosition.HRRecruiter'),
-    prop: 'hr_recruiter',
+    prop: 'recruiters',
+    type: FormItemTypeEnum.MULTIPLE_SELECT,
+    options: [],
+    required: true,
+    md: 8
+  },
+  {
+    label: $t('jobPosition.recruitmentPipeline'),
+    prop: 'recruitment_pipeline_id',
     type: FormItemTypeEnum.SELECT,
-    getOptions: getUserListByRole,
-    initOptionParams: { role: UserRoleEnum.REC },
+    options: [],
     required: true,
     md: 8
   },
   {
     label: $t('jobPosition.interviewProcessTemplate'),
-    prop: 'interview_process_templates',
+    prop: 'evaluation_plan_id',
     type: FormItemTypeEnum.SELECT,
-    getOptions: getInterviewProcessAsList,
-    optionKey: 'id',
-    optionName: 'name',
+    options: [],
     required: true,
-    md: 8
-  },
-  {
-    label: $t('jobPosition.resumeInbox'),
-    prop: 'resume_inbox',
-    type: FormItemTypeEnum.SELECT,
-    getOptions: getResumeInboxList,
-    optionKey: 'value',
-    optionName: 'value',
-    required: true,
-    md: 8
-  },
-  {
-    label: $t('jobPosition.jobPortals'),
-    prop: 'publish_channel',
-    type: FormItemTypeEnum.MULTIPLE_SELECT,
-    getOptions: getChannelTypeList,
-    optionKey: 'value',
-    optionName: 'name',
-    clearable: true,
-    enum: ChannelType,
-    md: 8
-  },
-  {
-    label: $t('jobPosition.functionalInterviewFeedback'),
-    prop: 'public_interview_feedback',
-    type: FormItemTypeEnum.SWITCH,
-    value: false,
     md: 8
   }
 ]
@@ -281,21 +228,8 @@ export const JOB_POSITION_BASIC_DETAIL: Form.DetailItem[] = [
     col: 8
   },
   {
-    label: $t('jobPosition.recruitmentType'),
-    prop: 'recruitment_type',
-    enum: RecruitmentType,
-    col: 8
-  },
-  {
     label: $t('jobPosition.employmentType'),
-    prop: 'employment_type',
-    enum: EmploymentType,
-    col: 8
-  },
-  {
-    label: $t('jobPosition.jobType'),
-    prop: 'job_type',
-    enum: JobType,
+    prop: 'employment_type_name',
     col: 8
   },
   {
@@ -309,14 +243,14 @@ export const JOB_POSITION_BASIC_DETAIL: Form.DetailItem[] = [
 export const JOB_POSITION_DETAIL_DETAIL: Form.DetailItem[] = [
   {
     label: $t('jobPosition.jobDescription'),
-    prop: 'job_desc',
+    prop: 'description',
     isFontBold: true,
     col: 24,
     slotName: 'rich'
   },
   {
     label: $t('jobPosition.mandatoryRequirements'),
-    prop: 'job_req',
+    prop: 'mandatory_requirements',
     isFontBold: true,
     isPaddingTop: true,
     col: 12,
@@ -324,7 +258,7 @@ export const JOB_POSITION_DETAIL_DETAIL: Form.DetailItem[] = [
   },
   {
     label: $t('jobPosition.preferredRequirements'),
-    prop: 'job_req_pref',
+    prop: 'preferred_requirements',
     isFontBold: true,
     isPaddingTop: true,
     col: 12,
@@ -342,22 +276,6 @@ export const JOB_POSITION_OTHER_DETAIL: Form.DetailItem[] = [
     label: $t('jobPosition.interviewProcessTemplate'),
     prop: 'interview_process_templates',
     col: 8,
-  },
-  {
-    label: $t('jobPosition.resumeInbox'),
-    prop: 'resume_inbox',
-    col: 8
-  },
-  {
-    label: $t('jobPosition.jobPortals'),
-    prop: 'publish_channel',
-    enum: ChannelType,
-    col: 8
-  },
-  {
-    label: $t('jobPosition.functionalInterviewFeedback'),
-    prop: 'public_interview_feedback',
-    md: 8
   }
 ]
 

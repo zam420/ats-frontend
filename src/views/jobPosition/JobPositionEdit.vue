@@ -4,16 +4,14 @@
 <script setup lang="ts" name="JobPositionEdit">
 import { ROUTER_JOB_POSITION } from '@/router/routerName'
 import JobPositionForm from './components/JobForm.vue'
-import { isNumber } from '@/utils/is'
 
 const route = useRoute()
 const router = useRouter()
-const id = ref<number>()
+const id = ref<string>()
 onMounted(() => {
   const paramId = route.params?.id
-  if (paramId && isNumber(Number(paramId))) {
-    id.value = Number(paramId)
-    console.log(paramId)
+  if (typeof paramId === 'string' && paramId.trim()) {
+    id.value = paramId
   } else {
     router.replace({
       path: `/${ROUTER_JOB_POSITION}`
