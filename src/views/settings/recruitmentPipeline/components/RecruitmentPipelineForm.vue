@@ -211,6 +211,7 @@ interface ParamsProps {
   isEdit: boolean
   readOnly?: boolean
   stagesOnly?: boolean
+  roundTypes?: RecruitmentPipeline.RoundType[]
   isTemplate?: boolean // create a system template
 }
 
@@ -294,7 +295,7 @@ const buildPayload = async (): Promise<RecruitmentPipeline.SaveParam | null> => 
   if (!isBasicPass) return null
   const processList = state.processList
   if (processList.length === 0) {
-    ElMessage.error($t('message.processLimit'))
+    ElMessage.error($t('message.stagesMinLimit'))
     return null
   }
   if (processList.length > MAX_ROUNDS) {
@@ -474,9 +475,8 @@ const roundTypeOf = (value: unknown) => state.allRoundTypes.find(type => type.va
 const isCustomRound = (item: RecruitmentPipeline.RoundParam) =>
   !!(roundTypeOf(item.round_type) as any)?.isCustom
 
-const loadRoundTypes = async () => {
-  const res = await getRecruitmentPipelineRoundTypes()
-  const types = (res?.result ?? []).map(type => ({
+const setRoundTypes = (roundTypes: RecruitmentPipeline.RoundType[]) => {
+  const types = roundTypes.map(type => ({
     value: type.id,
     label: type.name,
     subLabel: type.description,
@@ -492,11 +492,20 @@ const loadRoundTypes = async () => {
   }
 }
 
+watch(() => props.roundTypes, types => {
+  if (props.stagesOnly) setRoundTypes(types ?? [])
+}, { immediate: true })
+
+const loadRoundTypes = async () => {
+  const res = await getRecruitmentPipelineRoundTypes()
+  setRoundTypes(res?.result ?? [])
+}
+
 onMounted(async () => {
   if (props.stagesOnly) {
     previewLoading.value = true
     try {
-      await Promise.all([loadRoundTypes(), initData()])
+      await initData()
     } catch (error) {
       previewError.value = true
       console.error('Failed to load recruitment pipeline stages', error)

@@ -142,11 +142,16 @@ class RequestHttp {
         const { response } = error
         tryHideFullScreenLoading()
         if (response) {
-          const data = response.data as Result
-          if (data.code === ResultEnum.LOGIN_ERROR) {
+          const data = response.data as (Result & { error?: unknown }) | null | undefined
+          if (response.status === 400) {
+            const message = typeof data?.error === 'string' && data.error.trim() ? data.error : undefined
+            checkStatus(response.status, message)
+            return Promise.reject(data?.code === ResultEnum.ERROR_PARAMS ? data : error)
+          }
+          if (data?.code === ResultEnum.LOGIN_ERROR) {
             return Promise.reject(data)
           }
-          if (data.code === ResultEnum.NOT_EXIST_USER) {
+          if (data?.code === ResultEnum.NOT_EXIST_USER) {
             router.replace({
               path: `/${ROUTER_403}`
             })

@@ -23,11 +23,11 @@ declare namespace InterviewProcess {
   }
 
   interface InterviewRound {
-    id: number
+    id: string | number
     ipt_id: number
-    round_type: number
+    round_type: number | string
     round_type_name: string
-    interviewers: (Interviews | number)[]
+    interviewers: (Interviews | string | number)[] | null
     order: number
     name?: string
     description?: string
@@ -53,7 +53,7 @@ declare namespace InterviewProcess {
   interface RoundParam {
     id?: string | number
     round_type: number | string
-    interviewers: number[]
+    interviewers: (string | number)[]
     name?: string
     description?: string
     order?: number

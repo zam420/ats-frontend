@@ -1,3 +1,6 @@
+import InterviewProcess from './evaluationPlan'
+import RecruitmentPipeline from './recruitmentPipeline'
+
 declare namespace JobPosition {
   interface JonPositionInfo {
     id: number
@@ -81,6 +84,8 @@ declare namespace JobPosition {
     evaluation_plans: FieldOption[]
     recruiters: FieldOption[]
     hiring_managers: FieldOption[]
+    evaluation_plan_round_types: InterviewProcess.RoundType[]
+    recruitment_pipeline_round_types: RecruitmentPipeline.RoundType[]
   }
 }
 export default JobPosition

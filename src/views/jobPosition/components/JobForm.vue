@@ -82,6 +82,7 @@
           :is-edit="true"
           :read-only="true"
           :stages-only="true"
+          :round-types="recruitmentPipelineRoundTypes"
         />
       </el-tab-pane>
       <el-tab-pane :label="$t('jobPosition.interviewProcessTemplate')" name="evaluation">
@@ -94,6 +95,7 @@
           :title="''"
           :is-edit="true"
           :rounds-only="true"
+          :round-types="evaluationPlanRoundTypes"
         />
       </el-tab-pane>
       <el-tab-pane :label="$t('jobPosition.evaluationFeedback')" name="feedback">
@@ -119,6 +121,8 @@ import {
   getJobPositionDetail
 } from '@/api/modules/jobPosition'
 import JobPosition from '@/api/interface/jobPosition'
+import InterviewProcess from '@/api/interface/evaluationPlan'
+import RecruitmentPipeline from '@/api/interface/recruitmentPipeline'
 import { WorkLocationEnum } from '@/enums/workLocationEnum'
 import { useLocale } from '@/hooks/useLocale'
 import { ROUTER_JOB_POSITION } from '@/router/routerName'
@@ -152,6 +156,8 @@ const router = useRouter()
 const { $t } = useLocale()
 
 const activeTab = ref('description')
+const evaluationPlanRoundTypes = ref<InterviewProcess.RoundType[]>([])
+const recruitmentPipelineRoundTypes = ref<RecruitmentPipeline.RoundType[]>([])
 const espBasicRef = ref()
 const jobDescRef = ref()
 const jobReqRef = ref()
@@ -262,13 +268,24 @@ const showFullTagText = (event: MouseEvent) => {
   if (tag && !tag.title) tag.title = tag.textContent?.trim() ?? ''
 }
 getJobFieldsData().then(res => {
-  const data = res?.result
-  setOptions(state.baseForm, 'employment_type_id', data?.employment_types)
-  setOptions(state.baseForm, 'work_arrangement_type_id', data?.work_arrangement_types)
-  setOptions(state.hiringTeamForm, 'recruiters', data?.recruiters, true)
-  setOptions(state.hiringTeamForm, 'hiring_managers', data?.hiring_managers, true)
-  setOptions(state.pipelineForm, 'recruitment_pipeline_id', data?.recruitment_pipelines)
-  setOptions(state.evaluationForm, 'evaluation_plan_id', data?.evaluation_plans)
+  const data = res.result
+  if (!res.success || !data) {
+    throw new Error(res.message || 'Job fields are missing')
+  }
+  setOptions(state.baseForm, 'employment_type_id', data.employment_types)
+  setOptions(state.baseForm, 'work_arrangement_type_id', data.work_arrangement_types)
+  setOptions(state.hiringTeamForm, 'recruiters', data.recruiters, true)
+  setOptions(state.hiringTeamForm, 'hiring_managers', data.hiring_managers, true)
+  setOptions(state.pipelineForm, 'recruitment_pipeline_id', data.recruitment_pipelines)
+  setOptions(state.evaluationForm, 'evaluation_plan_id', data.evaluation_plans)
+  if (!Array.isArray(data.evaluation_plan_round_types) || !Array.isArray(data.recruitment_pipeline_round_types)) {
+    throw new Error('Job round types are missing')
+  }
+  evaluationPlanRoundTypes.value = data.evaluation_plan_round_types
+  recruitmentPipelineRoundTypes.value = data.recruitment_pipeline_round_types
+}).catch(error => {
+  console.error('Failed to load job fields', error)
+  ElMessage.error($t('jobPosition.fieldsLoadError'))
 })
 
 const disabledWorkLocation = (item: Form.FormItem) => {

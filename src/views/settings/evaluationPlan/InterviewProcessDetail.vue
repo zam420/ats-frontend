@@ -37,7 +37,7 @@
                     <div v-for="user in interviewerUsers(item.interviewers).slice(0, 2)" :key="user.id">
                       {{ `${user.name} (${user.email})` }}
                     </div>
-                    <div v-if="item?.interviewers?.length > 2">...</div>
+                    <div v-if="(item.interviewers?.length ?? 0) > 2">...</div>
                   </div>
                 </el-tooltip>
               </div>
@@ -98,7 +98,7 @@ const userMap = ref<Record<string, { id: string | number; name: string; email: s
 
 // Backend returns interviewer ids; resolve them to name/email via the user list
 const interviewerUsers = (list: InterviewProcess.InterviewRound['interviewers'] = []) =>
-  list.map(u => {
+  (list ?? []).map(u => {
     if (typeof u === 'object') return u
     return userMap.value[String(u)] ?? { id: u, name: String(u), email: '' }
   })

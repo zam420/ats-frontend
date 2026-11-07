@@ -237,6 +237,8 @@ export default {
     noDuplicateApplication: 'No duplicate application(s)',
     shareSuc: 'Share Successfully',
     processLimit: 'Please add at least one evaluation plan!',
+    roundsMinLimit: 'Please add at least one evaluation round.',
+    stagesMinLimit: 'Please add at least one recruitment stage.',
     roundsMaxLimit: 'An evaluation plan can have at most 10 rounds.',
     stagesMaxLimit: 'A recruitment pipeline can have at most 10 stages.',
     groupInterviewLimit: 'Please select resumes from candidates under the same job position.',
@@ -504,6 +506,7 @@ export default {
     appliedTimes: 'Applied {number} Times'
   },
   jobPosition: {
+    fieldsLoadError: 'Unable to load job fields and round types.',
     createJobPosition: 'Create Job Position',
     editJobPosition: 'Edit Job Position',
     jobPositionDetail: 'Job Position Detail',
@@ -522,7 +525,7 @@ export default {
     candidateQuestions: 'Candidate Questions',
     configuration: 'Configuration',
     hiringTeam: 'Hiring Team',
-    evaluationFeedback: 'Evaluation Feedback',
+    evaluationFeedback: 'Evaluation Feedback Settings',
     descriptionTabSubtitle: 'Define the position and its requirements.',
     questionsTabSubtitle: 'Candidate questions will be configured here.',
     configurationTabSubtitle: 'Configure the hiring team for this position.',
@@ -792,6 +795,7 @@ export default {
     receivers: 'Receiver(s)'
   },
   interviewProcess: {
+    interviewersLoadError: 'Unable to load interviewers for the evaluation plan.',
     previewLoadError: 'Unable to load evaluation plan rounds.',
     interviewName: 'Name',
     createInterview: 'Create Evaluation plan',

@@ -55,6 +55,7 @@
       </el-select>
       </el-col>
     </el-row>
+    <p v-if="roundsOnly && previewUsersError" role="alert">{{ $t('interviewProcess.interviewersLoadError') }}</p>
     <p v-if="roundsOnly && previewError" role="alert">{{ $t('interviewProcess.previewLoadError') }}</p>
     <el-row v-else :gutter="20" class="view-content" v-loading="roundsOnly && previewLoading">
       <el-col v-if="!roundsOnly" :span="6">
@@ -151,6 +152,7 @@
                       collapse-tags-tooltip
                       filterable
                       :clearable="true"
+                      :disabled="roundsOnly && (previewUsersLoading || previewUsersError)"
                     >
                       <el-option
                         v-for="option in state.interviewerList"
@@ -241,6 +243,7 @@ interface ParamsProps {
   isEdit: boolean // 是否编辑
   readOnly?: boolean // 只读查看
   roundsOnly?: boolean
+  roundTypes?: InterviewProcess.RoundType[]
   isTemplate?: boolean // 创建系统模板
 }
 
@@ -292,6 +295,8 @@ const state = reactive<ReactiveParams>({
 const isSystemTemplate = ref(false)
 const previewLoading = ref(false)
 const previewError = ref(false)
+const previewUsersLoading = ref(false)
+const previewUsersError = ref(false)
 
 // A plan opened for editing is read-only unless the signed-in user is its owner
 const planOwnerId = ref<string | number | null>(null)
@@ -340,7 +345,7 @@ const buildPayload = async (): Promise<InterviewProcess.SaveParam | null> => {
   if (!isBasicPass) return null
   const processList = state.processList
   if (processList.length === 0) {
-    ElMessage.error($t('message.processLimit'))
+    ElMessage.error($t('message.roundsMinLimit'))
     return null
   }
   if (processList.length > MAX_ROUNDS) {
@@ -548,29 +553,48 @@ const deleteRound = (index: number) => {
 const roundTypeOf = (value: unknown) =>
   state.interviewSessionList.find(type => type.value === value)
 
-const loadRoundTypes = async () => {
-  const res = await getInterviewRoundTypes()
-  state.interviewSessionList = (res?.result ?? []).map(type => ({
+const setRoundTypes = (types: InterviewProcess.RoundType[]) => {
+  state.interviewSessionList = types.map(type => ({
     value: type.id,
     label: type.name,
     subLabel: type.description
   }))
 }
 
+watch(() => props.roundTypes, types => {
+  if (props.roundsOnly) setRoundTypes(types ?? [])
+}, { immediate: true })
+
+const loadRoundTypes = async () => {
+  const res = await getInterviewRoundTypes()
+  setRoundTypes(res?.result ?? [])
+}
+
 onMounted(async () => {
   if (props.roundsOnly) {
     previewLoading.value = true
+    previewUsersLoading.value = true
+    const loadPreviewUsers = async () => {
+      try {
+        const users = await getUserList(ShareTypeEnum.INTERVIEWER)
+        if (!users.success || !users.result) {
+          throw new Error(users.message || 'Interviewer list is missing')
+        }
+        state.interviewerList = users.result.map(user => ({
+          label: user.name,
+          value: user.id,
+          subLabel: user.email
+        }))
+      } catch (error) {
+        previewUsersError.value = true
+        console.error('Failed to load evaluation plan interviewers', error)
+      } finally {
+        previewUsersLoading.value = false
+      }
+    }
+    void loadPreviewUsers()
     try {
-      const [, users] = await Promise.all([
-        loadRoundTypes(),
-        getUserList(ShareTypeEnum.INTERVIEWER),
-        initData()
-      ])
-      state.interviewerList = (users.result ?? []).map(user => ({
-        label: user.name,
-        value: user.id,
-        subLabel: user.email
-      }))
+      await initData()
     } catch (error) {
       previewError.value = true
       console.error('Failed to load evaluation plan rounds', error)

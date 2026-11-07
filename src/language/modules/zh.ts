@@ -237,6 +237,8 @@ export default {
     noDuplicateApplication: 'No duplicate application(s)',
     shareSuc: 'Share Successfully',
     processLimit: 'Please add at least one Interview Process!',
+    roundsMinLimit: '请至少添加一个评估轮次。',
+    stagesMinLimit: '请至少添加一个招聘阶段。',
     roundsMaxLimit: 'An evaluation plan can have at most 10 rounds.',
     stagesMaxLimit: 'A recruitment pipeline can have at most 10 stages.',
     groupInterviewLimit: 'Please select resumes from candidates under the same job position.',
@@ -504,6 +506,7 @@ export default {
     appliedTimes: 'Applied {number} Times'
   },
   jobPosition: {
+    fieldsLoadError: '无法加载职位字段和轮次类型。',
     createJobPosition: 'Create Job Position',
     editJobPosition: 'Edit Job Position',
     jobPositionDetail: 'Job Position Detail',
@@ -792,6 +795,7 @@ export default {
     receivers: 'Receiver(s)'
   },
   interviewProcess: {
+    interviewersLoadError: '无法加载评估计划的面试官。',
     previewLoadError: '无法加载评估计划轮次。',
     interviewName: 'Name',
     createInterview: 'Create Evaluation Plan',

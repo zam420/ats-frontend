@@ -3,11 +3,11 @@ import { useLocale } from '@/hooks/useLocale'
  * @description: 校验状态码
  * @param {number} status
  */
-export const checkStatus = (status: number): void => {
+export const checkStatus = (status: number, message?: string): void => {
   const { $t } = useLocale()
   switch (status) {
     case 400:
-      ElMessage.error($t('message.400Text'))
+      ElMessage.error(message ?? $t('message.400Text'))
       break
     case 401:
       ElMessage.error($t('message.401Text'))
