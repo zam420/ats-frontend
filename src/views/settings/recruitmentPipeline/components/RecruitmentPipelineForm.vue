@@ -1,13 +1,13 @@
 <template>
-  <EspMain :title="isReadOnly ? $t('recruitmentPipeline.pipelineDetail') : title">
-    <template #right v-if="accessReady && !isReadOnly">
+  <component :is="stagesOnly ? 'div' : EspMain" :title="stagesOnly ? undefined : isReadOnly ? $t('recruitmentPipeline.pipelineDetail') : title">
+    <template #right v-if="!stagesOnly && accessReady && !isReadOnly">
       <ElButton @click="goBack">{{ $t('button.cancel') }}</ElButton>
       <ElButton v-if="isEdit" @click="saveAs" class="btn-light">{{ $t('interviewProcess.saveAs') }}</ElButton>
       <ElButton @click="save" class="btn-primary-gradient">{{ $t('button.save') }}</ElButton>
     </template>
     <div :class="{ 'read-only': isReadOnly }">
-      <EspForm ref="formRef" v-model="state.baseForm" />
-      <el-row v-if="!isTemplate && !isSystemTemplate && accessReady && !isReadOnly" :gutter="20" class="share-section">
+      <EspForm v-if="!stagesOnly" ref="formRef" v-model="state.baseForm" />
+      <el-row v-if="!stagesOnly && !isTemplate && !isSystemTemplate && accessReady && !isReadOnly" :gutter="20" class="share-section">
         <el-col :span="6" class="share-controls">
           <div class="share-label">{{ $t('interviewProcess.shareWith') }}</div>
           <el-radio-group v-model="state.shareMode" @change="onShareModeChange">
@@ -55,8 +55,9 @@
           </el-select>
         </el-col>
       </el-row>
-      <el-row :gutter="20" class="view-content">
-        <el-col :span="6">
+      <p v-if="stagesOnly && previewError" role="alert">{{ $t('recruitmentPipeline.previewLoadError') }}</p>
+      <el-row v-else :gutter="20" class="view-content" v-loading="stagesOnly && previewLoading">
+        <el-col v-if="!stagesOnly" :span="6">
           <div class="step-panel">
             <div class="title">{{ $t('recruitmentPipeline.stageTypes') }}</div>
             <div class="content" ref="roundTypeRef">
@@ -70,10 +71,10 @@
             </div>
           </div>
         </el-col>
-        <el-col :span="18">
+        <el-col :span="stagesOnly ? 24 : 18">
           <div class="process-panel">
-            <div class="title">{{ $t('recruitmentPipeline.addedStages') }}</div>
-            <div>{{ $t('recruitmentPipeline.dragProcess') }}</div>
+            <div class="title">{{ $t(stagesOnly ? 'recruitmentPipeline.recruitmentPlanStages' : 'recruitmentPipeline.addedStages') }}</div>
+            <div v-if="!stagesOnly">{{ $t('recruitmentPipeline.dragProcess') }}</div>
             <div class="content">
               <div ref="processRef">
                 <div
@@ -94,7 +95,7 @@
                       <div class="order" v-if="item.round_type !== '' && isCustomRound(item)"></div>
                     </el-col>
                     <el-col :span="8">
-                      <el-dropdown trigger="click" :teleported="false" :disabled="!isCustomRound(item)">
+                      <el-dropdown trigger="click" :teleported="false" :disabled="isReadOnly || !isCustomRound(item)">
                         <div
                           class="add-select"
                           :class="{
@@ -109,12 +110,15 @@
                               </div>
                               <el-input
                                 v-model="item.name"
+                                :readonly="isReadOnly"
                                 class="inline-input inline-title"
                                 maxlength="30"
                                 :placeholder="roundTypeOf(item.round_type)?.subLabel"
                               />
                               <el-input
+                                v-if="!stagesOnly || item.description?.trim()"
                                 v-model="item.description"
+                                :readonly="isReadOnly"
                                 class="inline-input"
                                 maxlength="100"
                                 :placeholder="$t('interviewProcess.roundDescPlaceholder')"
@@ -142,7 +146,7 @@
                   </el-row>
                 </div>
               </div>
-              <div class="process-box">
+              <div v-if="!isReadOnly" class="process-box">
                 <el-row :gutter="20">
                   <el-col :span="1" class="center"> </el-col>
                   <el-col :span="8">
@@ -177,10 +181,11 @@
         </el-col>
       </el-row>
     </div>
-  </EspMain>
+  </component>
 </template>
 <script setup lang="ts" name="RecruitmentPipelineForm">
 import { cloneDeep } from 'lodash-es'
+import EspMain from '@/components/EspMain/index.vue'
 import { RECRUITMENT_PIPELINE_FORM } from '../data'
 import { generateUUID, getObjectByForms } from '@/utils'
 import { useLocale } from '@/hooks/useLocale'
@@ -205,6 +210,7 @@ interface ParamsProps {
   id?: string
   isEdit: boolean
   readOnly?: boolean
+  stagesOnly?: boolean
   isTemplate?: boolean // create a system template
 }
 
@@ -230,7 +236,8 @@ const roundTypeRef = ref()
 const props = withDefaults(defineProps<ParamsProps>(), {
   isEdit: false,
   readOnly: false,
-  isTemplate: false
+  isTemplate: false,
+  stagesOnly: false
 })
 const state = reactive<ReactiveParams>({
   baseForm: cloneDeep(RECRUITMENT_PIPELINE_FORM),
@@ -246,6 +253,8 @@ const state = reactive<ReactiveParams>({
 })
 
 const isSystemTemplate = ref(false)
+const previewLoading = ref(false)
+const previewError = ref(false)
 
 // A pipeline opened for editing is read-only unless the signed-in user is its owner
 const planOwnerId = ref<string | number | null>(null)
@@ -378,30 +387,32 @@ const goBack = () => {
   })
 }
 
-const initData = () => {
+const initData = async () => {
   if (props.id) {
-    getRecruitmentPipelineDetail(props.id).then(res => {
-      const result = (res.result ?? {}) as RecruitmentPipeline.DetailInfo
-      isSystemTemplate.value = !!result.is_system_template
-      planOwnerId.value = (result as any).owner_id ?? null
-      detailLoaded.value = true
-      const sharedIds = (result.shared_with_user_ids ?? result.share_to ?? []).map(u =>
-        typeof u === 'object' ? u.id : u
-      ) as (string | number)[]
-      state.shareUserIds = result.is_public ? [] : sharedIds
-      state.shareMode = result.is_public ? 'everyone' : sharedIds.length ? 'users' : 'none'
-      state.baseForm.forEach((item: Form.FormItem) => {
-        item.value = (result as any)?.[item.prop as string]
-        formRef.value?.changeFormModel({ prop: item.prop, value: item.value })
-      })
-      state.processList = (result?.rounds ?? []).map(data => ({
-        id: data.id,
-        round_type: Number(data.round_type),
-        name: data.name,
-        description: data.description,
-        order: data.order
-      }))
+    const res = await getRecruitmentPipelineDetail(props.id)
+    if (!res.success || !res.result) {
+      throw new Error(res.message || 'Recruitment pipeline detail is missing')
+    }
+    const result = res.result
+    isSystemTemplate.value = !!result.is_system_template
+    planOwnerId.value = result.owner_id ?? null
+    detailLoaded.value = true
+    const sharedIds = (result.shared_with_user_ids ?? result.share_to ?? []).map(u =>
+      typeof u === 'object' ? u.id : u
+    ) as (string | number)[]
+    state.shareUserIds = result.is_public ? [] : sharedIds
+    state.shareMode = result.is_public ? 'everyone' : sharedIds.length ? 'users' : 'none'
+    state.baseForm.forEach((item: Form.FormItem) => {
+      item.value = (result as any)?.[item.prop as string]
+      formRef.value?.changeFormModel({ prop: item.prop, value: item.value })
     })
+    state.processList = (result.rounds ?? []).map(data => ({
+      id: data.id,
+      round_type: Number(data.round_type),
+      name: data.name,
+      description: data.description,
+      order: data.order
+    }))
   }
 }
 const handleDragOver = (event: DragEvent, index: number) => {
@@ -482,6 +493,18 @@ const loadRoundTypes = async () => {
 }
 
 onMounted(async () => {
+  if (props.stagesOnly) {
+    previewLoading.value = true
+    try {
+      await Promise.all([loadRoundTypes(), initData()])
+    } catch (error) {
+      previewError.value = true
+      console.error('Failed to load recruitment pipeline stages', error)
+    } finally {
+      previewLoading.value = false
+    }
+    return
+  }
   await loadRoundTypes()
   const userRes = await getUserList(ShareTypeEnum.INTERVIEWER)
   state.userList = (userRes?.result ?? []).map(user => ({

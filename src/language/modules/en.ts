@@ -792,6 +792,7 @@ export default {
     receivers: 'Receiver(s)'
   },
   interviewProcess: {
+    previewLoadError: 'Unable to load evaluation plan rounds.',
     interviewName: 'Name',
     createInterview: 'Create Evaluation plan',
     createTemplate: 'Create Template',
@@ -835,6 +836,7 @@ export default {
     functionalInterviewZh: '专业/技术面试',
     executiveInterviewZh: 'C-Level面试',
     addedRounds: 'Added Rounds',
+    evaluationRounds: 'Evaluation Rounds',
     planOwner: 'Plan Owner',
     owner: 'Owner',
     allPlans: 'All',
@@ -849,6 +851,7 @@ export default {
     step: 'Step'
   },
   recruitmentPipeline: {
+    previewLoadError: 'Unable to load recruitment pipeline stages.',
     createPipeline: 'Create Recruitment Pipeline',
     editPipeline: 'Edit Recruitment Pipeline',
     pipelineDetail: 'Recruitment Pipeline Details',
@@ -858,7 +861,8 @@ export default {
     deletePipelineMsg: 'delete this recruitment pipeline?',
     dragProcess: 'Click the + button or drag-drop available rounds to add stages.',
     stageTypes: 'Stage Types',
-    addedStages: 'Added Stages'
+    addedStages: 'Added Stages',
+    recruitmentPlanStages: 'Recruitment Plan Stages'
   },
   scheduleInterview: {
     oneToOneInterview: 'Schedule One-on-one Interview',

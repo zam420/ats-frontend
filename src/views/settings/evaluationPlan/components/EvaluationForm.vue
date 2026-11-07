@@ -1,13 +1,13 @@
 <template>
-  <EspMain :title="isReadOnly ? $t('interviewProcess.interviewDetail') : title">
-    <template #right v-if="accessReady && !isReadOnly">
+  <component :is="roundsOnly ? 'div' : EspMain" :title="roundsOnly ? undefined : isReadOnly ? $t('interviewProcess.interviewDetail') : title">
+    <template #right v-if="!roundsOnly && accessReady && !isReadOnly">
       <ElButton @click="goBack">{{ $t('button.cancel') }}</ElButton>
       <ElButton v-if="isEdit" @click="saveAs" class="btn-light">{{ $t('interviewProcess.saveAs') }}</ElButton>
       <ElButton @click="save" class="btn-primary-gradient">{{ $t('button.save') }}</ElButton>
     </template>
     <div :class="{ 'read-only': isReadOnly }">
-    <EspForm ref="interviewRef" v-model="state.baseForm" />
-    <el-row v-if="!isTemplate && !isSystemTemplate && accessReady && !isReadOnly" :gutter="20" class="share-section">
+    <EspForm v-if="!roundsOnly" ref="interviewRef" v-model="state.baseForm" />
+    <el-row v-if="!roundsOnly && !isTemplate && !isSystemTemplate && accessReady && !isReadOnly" :gutter="20" class="share-section">
       <el-col :span="6" class="share-controls">
       <div class="share-label">{{ $t('interviewProcess.shareWith') }}</div>
       <el-radio-group v-model="state.shareMode" @change="onShareModeChange">
@@ -55,8 +55,9 @@
       </el-select>
       </el-col>
     </el-row>
-    <el-row :gutter="20" class="view-content">
-      <el-col :span="6">
+    <p v-if="roundsOnly && previewError" role="alert">{{ $t('interviewProcess.previewLoadError') }}</p>
+    <el-row v-else :gutter="20" class="view-content" v-loading="roundsOnly && previewLoading">
+      <el-col v-if="!roundsOnly" :span="6">
         <div class="step-panel">
           <div class="title">{{ $t('interviewProcess.interviewSessions') }}</div>
           <div class="content" ref="interviewSessionRef">
@@ -70,10 +71,10 @@
           </div>
         </div>
       </el-col>
-      <el-col :span="18">
+      <el-col :span="roundsOnly ? 24 : 18">
         <div class="process-panel">
-          <div class="title">{{ $t('interviewProcess.addedRounds') }}</div>
-          <div>{{ $t('interviewProcess.dragProcess') }}</div>
+          <div class="title">{{ $t(roundsOnly ? 'interviewProcess.evaluationRounds' : 'interviewProcess.addedRounds') }}</div>
+          <div v-if="!roundsOnly">{{ $t('interviewProcess.dragProcess') }}</div>
           <div class="content">
             <div ref="processRef">
               <div
@@ -90,10 +91,10 @@
               >
                 <el-row :gutter="20">
                   <el-col :span="1" class="center">
-                    <div class="order" v-if="item.round_type !== ''"></div>
+                    <div class="order" v-if="!roundsOnly && item.round_type !== ''"></div>
                   </el-col>
                   <el-col :span="8">
-                    <el-dropdown trigger="click" :teleported="false">
+                    <el-dropdown trigger="click" :teleported="false" :disabled="roundsOnly">
                       <div
                         class="add-select"
                         :class="{
@@ -108,12 +109,15 @@
                             </div>
                             <el-input
                               v-model="item.name"
+                              :readonly="roundsOnly"
                               class="inline-input inline-title"
                               maxlength="30"
                               :placeholder="roundTypeOf(item.round_type)?.subLabel"
                             />
                             <el-input
+                              v-if="!roundsOnly || item.description?.trim()"
                               v-model="item.description"
+                              :readonly="roundsOnly"
                               class="inline-input"
                               maxlength="100"
                               :placeholder="$t('interviewProcess.roundDescPlaceholder')"
@@ -135,7 +139,7 @@
                     </el-dropdown>
                   </el-col>
                   <el-col :span="14" v-if="item.round_type !== ''">
-                    <template v-if="!isTemplate && !isSystemTemplate">
+                    <template v-if="roundsOnly || (!isTemplate && !isSystemTemplate)">
                     <div class="select-title">{{ $t('interviewProcess.interviewers') }}</div>
                     <el-select
                       v-model="item.interviewers"
@@ -166,13 +170,13 @@
                     </el-select>
                     </template>
                   </el-col>
-                  <el-col :span="1" class="center" v-if="item.round_type !== ''">
+                  <el-col :span="1" class="center" v-if="!roundsOnly && item.round_type !== ''">
                     <i class="iconfont icon-delete" @click="deleteRound(index)"></i>
                   </el-col>
                 </el-row>
               </div>
             </div>
-            <div class="process-box">
+            <div v-if="!roundsOnly" class="process-box">
               <el-row :gutter="20">
                 <el-col :span="1" class="center"> </el-col>
                 <el-col :span="8">
@@ -207,10 +211,11 @@
       </el-col>
     </el-row>
     </div>
-  </EspMain>
+  </component>
 </template>
 <script setup lang="ts" name="EvaluationForm">
 import { cloneDeep } from 'lodash-es'
+import EspMain from '@/components/EspMain/index.vue'
 import { INTERVIEW_PROCESS_FORM } from '../data'
 import { generateUUID, getObjectByForms } from '@/utils'
 import { useLocale } from '@/hooks/useLocale'
@@ -235,6 +240,7 @@ interface ParamsProps {
   id?: string // 数据ID
   isEdit: boolean // 是否编辑
   readOnly?: boolean // 只读查看
+  roundsOnly?: boolean
   isTemplate?: boolean // 创建系统模板
 }
 
@@ -259,6 +265,7 @@ const interviewSessionRef = ref()
 const props = withDefaults(defineProps<ParamsProps>(), {
   isEdit: false,
   readOnly: false,
+  roundsOnly: false,
   isTemplate: false
 })
 const globalStore = useGlobalStore()
@@ -283,6 +290,8 @@ const state = reactive<ReactiveParams>({
 })
 
 const isSystemTemplate = ref(false)
+const previewLoading = ref(false)
+const previewError = ref(false)
 
 // A plan opened for editing is read-only unless the signed-in user is its owner
 const planOwnerId = ref<string | number | null>(null)
@@ -295,6 +304,7 @@ const selfUserId = computed(() => {
   return state.interviewerList.find(u => (u.subLabel ?? '').toLowerCase() === email)?.value
 })
 const isReadOnly = computed(() => {
+  if (props.roundsOnly) return false
   if (props.readOnly) return true
   if (!props.isEdit || planOwnerId.value == null || selfUserId.value == null) return false
   if (String(planOwnerId.value) === String(selfUserId.value)) return false
@@ -427,52 +437,54 @@ const showFullTagText = (e: MouseEvent) => {
   if (el && !el.title) el.title = el.textContent?.trim() ?? ''
 }
 
-const initData = () => {
+const initData = async () => {
   if (props.id) {
-    getInterviewProcessDetail(props.id).then(res => {
-      const result = (res.result ?? {}) as InterviewProcess.DetailInfo
-      isSystemTemplate.value = !!result.is_system_template
-      planOwnerId.value = result.owner_id ?? null
-      detailLoaded.value = true
-      if (isSystemTemplate.value) {
-        const ownerItem = state.baseForm.find(item => item.prop === 'owner_id')
-        if (ownerItem) ownerItem.isHide = true
+    const res = await getInterviewProcessDetail(props.id)
+    if (!res.success || !res.result) {
+      throw new Error(res.message || 'Evaluation plan detail is missing')
+    }
+    const result = res.result
+    isSystemTemplate.value = !!result.is_system_template
+    planOwnerId.value = result.owner_id ?? null
+    detailLoaded.value = true
+    if (isSystemTemplate.value) {
+      const ownerItem = state.baseForm.find(item => item.prop === 'owner_id')
+      if (ownerItem) ownerItem.isHide = true
+    }
+    state.baseForm.map((item: Form.FormItem) => {
+      let prop = item.prop as keyof InterviewProcess.DetailInfo
+      item.value = result?.[prop]
+      if (item.type === FormItemTypeEnum.TREE_SELECT) {
+        item.defaultExpendKeys = item?.value ? [item?.value] : []
       }
-      state.baseForm.map((item: Form.FormItem) => {
-        let prop = item.prop as keyof InterviewProcess.DetailInfo
-        item.value = result?.[prop]
-        if (item.type === FormItemTypeEnum.TREE_SELECT) {
-          item.defaultExpendKeys = item?.value ? [item?.value] : []
-        }
-        interviewRef.value &&
-          interviewRef.value.changeFormModel({
-            prop: item.prop,
-            value: item.value
-          })
-        return item
-      })
-      const sharedIds = (result.shared_with_user_ids ?? result.share_to ?? []).map(u =>
-        typeof u === 'object' ? u.id : u
-      ) as (string | number)[]
-      state.shareUserIds = result.is_public ? [] : sharedIds
-      state.shareMode = result.is_public ? 'everyone' : sharedIds.length ? 'users' : 'none'
-      const processList: InterviewProcess.RoundParam[] = []
-      result?.rounds?.forEach(data => {
-        const interviewers = data?.interviewers?.map(item => {
-          // Backend returns plain user ids; legacy responses returned objects
-          return typeof item === 'object' ? item.id : item
+      interviewRef.value &&
+        interviewRef.value.changeFormModel({
+          prop: item.prop,
+          value: item.value
         })
-        processList.push({
-          id: data.id,
-          round_type: Number(data.round_type),
-          interviewers: interviewers ?? [],
-          name: data.name,
-          description: data.description,
-          order: data.order
-        })
-      })
-      state.processList = [...processList]
+      return item
     })
+    const sharedIds = (result.shared_with_user_ids ?? result.share_to ?? []).map(u =>
+      typeof u === 'object' ? u.id : u
+    ) as (string | number)[]
+    state.shareUserIds = result.is_public ? [] : sharedIds
+    state.shareMode = result.is_public ? 'everyone' : sharedIds.length ? 'users' : 'none'
+    const processList: InterviewProcess.RoundParam[] = []
+    result?.rounds?.forEach(data => {
+      const interviewers = data?.interviewers?.map(item => {
+        // Backend returns plain user ids; legacy responses returned objects
+        return typeof item === 'object' ? item.id : item
+      })
+      processList.push({
+        id: data.id,
+        round_type: Number(data.round_type),
+        interviewers: interviewers ?? [],
+        name: data.name,
+        description: data.description,
+        order: data.order
+      })
+    })
+    state.processList = [...processList]
   }
 }
 // 拖拽物移入/放下事件
@@ -546,6 +558,27 @@ const loadRoundTypes = async () => {
 }
 
 onMounted(async () => {
+  if (props.roundsOnly) {
+    previewLoading.value = true
+    try {
+      const [, users] = await Promise.all([
+        loadRoundTypes(),
+        getUserList(ShareTypeEnum.INTERVIEWER),
+        initData()
+      ])
+      state.interviewerList = (users.result ?? []).map(user => ({
+        label: user.name,
+        value: user.id,
+        subLabel: user.email
+      }))
+    } catch (error) {
+      previewError.value = true
+      console.error('Failed to load evaluation plan rounds', error)
+    } finally {
+      previewLoading.value = false
+    }
+    return
+  }
   await loadRoundTypes()
   // 获取interviewer下拉的值
   const result = await getUserList(ShareTypeEnum.INTERVIEWER)

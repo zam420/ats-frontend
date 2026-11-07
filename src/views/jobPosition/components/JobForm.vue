@@ -74,10 +74,27 @@
       <el-tab-pane :label="$t('jobPosition.recruitmentPipeline')" name="pipeline">
         <p class="tab-subtitle">{{ $t('jobPosition.pipelineTabSubtitle') }}</p>
         <EspForm ref="espPipelineRef" v-model="state.pipelineForm" />
+        <RecruitmentPipelineForm
+          v-if="selectedPipelineId"
+          :key="selectedPipelineId"
+          :id="selectedPipelineId"
+          :title="''"
+          :is-edit="true"
+          :read-only="true"
+          :stages-only="true"
+        />
       </el-tab-pane>
       <el-tab-pane :label="$t('jobPosition.interviewProcessTemplate')" name="evaluation">
         <p class="tab-subtitle">{{ $t('jobPosition.evaluationTabSubtitle') }}</p>
         <EspForm ref="espEvaluationRef" v-model="state.evaluationForm" />
+        <EvaluationForm
+          v-if="selectedEvaluationId"
+          :key="selectedEvaluationId"
+          :id="selectedEvaluationId"
+          :title="''"
+          :is-edit="true"
+          :rounds-only="true"
+        />
       </el-tab-pane>
       <el-tab-pane :label="$t('jobPosition.evaluationFeedback')" name="feedback">
         <p class="tab-subtitle">{{ $t('jobPosition.feedbackTabSubtitle') }}</p>
@@ -108,6 +125,8 @@ import { ROUTER_JOB_POSITION } from '@/router/routerName'
 import { isArray } from '@/utils/is'
 import { FormItemTypeEnum } from '@/enums/formItemTypeEnum'
 import { jobRichTextToHtml } from '../jobRichText'
+import RecruitmentPipelineForm from '@/views/settings/recruitmentPipeline/components/RecruitmentPipelineForm.vue'
+import EvaluationForm from '@/views/settings/evaluationPlan/components/EvaluationForm.vue'
 
 interface ParamsProps {
   title: string // 标题
@@ -149,6 +168,14 @@ const state = reactive<ReactiveParams>({
   hiringTeamForm: cloneDeep(JOB_POSITION_HIRING_TEAM_FORM),
   pipelineForm: cloneDeep(JOB_POSITION_PIPELINE_FORM),
   evaluationForm: cloneDeep(JOB_POSITION_EVALUATION_FORM)
+})
+const selectedPipelineId = computed(() => {
+  const value = state.pipelineForm.find(item => item.prop === 'recruitment_pipeline_id')?.value
+  return value == null || value === '' ? '' : String(value)
+})
+const selectedEvaluationId = computed(() => {
+  const value = state.evaluationForm.find(item => item.prop === 'evaluation_plan_id')?.value
+  return value == null || value === '' ? '' : String(value)
 })
 
 const save = async () => {

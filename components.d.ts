@@ -106,4 +106,7 @@ declare module '@vue/runtime-core' {
     UserInfo: typeof import('./src/components/EspResumeDetail/components/UserInfo.vue')['default']
     WrittenTestScore: typeof import('./src/components/EspResumeDetail/components/WrittenTestScore.vue')['default']
   }
+  export interface ComponentCustomProperties {
+    vLoading: typeof import('element-plus/es')['ElLoadingDirective']
+  }
 }

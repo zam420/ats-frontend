@@ -125,7 +125,7 @@ export const JOB_POSITION_HIRING_TEAM_FORM: Form.FormItem[] = [
     required: true,
     maxTags: 2,
     clearable: true,
-    md: 8
+    col: 12
   },
   {
     label: $t('jobPosition.hiringManagers'),
@@ -135,7 +135,7 @@ export const JOB_POSITION_HIRING_TEAM_FORM: Form.FormItem[] = [
     required: true,
     maxTags: 2,
     clearable: true,
-    md: 8
+    col: 12
   }
 ]
 export const JOB_POSITION_PIPELINE_FORM: Form.FormItem[] = [

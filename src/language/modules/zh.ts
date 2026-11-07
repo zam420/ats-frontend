@@ -792,6 +792,7 @@ export default {
     receivers: 'Receiver(s)'
   },
   interviewProcess: {
+    previewLoadError: '无法加载评估计划轮次。',
     interviewName: 'Name',
     createInterview: 'Create Evaluation Plan',
     createTemplate: 'Create Template',
@@ -835,6 +836,7 @@ export default {
     functionalInterviewZh: '专业/技术面试',
     executiveInterviewZh: 'C-Level面试',
     addedRounds: 'Added Rounds',
+    evaluationRounds: '评估轮次',
     planOwner: 'Plan Owner',
     owner: 'Owner',
     allPlans: 'All',
@@ -849,6 +851,7 @@ export default {
     step: 'Step'
   },
   recruitmentPipeline: {
+    previewLoadError: '无法加载招聘流程阶段。',
     createPipeline: 'Create Recruitment Pipeline',
     editPipeline: 'Edit Recruitment Pipeline',
     pipelineDetail: 'Recruitment Pipeline Details',
@@ -858,7 +861,8 @@ export default {
     deletePipelineMsg: 'delete this recruitment pipeline?',
     dragProcess: 'Click the + button or drag-drop available rounds to add stages.',
     stageTypes: 'Stage Types',
-    addedStages: 'Added Stages'
+    addedStages: 'Added Stages',
+    recruitmentPlanStages: '招聘计划阶段'
   },
   scheduleInterview: {
     oneToOneInterview: 'Schedule One-on-one Interview',
