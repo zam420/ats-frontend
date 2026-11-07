@@ -11,6 +11,7 @@ declare namespace JobPosition {
     description: string
     mandatory_requirements: string
     preferred_requirements?: string
+    hiring_managers?: string[]
     hr_recruiter: number
     hr_coordinators: number[]
     interview_process_template: string
@@ -43,6 +44,7 @@ declare namespace JobPosition {
     evaluation_plan_id?: number | string
     evaluation_plan?: string
     recruiters?: string[]
+    hiring_managers?: string[]
     hr_coordinators: CommonEnum.enumItem[] | string
     hr_recruiter_id: number
     hr_recruiter_name: string
@@ -78,6 +80,7 @@ declare namespace JobPosition {
     recruitment_pipelines: FieldOption[]
     evaluation_plans: FieldOption[]
     recruiters: FieldOption[]
+    hiring_managers: FieldOption[]
   }
 }
 export default JobPosition

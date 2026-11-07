@@ -5,15 +5,9 @@ import { FormItemTypeEnum } from '@/enums/formItemTypeEnum'
 import { JobStatus } from '@/enums/jobStatusEnum'
 import { ROUTER_JOB_POSITION_DETAIL } from '@/router/routerName'
 import {
-  getChannelTypeList,
-  getResumeInboxList,
   getWorkLocationList
 } from '@/api/modules/common'
-import { EmploymentType } from '@/enums/employmentTypeEnum'
 import { WorkLocation } from '@/enums/workLocationEnum'
-import { UserRoleEnum } from '@/enums/userRoleEnum'
-import { ChannelType } from '@/enums/channelTypeEnum'
-import { ProjectStatusEnum } from '@/enums/projectStatusEnum'
 import { UserPermissionEnum } from '@/enums/userPermission'
 import { isHasPermission } from '@/utils'
 
@@ -122,15 +116,29 @@ export const JOB_POSITION_DETAIL_FORM: Form.FormItem[] = [
   },
 ]
 // 职位其他信息
-export const JOB_POSITION_OTHER_FORM: Form.FormItem[] = [
+export const JOB_POSITION_HIRING_TEAM_FORM: Form.FormItem[] = [
   {
     label: $t('jobPosition.HRRecruiter'),
     prop: 'recruiters',
     type: FormItemTypeEnum.MULTIPLE_SELECT,
     options: [],
     required: true,
+    maxTags: 2,
+    clearable: true,
     md: 8
   },
+  {
+    label: $t('jobPosition.hiringManagers'),
+    prop: 'hiring_managers',
+    type: FormItemTypeEnum.MULTIPLE_SELECT,
+    options: [],
+    required: true,
+    maxTags: 2,
+    clearable: true,
+    md: 8
+  }
+]
+export const JOB_POSITION_PIPELINE_FORM: Form.FormItem[] = [
   {
     label: $t('jobPosition.recruitmentPipeline'),
     prop: 'recruitment_pipeline_id',
@@ -138,67 +146,15 @@ export const JOB_POSITION_OTHER_FORM: Form.FormItem[] = [
     options: [],
     required: true,
     md: 8
-  },
+  }
+]
+export const JOB_POSITION_EVALUATION_FORM: Form.FormItem[] = [
   {
     label: $t('jobPosition.interviewProcessTemplate'),
     prop: 'evaluation_plan_id',
     type: FormItemTypeEnum.SELECT,
     options: [],
     required: true,
-    md: 8
-  }
-]
-
-// 职位问题信息
-export const JOB_POSITION_QUESTIONS_FORM: Form.FormItem[] = [
-  {
-    label: $t('jobPosition.question', { number: 1 }),
-    prop: 'question1',
-    md: 8
-  },
-  {
-    label: $t('jobPosition.question', { number: 2 }),
-    prop: 'question2',
-    md: 8
-  },
-  {
-    label: $t('jobPosition.question', { number: 3 }),
-    prop: 'question3',
-    md: 8
-  },
-  {
-    label: $t('jobPosition.question', { number: 4 }),
-    prop: 'question4',
-    md: 8
-  },
-  {
-    label: $t('jobPosition.question', { number: 5 }),
-    prop: 'question5',
-    md: 8
-  },
-  {
-    label: $t('jobPosition.question', { number: 6 }),
-    prop: 'question6',
-    md: 8
-  },
-  {
-    label: $t('jobPosition.question', { number: 7 }),
-    prop: 'question7',
-    md: 8
-  },
-  {
-    label: $t('jobPosition.question', { number: 8 }),
-    prop: 'question8',
-    md: 8
-  },
-  {
-    label: $t('jobPosition.question', { number: 9 }),
-    prop: 'question9',
-    md: 8
-  },
-  {
-    label: $t('jobPosition.question', { number: 10 }),
-    prop: 'question10',
     md: 8
   }
 ]

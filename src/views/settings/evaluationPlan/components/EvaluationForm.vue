@@ -671,41 +671,7 @@ onMounted(async () => {
     gap: 5px;
   }
 }
-// Interviewers: keep selected tags on a single line, truncating long names
-.interviewer-select {
-  :deep(.el-select__tags) {
-    flex-wrap: nowrap;
-  }
-  :deep(.el-select-tags-wrapper) {
-    display: flex;
-    flex-wrap: nowrap;
-    align-items: center;
-    max-width: 100%;
-    min-width: 0;
-  }
-  :deep(.el-select-tags-wrapper .el-tag) {
-    flex: 0 1 auto;
-    min-width: 0;
-    max-width: 45%;
-    overflow: hidden;
-  }
-  :deep(.el-select-tags-wrapper .el-tag .el-tag__content) {
-    min-width: 0;
-    overflow: hidden;
-  }
-  :deep(.el-select-tags-wrapper .el-tag .el-select__tags-text) {
-    display: block;
-    max-width: 100% !important;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  // the "+ n" tag keeps its full width
-  :deep(.el-select-tags-wrapper .el-tag:last-child) {
-    flex-shrink: 0;
-    max-width: none;
-  }
-}
+@import '@/styles/interviewer-select.less';
 // Added rounds: smaller round type label above the editable name
 // Insertion line shown while dragging a round type over an added round
 .process-box.drop-before {
