@@ -12,6 +12,7 @@
       ref="formRef"
       :model="formModel"
       :rules="curFormRules"
+      :disabled="disabled"
       :validate-on-rule-change="false"
       :require-asterisk-position="asteriskPosition"
     >
@@ -85,6 +86,7 @@ interface FormItemProps {
   showAdd?: boolean // 是否显示添加按钮
   isWatch?: boolean // 是否监听
   asteriskPosition?: 'left' | 'right' // 必填时星号的位置
+  disabled?: boolean
 }
 
 interface SearchOption {

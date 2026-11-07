@@ -2,7 +2,6 @@ import { useLocale } from '@/hooks/useLocale'
 import { TableColumnTypeEnum } from '@/enums/tableColumnTypeEnum'
 import { TableColumnFixedEnum } from '@/enums/tableColumnFixedEnum'
 import { FormItemTypeEnum } from '@/enums/formItemTypeEnum'
-import { JobStatus } from '@/enums/jobStatusEnum'
 import { ROUTER_JOB_POSITION_DETAIL } from '@/router/routerName'
 import {
   getWorkLocationList
@@ -33,20 +32,30 @@ export const JOB_POSITION_TABLE: Table.ColumnProps[] = [
   {
     prop: 'title',
     label: $t('jobPosition.jobTitle'),
-    link: ROUTER_JOB_POSITION_DETAIL
+    link: ROUTER_JOB_POSITION_DETAIL,
+    filter: false
   },
   {
-    prop: 'project_name',
-    label: $t('jobPosition.recruitmentProject')
+    prop: 'employment_type_name',
+    label: $t('jobPosition.employmentType'),
+    sortable: false,
+    filter: false
+  },
+  {
+    prop: 'work_arrangement_type_name',
+    label: $t('jobPosition.workArrangement'),
+    sortable: false,
+    filter: false
   },
   {
     prop: 'work_location',
-    label: $t('jobPosition.workLocation')
+    label: $t('jobPosition.workLocation'),
+    sortable: false,
+    filter: false
   },
   {
     prop: 'status',
     label: $t('jobPosition.status'),
-    status: JobStatus,
     width: '100px',
     filter: false
   }
@@ -114,6 +123,36 @@ export const JOB_POSITION_DETAIL_FORM: Form.FormItem[] = [
     col: 12,
     maxlength: 5000
   },
+]
+export const JOB_POSITION_INTERNAL_DETAILS_FORM: Form.FormItem[] = [
+  {
+    label: $t('jobPosition.requisitionId'),
+    prop: 'requisition_id',
+    maxlength: 20,
+    required: true
+  },
+  {
+    label: $t('jobPosition.numOfOpenings'),
+    prop: 'num_of_openings',
+    type: FormItemTypeEnum.NUMBER,
+    useNumericValue: true,
+    value: 1,
+    min: 1,
+    max: 50,
+    required: true
+  },
+  {
+    label: $t('jobPosition.office'),
+    prop: 'office',
+    maxlength: 100,
+    required: true
+  },
+  {
+    label: $t('jobPosition.department'),
+    prop: 'department',
+    maxlength: 100,
+    required: true
+  }
 ]
 // 职位其他信息
 export const JOB_POSITION_HIRING_TEAM_FORM: Form.FormItem[] = [

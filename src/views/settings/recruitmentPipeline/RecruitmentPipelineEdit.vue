@@ -3,7 +3,7 @@
     :title="$t('recruitmentPipeline.editPipeline')"
     :is-edit="true"
     :id="id"
-    :read-only="route.query?.readonly === '1'"
+    :read-only="route.name === 'ROUTER_SETTINGS_RECRUITMENT_PIPELINE_VIEW' || route.query?.readonly === '1'"
   />
 </template>
 <script setup lang="ts">

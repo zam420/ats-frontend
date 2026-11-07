@@ -14,6 +14,10 @@ declare namespace JobPosition {
     description: string
     mandatory_requirements: string
     preferred_requirements?: string
+    requisition_id: string
+    num_of_openings: number
+    office: string
+    department: string
     hiring_managers?: string[]
     hr_recruiter: number
     hr_coordinators: number[]
@@ -31,6 +35,15 @@ declare namespace JobPosition {
   interface ProcessTemp {
     id: number
     name: string
+  }
+  interface JobPositionListItem {
+    id: string
+    title: string
+    employment_type: number
+    work_arrangement_type: number
+    work_location: (number | CommonEnum.enumItem)[] | null
+    status: string
+    owner_id: string | null
   }
   interface JobPositionDetail {
     id: string | number
@@ -54,6 +67,10 @@ declare namespace JobPosition {
     description: string
     mandatory_requirements: string
     preferred_requirements?: string
+    requisition_id: string
+    num_of_openings: number
+    office: string
+    department: string
     title: string
     last_modified_at: string
     project_id: number

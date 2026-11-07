@@ -279,7 +279,7 @@ export default {
     large: 'Large'
   },
   title: {
-    jobPosition: 'Job Position Management',
+    jobPosition: 'Job Positions',
     recruitmentProject: 'Recruitment Project',
     createRecruitmentProject: 'Create Recruitment Project',
     modifyRecruitmentProject: 'Modify Recruitment Project',
@@ -318,6 +318,9 @@ export default {
   },
   jobStatusEnum: {
     draft: 'Draft',
+    underReview: '审核中',
+    open: '开放',
+    onHold: '暂停',
     published: 'Published',
     closed: 'Closed'
   },
@@ -524,11 +527,18 @@ export default {
     jobDescription: 'Job Description',
     candidateQuestions: '候选人问题',
     configuration: '配置',
+    internalDetails: '内部信息',
+    requisitionId: '招聘申请编号',
+    numOfOpenings: '招聘人数',
+    office: '办公地点',
+    department: '部门',
+    internalDetailsLength: '请输入 {min} 到 {max} 个字符。',
+    openingsInteger: '请输入 1 到 50 之间的整数。',
     hiringTeam: '招聘团队',
     evaluationFeedback: '评估反馈',
     descriptionTabSubtitle: '定义职位及其要求。',
     questionsTabSubtitle: '候选人问题将在此配置。',
-    configurationTabSubtitle: '配置此职位的招聘团队。',
+    configurationTabSubtitle: '配置此职位的内部信息和招聘团队。',
     pipelineTabSubtitle: '选择此职位的招聘流程。',
     evaluationTabSubtitle: '选择此职位的评估计划。',
     feedbackTabSubtitle: '评估反馈将在此配置。',

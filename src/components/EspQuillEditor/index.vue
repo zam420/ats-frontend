@@ -1,6 +1,6 @@
 <template>
   <div class="esp-form-wrap" v-click-outside="updateContent">
-    <div v-if="props.readOnly" class="quill-editor-wrap readonly">
+    <div v-if="props.readOnly && !props.matchEditableLayout" class="quill-editor-wrap readonly">
       <QuillEditor
         ref="quillEditorRef"
         theme=""
@@ -16,13 +16,14 @@
           >{{ props.label || $t('emailTemplate.emailContent')
           }}<span class="red" v-if="props.required">*</span></label
         >
-        <div class="quill-editor-wrap" :class="{ error: state.isError, compact: props.compact, full: props.fullToolbar }">
+        <div class="quill-editor-wrap" :class="{ error: state.isError && !props.readOnly, compact: props.compact, full: props.fullToolbar, 'matched-readonly': props.readOnly }">
           <QuillEditor
             ref="quillEditorRef"
             theme="snow"
             :content="state.content"
             contentType="html"
             :options="state.options"
+            :readOnly="props.readOnly"
             @update:content="validate"
             @ready="initTooltips"
             @blur="updateContent"
@@ -69,6 +70,7 @@ interface QuillEditorProps {
   content: string
   selectOptions: Form.FormSelect[]
   readOnly?: boolean
+  matchEditableLayout?: boolean
   hideLabel?: boolean
   updateCallback?: any
   canPreview?: boolean

@@ -1,6 +1,6 @@
 import http from '@/api'
 import JobPosition from '../interface/jobPosition'
-import { ResultCreate } from '../interface'
+import { ResPage, ResultCreate } from '../interface'
 import { ContentTypeEnum } from '@/enums/httpEnum'
 
 /**
@@ -9,7 +9,7 @@ import { ContentTypeEnum } from '@/enums/httpEnum'
 
 // 获取 Job Position 的列表
 export const getJobPositionList = (params?: any) => {
-  return http.get<JobPosition.JobPositionDetail[]>('api/job/all', params)
+  return http.get<ResPage<JobPosition.JobPositionListItem>>('api/job/all', params)
 }
 // 获取 Job Position 的列表-供cv使用
 export const getJobPositionListForCv = () => {

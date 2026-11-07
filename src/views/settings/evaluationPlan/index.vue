@@ -1,5 +1,13 @@
 <template>
   <EspMain :title="$t('menu.interviewProcess')">
+    <template #right>
+      <ElButton v-if="hasIptsa()" class="btn-light" @click="showCreateTemplate">{{
+        $t('interviewProcess.createTemplate')
+      }}</ElButton>
+      <ElButton v-if="hasPermission" @click="showCreate" class="btn-primary-gradient">{{
+        $t('button.create')
+      }}</ElButton>
+    </template>
     <EspTable
       ref="espTable"
       :columns="state.interviewProcessData"
@@ -14,13 +22,8 @@
       :is-front-pagination="false"
       @tab-change="onTabChange"
     >
-      <template #header="">
-        <ElButton v-if="hasIptsa()" class="btn-light" @click="showCreateTemplate">{{
-          $t('interviewProcess.createTemplate')
-        }}</ElButton>
-        <ElButton v-if="hasPermission" @click="showCreate" class="btn-primary-gradient">{{
-          $t('button.create')
-        }}</ElButton>
+      <template #name="{ row }">
+        <router-link class="plan-name-link" :to="planUrl(row)">{{ row.name }}</router-link>
       </template>
       <template #owner_id="{ row }">
         {{ userNames[row.owner_id] ?? '' }}
@@ -55,7 +58,6 @@
 <script setup lang="ts">
 import { cloneDeep } from 'lodash-es'
 import { useLocale } from '@/hooks/useLocale'
-import { getTableTabs, openNewWindow } from '@/utils'
 import { ResultEnum } from '@/enums/httpEnum'
 import { useGlobalStore } from '@/store/modules/global'
 import mittBus from '@/utils/mittBus'
@@ -64,7 +66,8 @@ import { INTERVIEW_PROCESS_TABLE } from './data'
 import router from '@/router'
 import {
   ROUTER_SETTINGS_EVALUATION_PLAN_CREATE,
-  ROUTER_SETTINGS_EVALUATION_PLAN_EDIT
+  ROUTER_SETTINGS_EVALUATION_PLAN_EDIT,
+  ROUTER_SETTINGS_EVALUATION_PLAN_VIEW
 } from '@/router/routerName'
 import InterviewProcess from '@/api/interface/evaluationPlan'
 import { UserPermissionEnum } from '@/enums/userPermission'
@@ -141,6 +144,14 @@ const loadUsers = async () => {
 const hasIpta = () => globalStore.permissions.includes(UserPermissionEnum.IPTA)
 const hasIptsa = () => globalStore.permissions.includes(UserPermissionEnum.IPTSA)
 
+const planUrl = (row: InterviewProcess.ListInfo) => {
+  const userId = globalStore.userInfo?.id || currentUserId.value
+  const route = userId && row.owner_id === userId
+    ? ROUTER_SETTINGS_EVALUATION_PLAN_EDIT
+    : ROUTER_SETTINGS_EVALUATION_PLAN_VIEW
+  return `/${route}/${encodeURIComponent(row.id)}`
+}
+
 // Whether the edit/delete icons are shown for a row, depending on the tab
 const canOperate = (row: InterviewProcess.ListInfo) => {
   if (row.is_system_template && !hasIptsa()) return false
@@ -197,9 +208,12 @@ const messageConfirm = (row: InterviewProcess.ListInfo) => {
     })
 }
 // 打开编辑页面; shared and system template records open read-only
-const showEdit = (id: number) => {
+const showEdit = (id: string) => {
   const readonly = currentTab.value === TAB_SHARED || currentTab.value === TAB_TEMPLATES
-  openNewWindow(`${ROUTER_SETTINGS_EVALUATION_PLAN_EDIT}/${id}${readonly ? '?readonly=1' : ''}`)
+  router.push({
+    path: `/${ROUTER_SETTINGS_EVALUATION_PLAN_EDIT}/${encodeURIComponent(id)}`,
+    query: readonly ? { readonly: '1' } : {}
+  })
 }
 // 打开新增页面
 const showCreateTemplate = () => {
@@ -222,5 +236,9 @@ const refreshTable = () => {
 <style lang="less" scoped>
 .btn-light {
   color: var(--el-color-primary);
+}
+.plan-name-link {
+  color: var(--el-color-primary);
+  &:hover { text-decoration: underline; }
 }
 </style>

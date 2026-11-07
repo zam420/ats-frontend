@@ -3,7 +3,8 @@ import {
   ROUTER_SETTINGS_EVALUATION_PLAN,
   ROUTER_SETTINGS_EVALUATION_PLAN_CREATE,
   ROUTER_SETTINGS_EVALUATION_PLAN_DETAIL,
-  ROUTER_SETTINGS_EVALUATION_PLAN_EDIT
+  ROUTER_SETTINGS_EVALUATION_PLAN_EDIT,
+  ROUTER_SETTINGS_EVALUATION_PLAN_VIEW
 } from '../../routerName'
 import { useLocale } from '@/hooks/useLocale'
 const { $t } = useLocale()
@@ -41,7 +42,19 @@ const interviewProcessRouter: Menu.MenuOptions[] = [
       title: $t('interviewProcess.editInterview'),
       isHide: true,
       activeMenu: `/${ROUTER_SETTINGS_EVALUATION_PLAN}`,
-      permissionCode: UserPermissionEnum.IPTE
+      permissionCode: UserPermissionEnum.IPTS
+    }
+  },
+  {
+    path: `/${ROUTER_SETTINGS_EVALUATION_PLAN_VIEW}/:id`,
+    name: 'ROUTER_SETTINGS_EVALUATION_PLAN_VIEW',
+    component: () => import('@/views/settings/evaluationPlan/InterviewProcessEdit.vue'),
+    meta: {
+      icon: '',
+      title: $t('interviewProcess.interviewDetail'),
+      isHide: true,
+      activeMenu: `/${ROUTER_SETTINGS_EVALUATION_PLAN}`,
+      permissionCode: UserPermissionEnum.IPTS
     }
   },
   {

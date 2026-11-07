@@ -19,6 +19,7 @@ export const ROUTER_JOB_POSITION = 'job'
 export const ROUTER_JOB_POSITION_CREATE = 'job/create'
 export const ROUTER_JOB_POSITION_DETAIL = 'job/detail'
 export const ROUTER_JOB_POSITION_EDIT = 'job/edit'
+export const ROUTER_JOB_POSITION_VIEW = 'job/view'
 
 //CV Management
 export const ROUTER_CV_MANAGEMENT = 'cvManagement'
@@ -62,12 +63,14 @@ export const ROUTER_SETTINGS_USER_MANAGEMENT = 'settings/userManagement'
 export const ROUTER_SETTINGS_EVALUATION_PLAN = 'settings/evaluationplan'
 export const ROUTER_SETTINGS_EVALUATION_PLAN_CREATE = 'settings/evaluationplan/create'
 export const ROUTER_SETTINGS_EVALUATION_PLAN_EDIT = 'settings/evaluationplan/edit'
+export const ROUTER_SETTINGS_EVALUATION_PLAN_VIEW = 'settings/evaluationplan/view'
 export const ROUTER_SETTINGS_EVALUATION_PLAN_DETAIL = '/settings/evaluationplan'
 
 //Settings -> Recruitment Pipeline
 export const ROUTER_SETTINGS_RECRUITMENT_PIPELINE = 'settings/recruitmentpipeline'
 export const ROUTER_SETTINGS_RECRUITMENT_PIPELINE_CREATE = 'settings/recruitmentpipeline/create'
 export const ROUTER_SETTINGS_RECRUITMENT_PIPELINE_EDIT = 'settings/recruitmentpipeline/edit'
+export const ROUTER_SETTINGS_RECRUITMENT_PIPELINE_VIEW = 'settings/recruitmentpipeline/view'
 export const ROUTER_SETTINGS_RECRUITMENT_PIPELINE_DETAIL = '/settings/recruitmentpipeline'
 
 //Settings -> Email Template

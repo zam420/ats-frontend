@@ -152,7 +152,7 @@
                       collapse-tags-tooltip
                       filterable
                       :clearable="true"
-                      :disabled="roundsOnly && (previewUsersLoading || previewUsersError)"
+                      :disabled="roundsOnly && (readOnly || previewUsersLoading || previewUsersError)"
                     >
                       <el-option
                         v-for="option in state.interviewerList"

@@ -3,7 +3,8 @@ import {
   ROUTER_SETTINGS_RECRUITMENT_PIPELINE,
   ROUTER_SETTINGS_RECRUITMENT_PIPELINE_CREATE,
   ROUTER_SETTINGS_RECRUITMENT_PIPELINE_DETAIL,
-  ROUTER_SETTINGS_RECRUITMENT_PIPELINE_EDIT
+  ROUTER_SETTINGS_RECRUITMENT_PIPELINE_EDIT,
+  ROUTER_SETTINGS_RECRUITMENT_PIPELINE_VIEW
 } from '../../routerName'
 import { useLocale } from '@/hooks/useLocale'
 const { $t } = useLocale()
@@ -41,7 +42,19 @@ const recruitmentPipelineRouter: Menu.MenuOptions[] = [
       title: $t('recruitmentPipeline.editPipeline'),
       isHide: true,
       activeMenu: `/${ROUTER_SETTINGS_RECRUITMENT_PIPELINE}`,
-      permissionCode: UserPermissionEnum.RPTE
+      permissionCode: UserPermissionEnum.RPTS
+    }
+  },
+  {
+    path: `/${ROUTER_SETTINGS_RECRUITMENT_PIPELINE_VIEW}/:id`,
+    name: 'ROUTER_SETTINGS_RECRUITMENT_PIPELINE_VIEW',
+    component: () => import('@/views/settings/recruitmentPipeline/RecruitmentPipelineEdit.vue'),
+    meta: {
+      icon: '',
+      title: $t('recruitmentPipeline.pipelineDetail'),
+      isHide: true,
+      activeMenu: `/${ROUTER_SETTINGS_RECRUITMENT_PIPELINE}`,
+      permissionCode: UserPermissionEnum.RPTS
     }
   },
   {

@@ -1,13 +1,11 @@
 <template>
   <EspMain :title="title">
     <template #left v-if="!isEmpty(state.status as string)">
-      <EspStatus :type="JobStatus?.[state.status as number]?.status ?? ''">{{
-        JobStatusEnum?.[state.status as number]
-      }}</EspStatus>
+      <EspStatus :type="statusType">{{ statusText }}</EspStatus>
     </template>
     <template #right>
       <ElButton @click="goBack">{{ $t('button.cancel') }}</ElButton>
-      <ElButton @click="save" class="btn-primary-gradient">{{ $t('button.save') }}</ElButton>
+      <ElButton v-if="!readOnly" @click="save" class="btn-primary-gradient">{{ $t('button.save') }}</ElButton>
     </template>
     <el-tabs v-model="activeTab" class="job-tabs">
       <el-tab-pane :label="$t('jobPosition.jobDescription')" name="description">
@@ -16,6 +14,7 @@
           ref="espBasicRef"
           :title="$t('jobPosition.basicInformation')"
           :changeForm="changeForm"
+          :disabled="readOnly"
           v-model="state.baseForm"
         />
         <EspForm :title="$t('jobPosition.jobDetail')" :model-value="[]">
@@ -29,6 +28,8 @@
                   :select-options="[]"
                   :hide-insert-field="true"
                   :full-toolbar="true"
+                  :read-only="readOnly"
+                  :match-editable-layout="true"
                 />
               </el-col>
             </el-row>
@@ -41,6 +42,8 @@
                   :select-options="[]"
                   :hide-insert-field="true"
                   :compact="true"
+                  :read-only="readOnly"
+                  :match-editable-layout="true"
                 />
               </el-col>
               <el-col :span="12">
@@ -52,6 +55,8 @@
                   :hide-insert-field="true"
                   :compact="true"
                   :required="false"
+                  :read-only="readOnly"
+                  :match-editable-layout="true"
                 />
               </el-col>
             </el-row>
@@ -64,16 +69,24 @@
       <el-tab-pane :label="$t('jobPosition.configuration')" name="configuration">
         <p class="tab-subtitle">{{ $t('jobPosition.configurationTabSubtitle') }}</p>
         <EspForm
+          ref="espInternalDetailsRef"
+          :title="$t('jobPosition.internalDetails')"
+          v-model="state.internalDetailsForm"
+          :form-rules="internalDetailsRules"
+          :disabled="readOnly"
+        />
+        <EspForm
           ref="espHiringTeamRef"
           :title="$t('jobPosition.hiringTeam')"
           v-model="state.hiringTeamForm"
+          :disabled="readOnly"
           class="interviewer-select"
           @mouseover="showFullTagText"
         />
       </el-tab-pane>
       <el-tab-pane :label="$t('jobPosition.recruitmentPipeline')" name="pipeline">
         <p class="tab-subtitle">{{ $t('jobPosition.pipelineTabSubtitle') }}</p>
-        <EspForm ref="espPipelineRef" v-model="state.pipelineForm" />
+        <EspForm ref="espPipelineRef" v-model="state.pipelineForm" :disabled="readOnly" />
         <RecruitmentPipelineForm
           v-if="selectedPipelineId"
           :key="selectedPipelineId"
@@ -87,7 +100,7 @@
       </el-tab-pane>
       <el-tab-pane :label="$t('jobPosition.interviewProcessTemplate')" name="evaluation">
         <p class="tab-subtitle">{{ $t('jobPosition.evaluationTabSubtitle') }}</p>
-        <EspForm ref="espEvaluationRef" v-model="state.evaluationForm" />
+        <EspForm ref="espEvaluationRef" v-model="state.evaluationForm" :disabled="readOnly" />
         <EvaluationForm
           v-if="selectedEvaluationId"
           :key="selectedEvaluationId"
@@ -95,6 +108,7 @@
           :title="''"
           :is-edit="true"
           :rounds-only="true"
+          :read-only="readOnly"
           :round-types="evaluationPlanRoundTypes"
         />
       </el-tab-pane>
@@ -106,14 +120,15 @@
 </template>
 <script setup lang="ts" name="JobPositionForm">
 import { cloneDeep } from 'lodash-es'
+import type { FormRules } from 'element-plus'
 import {
   JOB_POSITION_BASIC_FORM,
+  JOB_POSITION_INTERNAL_DETAILS_FORM,
   JOB_POSITION_HIRING_TEAM_FORM,
   JOB_POSITION_PIPELINE_FORM,
   JOB_POSITION_EVALUATION_FORM
 } from '../data'
 import { getObjectByForms, isEmpty } from '@/utils'
-import { JobStatusEnum, JobStatus } from '@/enums/jobStatusEnum'
 import {
   createJobPosition,
   editJobPosition,
@@ -124,6 +139,7 @@ import JobPosition from '@/api/interface/jobPosition'
 import InterviewProcess from '@/api/interface/evaluationPlan'
 import RecruitmentPipeline from '@/api/interface/recruitmentPipeline'
 import { WorkLocationEnum } from '@/enums/workLocationEnum'
+import { JobStatusEnum, JobStatus } from '@/enums/jobStatusEnum'
 import { useLocale } from '@/hooks/useLocale'
 import { ROUTER_JOB_POSITION } from '@/router/routerName'
 import { isArray } from '@/utils/is'
@@ -136,6 +152,7 @@ interface ParamsProps {
   title: string // 标题
   id?: string // 数据ID
   isEdit: boolean // 是否编辑
+  readOnly?: boolean
 }
 interface ReactiveParams {
   status?: string | number // 状态
@@ -143,6 +160,7 @@ interface ReactiveParams {
   jobDesc: string
   jobReq: string
   jobPrefReq: string
+  internalDetailsForm: Form.FormItem[]
   hiringTeamForm: Form.FormItem[]
   pipelineForm: Form.FormItem[]
   evaluationForm: Form.FormItem[]
@@ -162,6 +180,7 @@ const espBasicRef = ref()
 const jobDescRef = ref()
 const jobReqRef = ref()
 const jobPrefReqRef = ref()
+const espInternalDetailsRef = ref()
 const espHiringTeamRef = ref()
 const espPipelineRef = ref()
 const espEvaluationRef = ref()
@@ -171,9 +190,41 @@ const state = reactive<ReactiveParams>({
   jobDesc: '',
   jobReq: '',
   jobPrefReq: '',
+  internalDetailsForm: cloneDeep(JOB_POSITION_INTERNAL_DETAILS_FORM),
   hiringTeamForm: cloneDeep(JOB_POSITION_HIRING_TEAM_FORM),
   pipelineForm: cloneDeep(JOB_POSITION_PIPELINE_FORM),
   evaluationForm: cloneDeep(JOB_POSITION_EVALUATION_FORM)
+})
+const internalDetailsRules: FormRules = {
+  requisition_id: [
+    { required: true, whitespace: true, message: $t('form.required'), trigger: 'blur' },
+    { min: 4, max: 20, message: $t('jobPosition.internalDetailsLength', { min: 4, max: 20 }), trigger: 'blur' }
+  ],
+  num_of_openings: [
+    { type: 'integer', required: true, min: 1, max: 50, message: $t('jobPosition.openingsInteger'), trigger: 'change' }
+  ],
+  office: [
+    { required: true, whitespace: true, message: $t('form.required'), trigger: 'blur' },
+    { min: 4, max: 100, message: $t('jobPosition.internalDetailsLength', { min: 4, max: 100 }), trigger: 'blur' }
+  ],
+  department: [
+    { required: true, whitespace: true, message: $t('form.required'), trigger: 'blur' },
+    { min: 4, max: 100, message: $t('jobPosition.internalDetailsLength', { min: 4, max: 100 }), trigger: 'blur' }
+  ]
+}
+const statusText = computed(() => typeof state.status === 'number'
+  ? JobStatusEnum[state.status]
+  : state.status)
+const statusType = computed(() => {
+  if (typeof state.status === 'number') return JobStatus[state.status]?.status ?? 'default'
+  const colors: Record<string, 'warning' | 'success' | 'default'> = {
+    DRAFT: 'warning',
+    UNDER_REVIEW: 'warning',
+    OPEN: 'success',
+    ON_HOLD: 'warning',
+    CLOSED: 'default'
+  }
+  return colors[state.status ?? ''] ?? 'default'
 })
 const selectedPipelineId = computed(() => {
   const value = state.pipelineForm.find(item => item.prop === 'recruitment_pipeline_id')?.value
@@ -185,16 +236,18 @@ const selectedEvaluationId = computed(() => {
 })
 
 const save = async () => {
+  if (props.readOnly) return
   const basicValid = await espBasicRef.value.validateFrom(null, null, false)
   const descValid = jobDescRef.value?.validate()
   const reqValid = jobReqRef.value?.validate()
+  const internalDetailsValid = await espInternalDetailsRef.value.validateFrom(null, null, false)
   const hiringTeamValid = await espHiringTeamRef.value.validateFrom(null, null, false)
   const pipelineValid = await espPipelineRef.value.validateFrom(null, null, false)
   const evaluationValid = await espEvaluationRef.value.validateFrom(null, null, false)
-  if (!basicValid || !descValid || !reqValid || !hiringTeamValid || !pipelineValid || !evaluationValid) {
+  if (!basicValid || !descValid || !reqValid || !internalDetailsValid || !hiringTeamValid || !pipelineValid || !evaluationValid) {
     activeTab.value = !basicValid || !descValid || !reqValid
       ? 'description'
-      : !hiringTeamValid ? 'configuration' : !pipelineValid ? 'pipeline' : 'evaluation'
+      : !internalDetailsValid || !hiringTeamValid ? 'configuration' : !pipelineValid ? 'pipeline' : 'evaluation'
     ElMessage.error($t('form.requiredError'))
     return
   }
@@ -207,6 +260,7 @@ const save = async () => {
   const formData: Record<string, any> = {
     ...baseForm,
     ...detailForm,
+    ...getObjectByForms(state.internalDetailsForm),
     ...getObjectByForms(state.hiringTeamForm),
     ...getObjectByForms(state.pipelineForm),
     ...getObjectByForms(state.evaluationForm)
@@ -349,6 +403,8 @@ const getFormsByRes = (
         item.value = arrVal.map((info: CommonEnum.enumItem) => {
           return info.value
         })
+      } else if (item.prop === 'num_of_openings' && (res?.[prop] == null || res?.[prop] === '')) {
+        item.value = 1
       } else {
         item.value = res?.[prop]
       }
@@ -377,6 +433,7 @@ const initData = () => {
       if (index !== -1) {
         state.baseForm[index] = disabledWorkLocation(state.baseForm[index])
       }
+      state.internalDetailsForm = getFormsByRes(state.internalDetailsForm, result, espInternalDetailsRef.value)
       state.hiringTeamForm = getFormsByRes(state.hiringTeamForm, result, espHiringTeamRef.value)
       state.pipelineForm = getFormsByRes(state.pipelineForm, result, espPipelineRef.value)
       state.evaluationForm = getFormsByRes(state.evaluationForm, result, espEvaluationRef.value)

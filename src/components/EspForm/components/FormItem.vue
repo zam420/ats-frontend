@@ -633,7 +633,7 @@ const disabledDate = (date: Date) => {
 }
 
 const changeNumberValue = (val: any) => {
-  changeValue(regNumber(val, props.item?.toFixed))
+  changeValue(props.item.useNumericValue ? val : regNumber(val, props.item?.toFixed))
 }
 // 去除首尾空格
 const trimValue = () => {

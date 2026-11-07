@@ -26,7 +26,7 @@
               <el-tabs v-model="activeTab" @tab-change="handleTabClick">
                 <template :key="item.value" v-for="item in tableTabs">
                   <el-tab-pane
-                    :label="item.count ? `${item.label} (${item.count})` : item.label"
+                    :label="showTabCounts && item.count ? `${item.label} (${item.count})` : item.label"
                     :name="item.value"
                   ></el-tab-pane>
                 </template>
@@ -317,6 +317,7 @@ interface EspTableProps {
   showSearch?: boolean // 是否显示搜索
   tableHeaderMap?: any // 缓存获取过的
   tabs?: Form.FormSelect[]
+  showTabCounts?: boolean
   rowKey?: string
   statusKey?: string
   isCustomHeader?: boolean // 是否是自定义表格顶部
@@ -349,6 +350,7 @@ const props = withDefaults(defineProps<EspTableProps>(), {
   pageSearch: true,
   needTab: false,
   showSearch: true,
+  showTabCounts: true,
   rowKey: 'id',
   statusKey: 'status',
   isCustomHeader: false,

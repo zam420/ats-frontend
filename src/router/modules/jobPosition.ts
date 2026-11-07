@@ -3,7 +3,8 @@ import {
   ROUTER_JOB_POSITION,
   ROUTER_JOB_POSITION_CREATE,
   ROUTER_JOB_POSITION_DETAIL,
-  ROUTER_JOB_POSITION_EDIT
+  ROUTER_JOB_POSITION_EDIT,
+  ROUTER_JOB_POSITION_VIEW
 } from '../routerName'
 import { UserPermissionEnum } from '@/enums/userPermission'
 
@@ -38,6 +39,18 @@ const jobPositionRouter: Menu.MenuOptions[] = [
     path: `/${ROUTER_JOB_POSITION_DETAIL}/:id`,
     name: 'ROUTER_JOB_POSITION_DETAIL',
     component: () => import('@/views/jobPosition/JobPositionDetail.vue'),
+    meta: {
+      icon: '',
+      title: $t('jobPosition.jobPositionDetail'),
+      isHide: true,
+      activeMenu: `/${ROUTER_JOB_POSITION}`,
+      permissionCode: UserPermissionEnum.JPS
+    }
+  },
+  {
+    path: `/${ROUTER_JOB_POSITION_VIEW}/:id`,
+    name: 'ROUTER_JOB_POSITION_VIEW',
+    component: () => import('@/views/jobPosition/JobPositionView.vue'),
     meta: {
       icon: '',
       title: $t('jobPosition.jobPositionDetail'),

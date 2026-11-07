@@ -57,6 +57,7 @@ declare namespace Form {
     fileNum?: number // 当表单为文件时的文件数量
     accept?: string // 当表单为文件时的文件格式
     step?: number // 当表单为数字时的步长
+    useNumericValue?: boolean
     value?: any // 字段值
     required?: boolean // 表单是否必填
     disabled?: boolean // 表单是否禁用
