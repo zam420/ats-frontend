@@ -146,7 +146,7 @@ const loadUsers = async () => {
 
 const planUrl = (row: RecruitmentPipeline.ListInfo) => {
   const userId = globalStore.userInfo?.id || currentUserId.value
-  const route = userId && row.owner_id === userId
+  const route = (userId && row.owner_id === userId) || hasRpta()
     ? ROUTER_SETTINGS_RECRUITMENT_PIPELINE_EDIT
     : ROUTER_SETTINGS_RECRUITMENT_PIPELINE_VIEW
   return `/${route}/${encodeURIComponent(row.id)}`

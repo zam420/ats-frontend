@@ -4,6 +4,7 @@ export enum UserPermissionEnum {
   JPC = 'jpc', // job position create
   JPE = 'jpe', // job position edit
   JPS = 'jps', // job position search
+  JPA = 'jpa', // job position admin
   TPC = 'tpc', // talent pool create
   TPE = 'tpe', // talent pool edit
   TPS = 'tps', // talent pool search

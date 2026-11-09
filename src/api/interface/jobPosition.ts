@@ -47,6 +47,7 @@ declare namespace JobPosition {
   }
   interface JobPositionDetail {
     id: string | number
+    owner_id: string | null
     created_at: string
     created_by_id: number
     created_by_name: string

@@ -146,7 +146,7 @@ const hasIptsa = () => globalStore.permissions.includes(UserPermissionEnum.IPTSA
 
 const planUrl = (row: InterviewProcess.ListInfo) => {
   const userId = globalStore.userInfo?.id || currentUserId.value
-  const route = userId && row.owner_id === userId
+  const route = (userId && row.owner_id === userId) || hasIpta()
     ? ROUTER_SETTINGS_EVALUATION_PLAN_EDIT
     : ROUTER_SETTINGS_EVALUATION_PLAN_VIEW
   return `/${route}/${encodeURIComponent(row.id)}`

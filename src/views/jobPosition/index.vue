@@ -88,7 +88,9 @@ const canEdit = (row: JobPosition.JobPositionListItem) => {
   return typeof userId === 'string' && userId.length > 0 && row.owner_id === userId
 }
 const jobTitleUrl = (row: JobPosition.JobPositionListItem) => {
-  const route = canEdit(row) ? ROUTER_JOB_POSITION_EDIT : ROUTER_JOB_POSITION_VIEW
+  const route = canEdit(row) || globalStore.permissions.includes(UserPermissionEnum.JPA)
+    ? ROUTER_JOB_POSITION_EDIT
+    : ROUTER_JOB_POSITION_VIEW
   return `/${route}/${encodeURIComponent(row.id)}`
 }
 let fieldsPromise: Promise<JobPosition.JobFieldsData> | undefined

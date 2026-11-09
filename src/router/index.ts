@@ -142,6 +142,11 @@ router.beforeEach(async (to, from, next) => {
   next()
 })
 
+router.beforeResolve(async to => {
+  const { checkEditAccess } = await import('./editAccess')
+  return checkEditAccess(to)
+})
+
 /**
  * @description 路由跳转错误
  * */
