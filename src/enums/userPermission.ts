@@ -33,6 +33,12 @@ export enum UserPermissionEnum {
   RPTS = 'rpts', // recruitment pipeline search
   RPTA = 'rpta', // recruitment pipeline tenant admin
   RPTSA = 'rptsa', // recruitment pipeline system template admin
+  SQTM = 'sqtm', // screening questions form menu
+  SQTC = 'sqtc', // screening questions form create
+  SQTE = 'sqte', // screening questions form edit
+  SQTS = 'sqts', // screening questions form search
+  SQTA = 'sqta', // screening questions form tenant admin
+  SQTSA = 'sqtsa', // screening questions form system admin
   IM = 'im', // interviewer menu
   RSM = 'rsm', // resume review menu
   MIM = 'mim', // my review menu

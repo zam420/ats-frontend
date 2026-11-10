@@ -6,6 +6,7 @@ declare namespace InterviewProcess {
     description?: string
     is_system_template?: boolean
     is_public?: boolean
+    is_shared_within_tenant?: boolean | null
     status: number
     status_name?: string
   }

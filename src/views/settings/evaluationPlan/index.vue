@@ -29,13 +29,7 @@
         {{ userNames[row.owner_id] ?? '' }}
       </template>
       <template #plan_type="{ row }">
-        {{
-          row.is_public
-            ? $t('interviewProcess.typeShared')
-            : row.is_system_template
-              ? $t('interviewProcess.typeSystemTemplate')
-              : $t('interviewProcess.typePrivate')
-        }}
+        {{ $t(planTypeMessageKey(row)) }}
       </template>
       <!-- 表格操作 -->
       <template #operation="{ row }">
@@ -80,6 +74,7 @@ import {
 } from '@/api/modules/evaluationPlan'
 import { getUserList } from '@/api/modules/common'
 import { ShareTypeEnum } from '@/enums/shareTypeEnum'
+import { planTypeMessageKey } from '@/utils/planType'
 
 const TAB_OWNED = 'owned'
 const TAB_SHARED = 'shared'

@@ -1,6 +1,7 @@
 import { getInterviewProcessDetail } from '@/api/modules/evaluationPlan'
 import { getRecruitmentPipelineDetail } from '@/api/modules/recruitmentPipeline'
 import { getJobPositionDetail } from '@/api/modules/jobPosition'
+import { getScreeningForm } from '@/api/modules/screeningQuestionsForm'
 import { UserPermissionEnum } from '@/enums/userPermission'
 import { useGlobalStore } from '@/store/modules/global'
 import { ROUTER_404 } from './routerName'
@@ -18,6 +19,10 @@ const editRoutes = new Map([
   ['ROUTER_JOB_POSITION_EDIT', {
     permission: UserPermissionEnum.JPA,
     load: getJobPositionDetail
+  }],
+  ['ROUTER_SETTINGS_SCREENING_FORMS_EDIT', {
+    permission: UserPermissionEnum.SQTA,
+    load: getScreeningForm
   }]
 ])
 
@@ -35,5 +40,8 @@ export async function checkEditAccess(to: RouteLocationNormalized) {
   const userId = globalStore.userInfo?.id
   const ownerId = response.result.owner_id
   const isOwner = typeof userId === 'string' && userId.length > 0 && userId === ownerId
-  return isOwner || globalStore.permissions.includes(permission) ? true : `/${ROUTER_404}`
+  const isScreeningSystemAdmin = to.name === 'ROUTER_SETTINGS_SCREENING_FORMS_EDIT'
+    && 'is_system_template' in response.result && response.result.is_system_template
+    && globalStore.permissions.includes(UserPermissionEnum.SQTSA)
+  return isOwner || isScreeningSystemAdmin || globalStore.permissions.includes(permission) ? true : `/${ROUTER_404}`
 }

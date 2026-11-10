@@ -73,6 +73,11 @@ export const ROUTER_SETTINGS_RECRUITMENT_PIPELINE_EDIT = 'settings/recruitmentpi
 export const ROUTER_SETTINGS_RECRUITMENT_PIPELINE_VIEW = 'settings/recruitmentpipeline/view'
 export const ROUTER_SETTINGS_RECRUITMENT_PIPELINE_DETAIL = '/settings/recruitmentpipeline'
 
+export const ROUTER_SETTINGS_SCREENING_FORMS = 'settings/screeningquestionsforms'
+export const ROUTER_SETTINGS_SCREENING_FORMS_CREATE = 'settings/screeningquestionsforms/create'
+export const ROUTER_SETTINGS_SCREENING_FORMS_EDIT = 'settings/screeningquestionsforms/edit'
+export const ROUTER_SETTINGS_SCREENING_FORMS_VIEW = 'settings/screeningquestionsforms/view'
+
 //Settings -> Email Template
 export const ROUTER_SETTINGS_EMAIL_TEMPLATE = 'settings/emailTemplate'
 export const ROUTER_SETTINGS_EMAIL_TEMPLATE_CREATE = 'settings/emailTemplate/create'

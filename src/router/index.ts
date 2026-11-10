@@ -6,6 +6,7 @@ import NProgress from '@/config/nprogress'
 import { ROUTER_404, ROUTER_ACTIVATE, ROUTER_LOGIN, ROUTER_REGISTER } from './routerName'
 import { useMenuStore } from '@/store/modules/menu'
 import { isHasPermission } from '@/utils'
+import { UserPermissionEnum } from '@/enums/userPermission'
 
 // * 导入所有router
 const metaRouters = import.meta.glob('./modules/*.ts', { eager: true })
@@ -123,7 +124,9 @@ router.beforeEach(async (to, from, next) => {
     if (globalStore.isNotExistUser) {
       return
     }
-    const nextParam = isHasPermission(to.meta.permissionCode as string) ? {
+    const permissionCode = to.name === 'ROUTER_SETTINGS_SCREENING_FORMS_CREATE' && to.query.template === '1'
+      ? UserPermissionEnum.SQTSA : to.meta.permissionCode as string
+    const nextParam = isHasPermission(permissionCode) ? {
       path: to.path,
       query: to.query
     } : {
@@ -132,7 +135,9 @@ router.beforeEach(async (to, from, next) => {
     next(nextParam)
     return
   }
-  if (!isHasPermission(to.meta.permissionCode as string)) {
+  const permissionCode = to.name === 'ROUTER_SETTINGS_SCREENING_FORMS_CREATE' && to.query.template === '1'
+    ? UserPermissionEnum.SQTSA : to.meta.permissionCode as string
+  if (!isHasPermission(permissionCode)) {
     router.push({
       path: ROUTER_404
     })
