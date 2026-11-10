@@ -10,7 +10,6 @@ export default {
     questionTypes: 'Question Types',
     questions: 'Added Questions',
     add: 'Add',
-    questionName: 'Question Name',
     questionLabel: 'Question label',
     questionLabelPlaceholder: 'Label (Please input)',
     dragQuestions: 'Click the + button or drag and drop question types to add questions.',
@@ -28,6 +27,7 @@ export default {
     setDefault: 'Set or clear default option',
     optionSettings: 'Option settings',
     mandatory: 'Mandatory question',
+    multiSelect: 'Allow multiple selections',
     saveAsName: 'Screening Questions Form Name *',
     questionDescription: 'Description',
     moveUp: 'Move question up',
@@ -35,7 +35,6 @@ export default {
     deleteConfirm: 'Delete this screening questions form?',
     minQuestions: 'Please add at least one question.',
     maxQuestions: 'A form may have at most 10 questions.',
-    questionNameRequired: 'Enter a name for each question.',
     loadingError: 'Unable to load the screening questions form.',
     saveError: 'Unable to save the screening questions form.'
   },

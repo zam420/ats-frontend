@@ -71,43 +71,39 @@
                         <div v-if="canWrite" class="order"></div>
                       </el-col>
                       <el-col :span="canWrite ? 22 : 23" class="question-preview">
-                        <el-input v-model="question.label" class="inline-input inline-title" maxlength="30" :placeholder="$t('screeningForms.questionLabelPlaceholder')" />
+                        <div class="question-label">
+                          <span class="question-label-field">
+                            <span class="question-label-measure" aria-hidden="true">{{ question.label || $t('screeningForms.questionLabelPlaceholder') }}</span>
+                            <el-input v-model="question.label" class="inline-input inline-title" maxlength="100" :placeholder="$t('screeningForms.questionLabelPlaceholder')" />
+                          </span>
+                          <span v-if="question.is_mandatory && !forcedReadOnly" class="required-marker" :title="$t('screeningForms.mandatory')" :aria-label="$t('screeningForms.mandatory')">*</span>
+                        </div>
                         <el-input v-if="typeOf(question)?.code === 'INPUT'" disabled :placeholder="$t('screeningForms.answerPreview')" />
                         <el-input v-else-if="typeOf(question)?.code === 'INPUTAREA'" type="textarea" disabled :placeholder="$t('screeningForms.answerPreview')" />
-                        <div v-else-if="isInlineChoice(question)" class="inline-options">
-                          <div class="choice-options">
-                            <div v-for="(option, optionIndex) in question.options ?? []" :key="optionIndex" class="inline-option">
-                              <div class="option-content">
-                                <input class="option-marker" :type="typeOf(question)?.code === 'CHK' ? 'checkbox' : 'radio'" :checked="question.default_option === option" disabled :aria-label="$t('screeningForms.optionPreview')" />
-                                <el-input :model-value="option" class="inline-input option-label" maxlength="100" :aria-label="$t('screeningForms.option')" @update:model-value="(value: string) => renameOption(question, optionIndex, value)" />
-                              </div>
-                              <div v-if="canWrite" class="option-actions" role="group" :aria-label="$t('screeningForms.optionSettings')">
-                                <ElButton text :disabled="(question.options?.length ?? 0) <= 1" :aria-label="$t('screeningForms.removeOption')" :title="$t('screeningForms.removeOption')" @click="removeOption(question, optionIndex)">
-                                  <el-icon><Delete /></el-icon>
-                                </ElButton>
-                                <button type="button" class="default-switch" role="switch" :class="{ 'is-on': question.default_option === option }"
-                                  :aria-label="$t('screeningForms.setDefault')" :aria-checked="question.default_option === option"
-                                  :title="$t('screeningForms.setDefault')" @click="toggleDefault(question, option)"><span></span></button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <el-select v-else-if="typeOf(question)?.code === 'DD'" disabled :multiple="!!question.is_drop_down_multi_select" :placeholder="$t('screeningForms.answerPreview')">
+                        <ChoiceOptions v-else-if="isInlineChoice(question)" :options="question.options ?? []" :default-option="question.default_option"
+                          :marker="typeOf(question)?.code === 'CHK' ? 'checkbox' : 'radio'" :can-write="canWrite" :require-one="true"
+                          @rename="(index, value) => renameOption(question, index, value)" @remove="index => removeOption(question, index)"
+                          @toggle-default="option => toggleDefault(question, option)" />
+                        <el-select v-else-if="typeOf(question)?.code === 'DD'" disabled :multiple="!!question.is_drop_down_multi_select"
+                          :model-value="question.is_drop_down_multi_select ? (question.default_option == null ? [] : [question.default_option]) : question.default_option"
+                          :placeholder="$t('screeningForms.answerPreview')">
                           <el-option v-for="(option, optionIndex) in question.options ?? []" :key="optionIndex" :label="option" :value="option" />
                         </el-select>
                         <p v-else role="alert">{{ $t('screeningForms.unsupportedType') }}</p>
-                        <el-input v-model="question.description" class="inline-input inline-description" maxlength="100" :placeholder="$t('interviewProcess.roundDescPlaceholder')" />
-                        <ElButton v-if="isInlineChoice(question) && canWrite" text type="primary" :disabled="(question.options?.length ?? 0) >= 20" @click="addOption(question)">{{ $t('screeningForms.addOption') }}</ElButton>
-                        <div v-if="typeOf(question)?.code === 'DD'" class="options-editor">
-                          <div class="options-title">{{ $t('screeningForms.options') }}</div>
-                          <div v-for="(_, optionIndex) in question.options ?? []" :key="optionIndex" class="option-row">
-                            <el-input v-model="question.options![optionIndex]" maxlength="100" :placeholder="$t('screeningForms.option')" />
-                            <ElButton v-if="canWrite" text type="danger" :aria-label="$t('screeningForms.removeOption')" @click="removeOption(question, optionIndex)">×</ElButton>
-                          </div>
-                          <ElButton v-if="canWrite" text type="primary" :disabled="(question.options?.length ?? 0) >= 20" @click="addOption(question)">{{ $t('screeningForms.addOption') }}</ElButton>
-                        </div>
+                        <ChoiceOptions v-if="typeOf(question)?.code === 'DD'" :options="question.options ?? []" :default-option="question.default_option"
+                          :can-write="canWrite" :require-one="true" @rename="(index, value) => renameOption(question, index, value)"
+                          @remove="index => removeOption(question, index)" @toggle-default="option => toggleDefault(question, option)" />
+                        <el-input v-model="question.description" class="inline-input inline-description" maxlength="200" :placeholder="$t('interviewProcess.roundDescPlaceholder')" />
+                        <ElButton v-if="isChoiceQuestion(question) && canWrite" text type="primary" :disabled="(question.options?.length ?? 0) >= 20" @click="addOption(question)">{{ $t('screeningForms.addOption') }}</ElButton>
                       </el-col>
                       <el-col v-if="canWrite" :span="1" class="center question-actions">
+                        <button v-if="typeOf(question)?.code === 'DD'" type="button" class="multi-select-toggle" :class="{ 'is-on': question.is_drop_down_multi_select }"
+                          :aria-label="$t('screeningForms.multiSelect')" :title="$t('screeningForms.multiSelect')"
+                          :aria-pressed="!!question.is_drop_down_multi_select" @click="question.is_drop_down_multi_select = !question.is_drop_down_multi_select">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="m3 6 1.5 1.5L7 5m3 1.5h11M3 13l1.5 1.5L7 12m3 1.5h11M4 20h3m3 0h11" />
+                          </svg>
+                        </button>
                         <button type="button" class="default-switch" role="switch" :class="{ 'is-on': question.is_mandatory }"
                           :aria-label="$t('screeningForms.mandatory')" :title="$t('screeningForms.mandatory')"
                           :aria-checked="!!question.is_mandatory" @click="question.is_mandatory = !question.is_mandatory"><span></span></button>
@@ -134,7 +130,8 @@
 <script setup lang="ts">
 import type { FormInstance } from 'element-plus'
 import Sortable from 'sortablejs'
-import { EditPen, Document, Select, CircleCheck, ArrowDown, More, Delete } from '@element-plus/icons-vue'
+import { EditPen, Document, Select, CircleCheck, ArrowDown, More } from '@element-plus/icons-vue'
+import ChoiceOptions from './ChoiceOptions.vue'
 import type User from '@/api/interface/user'
 import type { ScreeningFormRequest, ScreeningQuestion, ScreeningQuestionType } from '@/api/interface/screeningQuestionsForm'
 import { getUserList } from '@/api/modules/common'
@@ -227,16 +224,12 @@ const isInlineChoice = (question: Question) => ['CHK', 'RDO'].includes(typeOf(qu
 const addOption = (question: Question) => {
   if (!question.options) question.options = []
   if (question.options.length >= 20) return
-  if (!isInlineChoice(question)) {
-    question.options.push('')
-    return
-  }
   let number = question.options.length + 1
   while (question.options.includes(`Option${number}`)) number++
   question.options.push(`Option${number}`)
 }
 const removeOption = (question: Question, index: number) => {
-  if (isInlineChoice(question) && (question.options?.length ?? 0) <= 1) return
+  if (isChoiceQuestion(question) && (question.options?.length ?? 0) <= 1) return
   const removed = question.options?.[index]
   question.options?.splice(index, 1)
   if (removed != null && question.default_option === removed) question.default_option = null
@@ -260,8 +253,8 @@ const addQuestion = (typeId: number, index = form.questions.length) => {
   if (!type) return
   form.questions.splice(index, 0, {
     key: nextKey++, screening_question_type: type.id,
-    name: type.name, label: '', description: '', order: index,
-    options: ['CHK', 'RDO'].includes(type.code) ? ['Option1'] : type.code === 'DD' ? [] : null,
+    label: '', description: '', order: index,
+    options: ['CHK', 'RDO', 'DD'].includes(type.code) ? ['Option1'] : null,
     default_option: null, is_mandatory: false, is_drop_down_multi_select: false, max_chars: null
   })
 }
@@ -277,10 +270,6 @@ const buildPayload = async (): Promise<ScreeningFormRequest | null> => {
     ElMessage.error($t('screeningForms.maxQuestions'))
     return null
   }
-  if (form.questions.some(question => !question.name.trim())) {
-    ElMessage.error($t('screeningForms.questionNameRequired'))
-    return null
-  }
   if (form.questions.some(question => !question.label?.trim())) {
     ElMessage.error($t('screeningForms.questionLabelRequired'))
     return null
@@ -289,7 +278,7 @@ const buildPayload = async (): Promise<ScreeningFormRequest | null> => {
     ElMessage.error($t('screeningForms.optionRequired'))
     return null
   }
-  if (form.questions.some(question => isInlineChoice(question) && question.options && new Set(question.options).size !== question.options.length)) {
+  if (form.questions.some(question => isChoiceQuestion(question) && question.options && new Set(question.options).size !== question.options.length)) {
     ElMessage.error($t('screeningForms.duplicateOptions'))
     return null
   }
@@ -306,7 +295,6 @@ const buildPayload = async (): Promise<ScreeningFormRequest | null> => {
       shared_with_user_ids: shareMode.value === 'users' ? form.shared_with_user_ids : null
     } : {}),
     questions: form.questions.map((question, index) => ({
-      name: question.name.trim(),
       label: question.label.trim(),
       description: question.description,
       screening_question_type_id: question.screening_question_type,
@@ -386,9 +374,9 @@ onMounted(async () => {
       shareMode.value = detail.is_public ? 'everyone' : form.shared_with_user_ids.length ? 'users' : 'none'
       form.questions = [...detail.questions].sort((a, b) => a.order - b.order).map(question => {
         const code = types.value.find(type => type.id === question.screening_question_type)?.code
-        const options = ['CHK', 'RDO'].includes(code ?? '') && !question.options?.length
+        const options = ['CHK', 'RDO', 'DD'].includes(code ?? '') && !question.options?.length
           ? ['Option1'] : question.options
-        return { ...question, options, name: question.name ?? '', description: question.description ?? '', key: nextKey++ }
+        return { ...question, options, description: question.description ?? '', key: nextKey++ }
       })
     }
     ready.value = true
@@ -448,8 +436,13 @@ onBeforeUnmount(() => {
 .screening-form :deep(.el-form-item__label) { justify-content: flex-start; height: 2em; line-height: 2em; }
 .screening-form :deep(.el-select) { width: 100%; }
 .step-title .el-icon { vertical-align: middle; }
-.inline-input :deep(.el-input__wrapper) { padding: 0; background: transparent; box-shadow: none; }
-.inline-title :deep(.el-input__inner) { font-weight: bold; }
+.inline-input :deep(.el-input__wrapper) { padding: 0 !important; background: transparent; box-shadow: none; }
+.inline-title :deep(.el-input__inner), .question-label-measure { font-family: var(--font-family-body); font-size: var(--el-font-size-base); font-weight: bold; letter-spacing: normal; }
+.question-label { display: flex; align-items: center; }
+.question-label-field { position: relative; display: inline-block; max-width: calc(100% - 12px); }
+.question-label-measure { display: block; overflow: hidden; padding-right: 4px; white-space: pre; visibility: hidden; }
+.question-label-field .inline-title { position: absolute; inset: 0; width: 100%; }
+.required-marker { color: var(--el-color-danger); margin-left: 4px; }
 .inline-description :deep(.el-input__inner) { font-size: 12px; }
 .question-preview > * { margin-bottom: 6px; }
 .process-panel > .content { min-height: 50px; }
@@ -458,22 +451,15 @@ onBeforeUnmount(() => {
 .process-box.drop-before { box-shadow: 0 -3px 0 0 var(--el-color-primary); }
 .process-box.drop-after { box-shadow: 0 3px 0 0 var(--el-color-primary); }
 .add-question-box.drop-append .add-select { border-color: var(--el-color-primary); }
-.option-row { display: flex; align-items: center; margin-top: 6px; }
-.choice-options { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px 20px; }
-.inline-option { position: relative; display: flex; align-items: flex-start; }
-.option-content { display: flex; align-items: center; gap: 8px; }
-.option-marker { margin: 0; flex: none; }
-.option-label { width: auto; min-width: 100px; max-width: 250px; }
-.option-actions { position: absolute; z-index: 10; top: 100%; left: 20px; display: flex; align-items: center; gap: 4px; padding: 4px; background: var(--el-bg-color-overlay); border: 1px solid var(--el-border-color-light); border-radius: 4px; box-shadow: var(--el-box-shadow-light); visibility: hidden; }
-.inline-option:hover .option-actions, .inline-option:focus-within .option-actions { visibility: visible; }
-.option-actions :deep(.el-button) { min-width: 32px !important; width: 32px; height: 32px !important; margin: 0; padding: 5px; font-size: 19px; }
 .default-switch { position: relative; width: 38px; height: 22px; padding: 0; border: 0; border-radius: 11px; background: var(--el-border-color); cursor: pointer; }
 .default-switch.is-on { background: var(--el-color-primary); }
 .default-switch span { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: white; transition: transform 0.2s; }
 .default-switch.is-on span { transform: translateX(16px); }
-.default-switch:focus-visible { outline: 2px solid var(--el-color-primary); outline-offset: 2px; }
+.default-switch:focus-visible, .multi-select-toggle:focus-visible { outline: 2px solid var(--el-color-primary); outline-offset: 2px; }
+.multi-select-toggle { display: flex; align-items: center; justify-content: center; width: 38px; height: 22px; padding: 0; border: 0; border-radius: 4px; background: transparent; color: var(--el-text-color-placeholder); font-size: 22px; cursor: pointer; }
+.multi-select-toggle svg { width: 22px; height: 22px; }
+.multi-select-toggle.is-on { color: var(--el-color-primary); }
 .view-content .process-panel .process-box .question-actions { flex-direction: column; gap: 10px; }
-.options-title { font-weight: bold; }
 .add-question-box .el-dropdown { width: 35%; }
 .btn-light { color: var(--el-color-primary); }
 </style>

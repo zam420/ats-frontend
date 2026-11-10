@@ -10,7 +10,6 @@ export default {
     questionTypes: '问题类型',
     questions: '已添加的问题',
     add: '添加',
-    questionName: '问题名称',
     questionLabel: '问题标签',
     questionLabelPlaceholder: '标签（请输入）',
     dragQuestions: '点击加号或拖放问题类型以添加问题。',
@@ -28,6 +27,7 @@ export default {
     setDefault: '设置或清除默认选项',
     optionSettings: '选项设置',
     mandatory: '必答问题',
+    multiSelect: '允许多选',
     saveAsName: '筛选问题表单名称 *',
     questionDescription: '描述',
     moveUp: '上移问题',
@@ -35,7 +35,6 @@ export default {
     deleteConfirm: '确定删除此筛选问题表单吗？',
     minQuestions: '请至少添加一个问题。',
     maxQuestions: '表单最多可包含 10 个问题。',
-    questionNameRequired: '请输入每个问题的名称。',
     loadingError: '无法加载筛选问题表单。',
     saveError: '无法保存筛选问题表单。'
   },

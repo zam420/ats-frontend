@@ -7,7 +7,6 @@ export interface ScreeningQuestionType {
 
 export interface ScreeningQuestion {
   id?: string
-  name: string
   label: string
   description: string
   screening_question_type: number
