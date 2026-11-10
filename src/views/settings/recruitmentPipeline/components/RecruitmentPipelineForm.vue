@@ -55,7 +55,9 @@
           </el-select>
         </el-col>
       </el-row>
-      <p v-if="stagesOnly && previewError" role="alert">{{ $t('recruitmentPipeline.previewLoadError') }}</p>
+      <template v-if="stagesOnly && previewError">
+        <p v-if="!hidePreviewErrors" role="alert">{{ $t('recruitmentPipeline.previewLoadError') }}</p>
+      </template>
       <el-row v-else :gutter="20" class="view-content" v-loading="stagesOnly && previewLoading">
         <el-col v-if="!stagesOnly" :span="6">
           <div class="step-panel">
@@ -211,6 +213,7 @@ interface ParamsProps {
   isEdit: boolean
   readOnly?: boolean
   stagesOnly?: boolean
+  hidePreviewErrors?: boolean
   roundTypes?: RecruitmentPipeline.RoundType[]
   isTemplate?: boolean // create a system template
 }

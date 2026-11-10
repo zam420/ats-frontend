@@ -85,8 +85,8 @@
         />
       </el-tab-pane>
       <el-tab-pane :label="$t('jobPosition.recruitmentPipeline')" name="pipeline">
-        <p class="tab-subtitle">{{ $t('jobPosition.pipelineTabSubtitle') }}</p>
-        <EspForm ref="espPipelineRef" v-model="state.pipelineForm" :disabled="readOnly" />
+        <p v-if="!readOnly" class="tab-subtitle">{{ $t('jobPosition.pipelineTabSubtitle') }}</p>
+        <EspForm v-if="!readOnly" ref="espPipelineRef" v-model="state.pipelineForm" />
         <RecruitmentPipelineForm
           v-if="selectedPipelineId"
           :key="selectedPipelineId"
@@ -95,12 +95,13 @@
           :is-edit="true"
           :read-only="true"
           :stages-only="true"
+          :hide-preview-errors="readOnly"
           :round-types="recruitmentPipelineRoundTypes"
         />
       </el-tab-pane>
       <el-tab-pane :label="$t('jobPosition.interviewProcessTemplate')" name="evaluation">
-        <p class="tab-subtitle">{{ $t('jobPosition.evaluationTabSubtitle') }}</p>
-        <EspForm ref="espEvaluationRef" v-model="state.evaluationForm" :disabled="readOnly" />
+        <p v-if="!readOnly" class="tab-subtitle">{{ $t('jobPosition.evaluationTabSubtitle') }}</p>
+        <EspForm v-if="!readOnly" ref="espEvaluationRef" v-model="state.evaluationForm" />
         <EvaluationForm
           v-if="selectedEvaluationId"
           :key="selectedEvaluationId"
@@ -109,6 +110,7 @@
           :is-edit="true"
           :rounds-only="true"
           :read-only="readOnly"
+          :hide-preview-errors="readOnly"
           :round-types="evaluationPlanRoundTypes"
         />
       </el-tab-pane>

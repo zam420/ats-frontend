@@ -55,8 +55,10 @@
       </el-select>
       </el-col>
     </el-row>
-    <p v-if="roundsOnly && previewUsersError" role="alert">{{ $t('interviewProcess.interviewersLoadError') }}</p>
-    <p v-if="roundsOnly && previewError" role="alert">{{ $t('interviewProcess.previewLoadError') }}</p>
+    <p v-if="roundsOnly && previewUsersError && !hidePreviewErrors" role="alert">{{ $t('interviewProcess.interviewersLoadError') }}</p>
+    <template v-if="roundsOnly && previewError">
+      <p v-if="!hidePreviewErrors" role="alert">{{ $t('interviewProcess.previewLoadError') }}</p>
+    </template>
     <el-row v-else :gutter="20" class="view-content" v-loading="roundsOnly && previewLoading">
       <el-col v-if="!roundsOnly" :span="6">
         <div class="step-panel">
@@ -243,6 +245,7 @@ interface ParamsProps {
   isEdit: boolean // 是否编辑
   readOnly?: boolean // 只读查看
   roundsOnly?: boolean
+  hidePreviewErrors?: boolean
   roundTypes?: InterviewProcess.RoundType[]
   isTemplate?: boolean // 创建系统模板
 }

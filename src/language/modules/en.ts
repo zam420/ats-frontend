@@ -66,7 +66,7 @@ export default {
   },
   menu: {
     home: 'Home',
-    jobPosition: 'Job Position',
+    jobPosition: 'Job Positions',
     cvManagement: 'CV Management',
     talentPool: 'Talent Pool',
     admin: 'Admin',
