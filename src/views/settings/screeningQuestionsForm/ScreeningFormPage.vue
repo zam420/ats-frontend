@@ -445,6 +445,7 @@ onBeforeUnmount(() => {
 .required-marker { color: var(--el-color-danger); margin-left: 4px; }
 .inline-description :deep(.el-input__inner) { font-size: 12px; }
 .question-preview > * { margin-bottom: 6px; }
+.question-preview > :has(+ .inline-description) { margin-bottom: 0px; }
 .process-panel > .content { min-height: 50px; }
 .step-panel .step, .process-box .order { user-select: none; }
 :global(body.screening-question-dragging), :global(body.screening-question-dragging *) { user-select: none !important; }

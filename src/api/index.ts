@@ -22,6 +22,7 @@ export interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
   noLoading?: boolean
   loadingText?: string
   preserveHtml?: boolean
+  loadingActive?: boolean
 }
 
 type RetryableConfig = CustomAxiosRequestConfig & { _retry?: boolean }
@@ -76,9 +77,12 @@ class RequestHttp {
           config.url = `/${config.url}`
         }
         // 当前请求不需要显示 loading 或者改变显示文字，在 api 服务中通过指定的第三个参数: { noLoading: true, loadingText: string } 来控制
-        config.noLoading || showFullScreenLoading(config.loadingText)
         if (config.headers && typeof config.headers.set === 'function') {
           config.headers.set('Authorization', globalStore.accessToken)
+        }
+        if (!config.noLoading) {
+          showFullScreenLoading(config.loadingText)
+          config.loadingActive = true
         }
         return config
       },
@@ -94,7 +98,11 @@ class RequestHttp {
     this.service.interceptors.response.use(
       async (response: AxiosResponse) => {
         let { data } = response
-        tryHideFullScreenLoading()
+        const requestConfig = response.config as CustomAxiosRequestConfig
+        if (requestConfig.loadingActive) {
+          requestConfig.loadingActive = false
+          tryHideFullScreenLoading()
+        }
         const globalStore = useGlobalStore()
         globalStore.setIsNotExistUser(false)
         if (data.code === ResultEnum.NOT_EXIST_USER) {
@@ -140,7 +148,11 @@ class RequestHttp {
       },
       async (error: AxiosError) => {
         const { response } = error
-        tryHideFullScreenLoading()
+        const requestConfig = error.config as CustomAxiosRequestConfig | undefined
+        if (requestConfig?.loadingActive) {
+          requestConfig.loadingActive = false
+          tryHideFullScreenLoading()
+        }
         if (response) {
           const data = response.data as (Result & { error?: unknown }) | null | undefined
           if (response.status === 400) {

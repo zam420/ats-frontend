@@ -1,8 +1,8 @@
-import { RouteRecordRaw, createRouter, createWebHistory } from 'vue-router'
+import { RouteLocationNormalized, RouteLocationRaw, RouteRecordRaw, createRouter, createWebHistory } from 'vue-router'
 import { useGlobalStore } from '@/store/modules/global'
 import { ROUTER_WHITE_LIST } from '@/config'
 import { staticRouter, errorRouter } from '@/router/staticRouter'
-import NProgress from '@/config/nprogress'
+import { showNavigationLoading, hideNavigationLoading } from '@/config/serviceLoading'
 import { ROUTER_404, ROUTER_ACTIVATE, ROUTER_LOGIN, ROUTER_REGISTER } from './routerName'
 import { useMenuStore } from '@/store/modules/menu'
 import { isHasPermission } from '@/utils'
@@ -54,6 +54,10 @@ routerArray.forEach(item => {
 })
 
 let sessionRestoreTried = false
+const loadingNavigations = new WeakSet<RouteLocationNormalized>()
+const finishNavigationLoading = (to: RouteLocationNormalized) => {
+  if (loadingNavigations.delete(to)) hideNavigationLoading()
+}
 
 // Goes to the login page, remembering the current page so login can bring the user back to it
 export const redirectToLogin = () => {
@@ -72,8 +76,12 @@ export const redirectToLogin = () => {
 router.beforeEach(async (to, from, next) => {
   const globalStore = useGlobalStore()
   const menuStore = useMenuStore()
-  // 1.NProgress 开始
-  NProgress.start()
+  loadingNavigations.add(to)
+  showNavigationLoading()
+  const redirect = (path: RouteLocationRaw) => {
+    finishNavigationLoading(to)
+    next(path)
+  }
 
   // A tab opened without a session tries once to sign in with the shared refresh cookie
   if (!globalStore.accessToken && !sessionRestoreTried) {
@@ -88,15 +96,14 @@ router.beforeEach(async (to, from, next) => {
   if (ROUTER_WHITE_LIST.includes(to.path)) {
     // Already signed in: skip the login/register pages
     if ((to.path === ROUTER_LOGIN || to.path === `/${ROUTER_REGISTER}`) && globalStore.accessToken) {
-      return next(globalStore.activationRequired ? `/${ROUTER_ACTIVATE}` : '/')
+      return redirect(globalStore.activationRequired ? `/${ROUTER_ACTIVATE}` : '/')
     }
     return next()
   }
 
   // 5.判断是否有 Token，没有重定向到 login 页面
   if (!globalStore.accessToken) {
-    NProgress.done()
-    return next({
+    return redirect({
       path: ROUTER_LOGIN,
       query: to.fullPath && to.fullPath !== '/' ? { redirect: to.fullPath } : undefined
     })
@@ -104,10 +111,10 @@ router.beforeEach(async (to, from, next) => {
   // Unactivated accounts can only see the activation page
   const activatePath = `/${ROUTER_ACTIVATE}`
   if (globalStore.activationRequired) {
-    return to.path === activatePath ? next() : next(activatePath)
+    return to.path === activatePath ? next() : redirect(activatePath)
   }
   if (to.path === activatePath) {
-    return next('/')
+    return redirect('/')
   }
   if (menuStore.menuList.length === 0) {
     try {
@@ -115,14 +122,13 @@ router.beforeEach(async (to, from, next) => {
     } catch (e) {
       // Token invalid/expired or user info unavailable: force a fresh login
       globalStore.clearUserInfo()
-      NProgress.done()
-      return next({
+      return redirect({
         path: ROUTER_LOGIN,
         query: to.fullPath && to.fullPath !== '/' ? { redirect: to.fullPath } : undefined
       })
     }
     if (globalStore.isNotExistUser) {
-      return
+      return next(false)
     }
     const permissionCode = to.name === 'ROUTER_SETTINGS_SCREENING_FORMS_CREATE' && to.query.template === '1'
       ? UserPermissionEnum.SQTSA : to.meta.permissionCode as string
@@ -132,16 +138,15 @@ router.beforeEach(async (to, from, next) => {
     } : {
       path: globalStore.defaultUrl
     }
-    next(nextParam)
+    redirect(nextParam)
     return
   }
   const permissionCode = to.name === 'ROUTER_SETTINGS_SCREENING_FORMS_CREATE' && to.query.template === '1'
     ? UserPermissionEnum.SQTSA : to.meta.permissionCode as string
   if (!isHasPermission(permissionCode)) {
-    router.push({
+    return redirect({
       path: ROUTER_404
     })
-    return
   }
   // 6.正常访问页面
   next()
@@ -149,22 +154,24 @@ router.beforeEach(async (to, from, next) => {
 
 router.beforeResolve(async to => {
   const { checkEditAccess } = await import('./editAccess')
-  return checkEditAccess(to)
+  const result = await checkEditAccess(to)
+  if (result !== true) finishNavigationLoading(to)
+  return result
 })
 
 /**
  * @description 路由跳转错误
  * */
-router.onError(error => {
-  NProgress.done()
+router.onError((error, to) => {
+  finishNavigationLoading(to)
   console.warn('路由错误', error.message)
 })
 
 /**
  * @description 路由跳转结束
  * */
-router.afterEach(() => {
-  NProgress.done()
+router.afterEach(to => {
+  finishNavigationLoading(to)
 })
 
 export default router
