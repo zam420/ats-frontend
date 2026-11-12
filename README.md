@@ -63,6 +63,10 @@ screening form is selected by default. Edits and the selected form are temporary
 and are not saved with the job or to the shared screening form. Loading forms
 requires the `sqts` permission.
 
+Screening question headings support levels 1 through 3. Apply
+`java_backend/src/main/resources/sql/sprint_15.sql` when schema auto-update is
+disabled before using heading levels.
+
 ## Project structure
  src: 
 

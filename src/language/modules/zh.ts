@@ -12,6 +12,8 @@ export default {
     add: '添加',
     questionLabel: '问题标签',
     questionLabelPlaceholder: '标签（请输入）',
+    headingLevel: '标题级别',
+    headingOption: '标题 {level}',
     dragQuestions: '点击加号或拖放问题类型以添加问题。',
     questionLabelRequired: '请输入每个问题的标签。',
     answerPreview: '回答预览',

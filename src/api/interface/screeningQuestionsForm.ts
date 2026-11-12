@@ -16,6 +16,7 @@ export interface ScreeningQuestion {
   is_mandatory: boolean | null
   is_drop_down_multi_select: boolean | null
   max_chars: number | null
+  heading_level?: number | null
 }
 
 export interface ScreeningFormListItem {

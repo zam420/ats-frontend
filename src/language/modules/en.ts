@@ -12,6 +12,8 @@ export default {
     add: 'Add',
     questionLabel: 'Question label',
     questionLabelPlaceholder: 'Label (Please input)',
+    headingLevel: 'Heading level',
+    headingOption: 'Heading {level}',
     dragQuestions: 'Click the + button or drag and drop question types to add questions.',
     questionLabelRequired: 'Enter a label for each question.',
     answerPreview: 'Answer preview',

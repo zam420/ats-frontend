@@ -72,12 +72,15 @@
                       </el-col>
                       <el-col :span="canWrite ? 22 : 23" class="question-preview">
                         <div class="question-label">
-                          <span class="question-label-field">
+                          <span class="question-label-field" :class="headingClass(question)">
                             <span class="question-label-measure" aria-hidden="true">{{ question.label || $t('screeningForms.questionLabelPlaceholder') }}</span>
                             <el-input v-model="question.label" class="inline-input inline-title" maxlength="100" :placeholder="$t('screeningForms.questionLabelPlaceholder')" />
                           </span>
-                          <span v-if="question.is_mandatory && !forcedReadOnly" class="required-marker" :title="$t('screeningForms.mandatory')" :aria-label="$t('screeningForms.mandatory')">*</span>
+                          <span v-if="!isDisplayOnly(question) && question.is_mandatory && !forcedReadOnly" class="required-marker" :title="$t('screeningForms.mandatory')" :aria-label="$t('screeningForms.mandatory')">*</span>
                         </div>
+                        <el-radio-group v-if="typeOf(question)?.code === 'HN'" v-model="question.heading_level" :disabled="!canWrite" :aria-label="$t('screeningForms.headingLevel')">
+                          <el-radio v-for="level in [1, 2, 3]" :key="level" :label="level">{{ $t('screeningForms.headingOption', { level }) }}</el-radio>
+                        </el-radio-group>
                         <el-input v-if="typeOf(question)?.code === 'INPUT'" disabled :placeholder="$t('screeningForms.answerPreview')" />
                         <el-input v-else-if="typeOf(question)?.code === 'INPUTAREA'" type="textarea" disabled :placeholder="$t('screeningForms.answerPreview')" />
                         <ChoiceOptions v-else-if="isInlineChoice(question)" :options="question.options ?? []" :default-option="question.default_option"
@@ -89,11 +92,11 @@
                           :placeholder="$t('screeningForms.answerPreview')">
                           <el-option v-for="(option, optionIndex) in question.options ?? []" :key="optionIndex" :label="option" :value="option" />
                         </el-select>
-                        <p v-else role="alert">{{ $t('screeningForms.unsupportedType') }}</p>
+                        <p v-else-if="!isDisplayOnly(question)" role="alert">{{ $t('screeningForms.unsupportedType') }}</p>
                         <ChoiceOptions v-if="typeOf(question)?.code === 'DD'" :options="question.options ?? []" :default-option="question.default_option"
                           :can-write="canWrite" :require-one="true" @rename="(index, value) => renameOption(question, index, value)"
                           @remove="index => removeOption(question, index)" @toggle-default="option => toggleDefault(question, option)" />
-                        <el-input v-model="question.description" class="inline-input inline-description" maxlength="200" :placeholder="$t('interviewProcess.roundDescPlaceholder')" />
+                        <el-input v-if="!isDisplayOnly(question)" v-model="question.description" class="inline-input inline-description" maxlength="200" :placeholder="$t('interviewProcess.roundDescPlaceholder')" />
                         <ElButton v-if="isChoiceQuestion(question) && canWrite" text type="primary" :disabled="(question.options?.length ?? 0) >= 20" @click="addOption(question)">{{ $t('screeningForms.addOption') }}</ElButton>
                       </el-col>
                       <el-col v-if="canWrite" :span="1" class="center question-actions">
@@ -104,7 +107,7 @@
                             <path d="m3 6 1.5 1.5L7 5m3 1.5h11M3 13l1.5 1.5L7 12m3 1.5h11M4 20h3m3 0h11" />
                           </svg>
                         </button>
-                        <button type="button" class="default-switch" role="switch" :class="{ 'is-on': question.is_mandatory }"
+                        <button v-if="!isDisplayOnly(question)" type="button" class="default-switch" role="switch" :class="{ 'is-on': question.is_mandatory }"
                           :aria-label="$t('screeningForms.mandatory')" :title="$t('screeningForms.mandatory')"
                           :aria-checked="!!question.is_mandatory" @click="question.is_mandatory = !question.is_mandatory"><span></span></button>
                         <i class="iconfont icon-delete" role="button" tabindex="0" :aria-label="$t('opt.delete')" :title="$t('opt.delete')" @click="form.questions.splice(index, 1)" @keydown.enter.prevent="form.questions.splice(index, 1)" @keydown.space.prevent="form.questions.splice(index, 1)"></i>
@@ -130,7 +133,7 @@
 <script setup lang="ts">
 import type { FormInstance } from 'element-plus'
 import Sortable from 'sortablejs'
-import { EditPen, Document, Select, CircleCheck, ArrowDown, More } from '@element-plus/icons-vue'
+import { EditPen, Document, Select, CircleCheck, ArrowDown, More, PriceTag } from '@element-plus/icons-vue'
 import ChoiceOptions from './ChoiceOptions.vue'
 import EspMain from '@/components/EspMain/index.vue'
 import type User from '@/api/interface/user'
@@ -222,11 +225,18 @@ const form = reactive({
 })
 
 const typeOf = (question: Question) => types.value.find(type => type.id === question.screening_question_type)
+const HeadingIcon = defineComponent({
+  render: () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2.5, 'stroke-linecap': 'round', 'aria-hidden': 'true' },
+    [h('path', { d: 'M6 4v16M18 4v16M6 12h12' })])
+})
 const typeIcon = (code: string) => ({
-  INPUT: EditPen, INPUTAREA: Document, CHK: Select, RDO: CircleCheck, DD: ArrowDown
+  INPUT: EditPen, INPUTAREA: Document, CHK: Select, RDO: CircleCheck, DD: ArrowDown, HN: HeadingIcon, LBL: PriceTag
 }[code] ?? More)
 const isChoiceQuestion = (question: Question) => ['CHK', 'RDO', 'DD'].includes(typeOf(question)?.code ?? '')
 const isInlineChoice = (question: Question) => ['CHK', 'RDO'].includes(typeOf(question)?.code ?? '')
+const isDisplayOnly = (question: Question) => ['HN', 'LBL'].includes(typeOf(question)?.code ?? '')
+const headingClass = (question: Question) => typeOf(question)?.code === 'HN'
+  ? `heading-level-${question.heading_level ?? 1}` : ''
 const addOption = (question: Question) => {
   if (!question.options) question.options = []
   if (question.options.length >= 20) return
@@ -261,7 +271,8 @@ const addQuestion = (typeId: number, index = form.questions.length) => {
     key: nextKey++, screening_question_type: type.id,
     label: '', description: '', order: index,
     options: ['CHK', 'RDO', 'DD'].includes(type.code) ? ['Option1'] : null,
-    default_option: null, is_mandatory: false, is_drop_down_multi_select: false, max_chars: null
+    default_option: null, is_mandatory: false, is_drop_down_multi_select: false, max_chars: null,
+    heading_level: type.code === 'HN' ? 1 : null
   })
 }
 const goBack = () => router.replace(`/${ROUTER_SETTINGS_SCREENING_FORMS}`)
@@ -302,14 +313,15 @@ const buildPayload = async (): Promise<ScreeningFormRequest | null> => {
     } : {}),
     questions: form.questions.map((question, index) => ({
       label: question.label.trim(),
-      description: question.description,
+      description: isDisplayOnly(question) ? '' : question.description,
       screening_question_type_id: question.screening_question_type,
       order: index,
       options: question.options,
       default_option: question.default_option,
-      is_mandatory: question.is_mandatory,
+      is_mandatory: isDisplayOnly(question) ? false : question.is_mandatory,
       is_drop_down_multi_select: question.is_drop_down_multi_select,
-      max_chars: question.max_chars
+      max_chars: question.max_chars,
+      heading_level: typeOf(question)?.code === 'HN' ? question.heading_level ?? 1 : null
     }))
   }
 }
@@ -381,9 +393,13 @@ onMounted(async () => {
       shareMode.value = detail.is_public ? 'everyone' : form.shared_with_user_ids.length ? 'users' : 'none'
       form.questions = [...detail.questions].sort((a, b) => a.order - b.order).map(question => {
         const code = types.value.find(type => type.id === question.screening_question_type)?.code
+        if (code === 'HN' && question.heading_level != null && ![1, 2, 3].includes(question.heading_level)) {
+          throw new Error('Invalid heading level in screening form')
+        }
         const options = ['CHK', 'RDO', 'DD'].includes(code ?? '') && !question.options?.length
           ? ['Option1'] : question.options
-        return { ...question, options, description: question.description ?? '', key: nextKey++ }
+        return { ...question, options, description: question.description ?? '',
+          heading_level: code === 'HN' ? question.heading_level ?? 1 : question.heading_level, key: nextKey++ }
       })
     }
     ready.value = true
@@ -446,6 +462,9 @@ onDeactivated(endDrag)
 .step-title .el-icon { vertical-align: middle; }
 .inline-input :deep(.el-input__wrapper) { padding: 0 !important; background: transparent; box-shadow: none; }
 .inline-title :deep(.el-input__inner), .question-label-measure { font-family: var(--font-family-body); font-size: var(--el-font-size-base); font-weight: bold; letter-spacing: normal; }
+.heading-level-1 .question-label-measure, .heading-level-1 .inline-title :deep(.el-input__inner) { font-size: 24px; }
+.heading-level-2 .question-label-measure, .heading-level-2 .inline-title :deep(.el-input__inner) { font-size: 20px; }
+.heading-level-3 .question-label-measure, .heading-level-3 .inline-title :deep(.el-input__inner) { font-size: 16px; }
 .question-label { display: flex; align-items: center; }
 .question-label-field { position: relative; display: inline-block; max-width: calc(100% - 12px); }
 .question-label-measure { display: block; overflow: hidden; padding-right: 4px; white-space: pre; visibility: hidden; }
