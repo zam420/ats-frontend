@@ -27,6 +27,21 @@
 
     yarn build:prod / npm run build:prod
 
+## Tenant Management
+
+Tenant Management requires the Settings menu permission (`stm`) and tenant menu
+permission (`clnm`). Listing, creating and editing/deactivating also require
+`clns`, `clnc` and `clne`, respectively; the backend applies its existing
+owner/system-admin access checks.
+
+Logos are optional. JPG, PNG and SVG files must be at most 1 MiB and
+140 x 140 pixels. SVG dimensions must be pixel width and height or a viewBox;
+scripts, external references and unsafe styles are rejected. Logos are stored
+on the backend filesystem in `tenant-logos` under `ats.storage.root` (default
+`./uploads`), which must be writable and backed up with the database. Apply
+`java_backend/src/main/resources/sql/sprint_14.sql` when schema auto-update is
+disabled. Existing role grants must include `clnm` for the menu to appear.
+
 ## Project structure
  src: 
 

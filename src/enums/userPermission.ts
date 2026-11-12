@@ -48,5 +48,10 @@ export enum UserPermissionEnum {
   RDHT = 'rdht', // cv historical operations tab
   WTRM = 'wtrm', // test review menu
   UMM = 'umm', // user management
+  CLNM = 'clnm', // tenant management menu
+  CLNC = 'clnc', // tenant create
+  CLNE = 'clne', // tenant edit
+  CLNS = 'clns', // tenant search
+  CLNSA = 'clnsa', // tenant system admin
   TMM = 'tmm' // tag menu
 }

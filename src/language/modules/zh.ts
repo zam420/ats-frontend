@@ -100,6 +100,21 @@ export default {
     activateFailed: 'Activation failed',
     logout: 'Sign out'
   },
+  tenantManagement: {
+    title: 'Tenant Management',
+    create: 'Create Tenant',
+    edit: 'Edit Tenant',
+    organizationName: 'Organization Name',
+    description: 'Description',
+    logo: 'Logo',
+    logoHint: 'JPG, PNG or SVG, up to 1 MB and 140 x 140 pixels.',
+    invalidLogo: 'Choose a valid JPG, PNG or SVG logo up to 1 MB and 140 x 140 pixels.',
+    logoLoadError: 'Could not load the tenant logo.',
+    noSearchPermission: 'You do not have permission to view tenants.',
+    deactivateConfirm: 'Delete this tenant?',
+    saved: 'Tenant saved',
+    deactivated: 'Tenant deactivated'
+  },
   home: {
     welcome: 'Welcome'
   },
@@ -113,6 +128,7 @@ export default {
     settings: 'Settings',
     recruitmentProject: 'Recruitment Project',
     userManagement: 'User Management',
+    tenantManagement: 'Tenant Management',
     interviewProcess: 'Evaluation Plan',
     recruitmentPipeline: 'Recruitment Pipeline',
     emailTemplate: 'Email Template',

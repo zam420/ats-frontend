@@ -2,6 +2,7 @@ import { RouteRecordRaw } from 'vue-router'
 import { useLocale } from '@/hooks/useLocale'
 import { ROUTER_SETTINGS_EVALUATION_PLAN, ROUTER_SETTINGS } from '../routerName'
 import { UserPermissionEnum } from '@/enums/userPermission'
+import { useGlobalStore } from '@/store/modules/global'
 const { $t } = useLocale()
 
 // * 导入所有router
@@ -24,7 +25,15 @@ const settingsRouter: Array<RouteRecordRaw> = [
   {
     path: `/${ROUTER_SETTINGS}`,
     name: ROUTER_SETTINGS,
-    redirect: `/${ROUTER_SETTINGS_EVALUATION_PLAN}`,
+    redirect: () => {
+      const permissions = useGlobalStore().permissions
+      if (permissions.includes(UserPermissionEnum.IPTM)) return `/${ROUTER_SETTINGS_EVALUATION_PLAN}`
+      const firstAccessible = routerArray.find(route =>
+        !route.meta?.isHide && typeof route.meta?.permissionCode === 'string' &&
+        permissions.includes(route.meta.permissionCode)
+      )
+      return firstAccessible?.path ?? `/${ROUTER_SETTINGS_EVALUATION_PLAN}`
+    },
     meta: {
       icon: 'settings',
       title: $t('menu.settings'),

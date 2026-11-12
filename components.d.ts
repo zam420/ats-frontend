@@ -18,6 +18,7 @@ declare module '@vue/runtime-core' {
     ColFilter: typeof import('./src/components/EspTable/components/ColFilter.vue')['default']
     ColForm: typeof import('./src/components/EspTable/components/ColForm.vue')['default']
     ColSetting: typeof import('./src/components/EspTable/components/ColSetting.vue')['default']
+    ElAlert: typeof import('element-plus/es')['ElAlert']
     ElAside: typeof import('element-plus/es')['ElAside']
     ElBadge: typeof import('element-plus/es')['ElBadge']
     ElButton: typeof import('element-plus/es')['ElButton']

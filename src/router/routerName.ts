@@ -58,6 +58,7 @@ export const ROUTER_SETTINGS = 'settings'
 
 //Settings -> User Management
 export const ROUTER_SETTINGS_USER_MANAGEMENT = 'settings/userManagement'
+export const ROUTER_SETTINGS_TENANT_MANAGEMENT = 'settings/tenantManagement'
 
 //Settings -> Evaluation Plan
 export const ROUTER_SETTINGS_EVALUATION_PLAN = 'settings/evaluationplan'
