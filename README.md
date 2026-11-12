@@ -57,6 +57,9 @@ locations. The preview displays the current date as the posted date and loads
 the current tenant and, when
 available, its logo using the authenticated tenant endpoints. Allow pop-ups
 for the application if the preview does not open.
+The current screening questions and display mode are included in the snapshot;
+questions appear below the description or in a separate tab. Preview answers,
+like the job's screening-form edits, are not saved.
 
 On the Screening Questions tab of the job create/edit form, the first available
 screening form is selected by default. Edits and the selected form are temporary

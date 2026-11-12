@@ -19,10 +19,22 @@
         <div class="job-fact"><span>{{ $t('jobPosition.workLocation') }}:</span> {{ preview.workLocation || '—' }}</div>
       </div>
       <p class="posted-date">{{ $t('jobPosition.previewPostedDate') }}: {{ postedDate }}</p>
-      <section class="job-preview-description">
+      <template v-if="preview.screeningDisplayMode === 'description'">
         <hr class="description-divider" />
         <div class="ql-editor job-rich-text preview-description" v-html="description"></div>
-      </section>
+        <section class="additional-questions">
+          <h1>{{ $t('jobPosition.additionalQuestions') }}</h1>
+          <ScreeningQuestionsPreview v-if="preview.questions.length" class="additional-questions-content" :questions="preview.questions" />
+        </section>
+      </template>
+      <el-tabs v-else v-model="activePreviewTab" class="preview-tabs">
+        <el-tab-pane :label="$t('jobPosition.jobDescription')" name="description">
+          <div class="ql-editor job-rich-text preview-description" v-html="description"></div>
+        </el-tab-pane>
+        <el-tab-pane :label="$t('jobPosition.additionalQuestions')" name="questions">
+          <ScreeningQuestionsPreview :questions="preview.questions" />
+        </el-tab-pane>
+      </el-tabs>
     </article>
   </EspMain>
 </template>
@@ -31,6 +43,7 @@
 import { getCurrentTenant, getCurrentTenantLogo, type Tenant } from '@/api/modules/tenant'
 import { jobRichTextToHtml } from './jobRichText'
 import { readJobPreview } from './jobPreview'
+import ScreeningQuestionsPreview from './components/ScreeningQuestionsPreview.vue'
 import moment from 'moment'
 import { DATE_FORMAT } from '@/config'
 import '@vueup/vue-quill/dist/vue-quill.snow.css'
@@ -43,6 +56,7 @@ const logoUrl = ref('')
 const loading = ref(false)
 const companyError = ref(false)
 const logoError = ref(false)
+const activePreviewTab = ref('description')
 const description = computed(() => jobRichTextToHtml(preview.value?.description))
 const postedDate = moment().format(DATE_FORMAT)
 let disposed = false
@@ -94,11 +108,8 @@ onBeforeUnmount(() => {
   box-sizing: border-box;
   min-height: 220px;
   margin: 0px auto;
-  padding: 20px;
+  padding: 20px 20px 28px;
   background: var(--el-color-white);
-}
-.job-preview-description {
-  padding-bottom: 40px;
 }
 .company-header { display: flex; align-items: center; gap: 20px; margin-bottom: 24px; }
 .logo-slot { width: 100px; height: 100px; flex: 0 0 100px; }
@@ -110,6 +121,11 @@ onBeforeUnmount(() => {
 .job-fact span { font-weight: 600; }
 .posted-date { margin: 12px 0 18px; }
 .description-divider { border: 0; border-top: 1px solid var(--el-border-color); margin: 0 0 28px; }
-.preview-description { padding: 0; font-size: 14px; overflow-wrap: anywhere; }
+.preview-description { height: auto; overflow-y: visible; padding: 0; font-size: 14px; overflow-wrap: anywhere; }
+.preview-tabs :deep(.el-tabs__header) { margin-bottom: 28px; }
+.preview-tabs :deep(.el-tabs__content) { padding-bottom: 28px; }
+.additional-questions { margin-top: 28px; padding-bottom: 28px;}
+.additional-questions h1 { font-size: 24px; font-weight: 600; }
+.additional-questions-content { margin-top: 20px; }
 .el-alert { margin-bottom: 16px; }
 </style>

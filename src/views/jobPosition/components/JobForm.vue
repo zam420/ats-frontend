@@ -42,15 +42,23 @@
         <template v-if="!readOnly">
           <el-alert :title="$t('screeningForms.jobEditsTemporary')" type="info" :closable="false" show-icon />
           <el-form label-position="top" class="screening-selection">
-            <el-form-item :label="$t('screeningForms.name')">
-              <el-select v-model="selectedScreeningFormId" filterable :loading="screeningFormsLoading">
-                <el-option v-for="form in screeningForms" :key="form.id" :label="form.name" :value="form.id" />
-              </el-select>
-            </el-form-item>
+            <div class="screening-selection-fields">
+                <el-form-item :label="$t('screeningForms.name')">
+                  <el-select v-model="selectedScreeningFormId" filterable :loading="screeningFormsLoading">
+                    <el-option v-for="form in screeningForms" :key="form.id" :label="form.name" :value="form.id" />
+                  </el-select>
+                </el-form-item>
+                <el-form-item :label="$t('jobPosition.screeningDisplayMode')">
+                  <el-select v-model="screeningDisplayMode">
+                    <el-option value="description" :label="$t('jobPosition.withJobDescription')" />
+                    <el-option value="tab" :label="$t('jobPosition.separateTab')" />
+                  </el-select>
+                </el-form-item>
+            </div>
           </el-form>
           <p v-if="screeningFormsLoaded && !screeningForms.length" role="status">{{ $t('screeningForms.noFormsAvailable') }}</p>
           <KeepAlive>
-            <ScreeningFormPage v-if="selectedScreeningFormId" :key="selectedScreeningFormId" embedded :form-id="selectedScreeningFormId" />
+            <ScreeningFormPage v-if="selectedScreeningFormId" :key="selectedScreeningFormId" ref="screeningFormRef" embedded :form-id="selectedScreeningFormId" />
           </KeepAlive>
         </template>
       </el-tab-pane>
@@ -140,7 +148,7 @@ import EvaluationForm from '@/views/settings/evaluationPlan/components/Evaluatio
 import ScreeningFormPage from '@/views/settings/screeningQuestionsForm/ScreeningFormPage.vue'
 import { getScreeningFormsList } from '@/api/modules/screeningQuestionsForm'
 import type { ScreeningFormListItem } from '@/api/interface/screeningQuestionsForm'
-import { newPreviewStorageKey } from '../jobPreview'
+import { newPreviewStorageKey, type PreviewQuestion, type ScreeningDisplayMode } from '../jobPreview'
 
 interface ParamsProps {
   title: string // 标题
@@ -169,6 +177,8 @@ const activeTab = ref('description')
 const jobReady = ref(!props.isEdit)
 const screeningForms = ref<ScreeningFormListItem[]>([])
 const selectedScreeningFormId = ref('')
+const screeningDisplayMode = ref<ScreeningDisplayMode>('description')
+const screeningFormRef = ref<InstanceType<typeof ScreeningFormPage>>()
 const screeningFormsLoading = ref(false)
 const screeningFormsLoaded = ref(false)
 const evaluationPlanRoundTypes = ref<InterviewProcess.RoundType[]>([])
@@ -254,6 +264,16 @@ const preview = () => {
   let employmentType: string
   let workArrangement: string
   let workLocation: string
+  let questions: PreviewQuestion[]
+  try {
+    if (!screeningFormsLoaded.value) throw new Error('Screening forms are not ready')
+    if (selectedScreeningFormId.value && !screeningFormRef.value) throw new Error('Screening form is not ready')
+    questions = screeningFormRef.value?.getPreviewQuestions() ?? []
+  } catch (error) {
+    console.error('Failed to prepare screening questions for preview', error)
+    ElMessage.error($t('jobPosition.previewScreeningError'))
+    return
+  }
   try {
     employmentType = previewFieldLabel('employment_type_id')
     workArrangement = previewFieldLabel('work_arrangement_type_id')
@@ -271,7 +291,9 @@ const preview = () => {
       description: jobDescRef.value?.getContent() ?? state.jobDesc,
       employmentType,
       workArrangement,
-      workLocation
+      workLocation,
+      screeningDisplayMode: screeningDisplayMode.value,
+      questions
     }))
     const path = props.isEdit ? ROUTER_JOB_POSITION_EDIT_PREVIEW : ROUTER_JOB_POSITION_CREATE_PREVIEW
     const href = router.resolve({ path: `/${path}`, query: { preview: key } }).href
@@ -530,7 +552,9 @@ onMounted(() => {
 @import '@/styles/interviewer-select.less';
 
 .screening-selection { margin-top: 16px; }
-.screening-selection :deep(.el-select) { width: 100%; max-width: 320px; }
+.screening-selection-fields { display: flex; flex-wrap: wrap; gap: 0 20px; }
+.screening-selection-fields :deep(.el-form-item) { flex: 0 1 320px; min-width: 0; }
+.screening-selection-fields :deep(.el-select) { width: 100%; }
 
 .job-tabs {
   padding: .8em 0 0;

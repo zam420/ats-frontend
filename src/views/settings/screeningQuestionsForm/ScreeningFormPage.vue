@@ -74,7 +74,7 @@
                         <div class="question-label">
                           <span class="question-label-field" :class="headingClass(question)">
                             <span class="question-label-measure" aria-hidden="true">{{ question.label || $t('screeningForms.questionLabelPlaceholder') }}</span>
-                            <el-input v-model="question.label" class="inline-input inline-title" maxlength="100" :placeholder="$t('screeningForms.questionLabelPlaceholder')" />
+                            <el-input v-model="question.label" class="inline-input inline-title" maxlength="500" :placeholder="$t('screeningForms.questionLabelPlaceholder')" />
                           </span>
                           <span v-if="!isDisplayOnly(question) && question.is_mandatory && !forcedReadOnly" class="required-marker" :title="$t('screeningForms.mandatory')" :aria-label="$t('screeningForms.mandatory')">*</span>
                         </div>
@@ -96,7 +96,7 @@
                         <ChoiceOptions v-if="typeOf(question)?.code === 'DD'" :options="question.options ?? []" :default-option="question.default_option"
                           :can-write="canWrite" :require-one="true" @rename="(index, value) => renameOption(question, index, value)"
                           @remove="index => removeOption(question, index)" @toggle-default="option => toggleDefault(question, option)" />
-                        <el-input v-if="!isDisplayOnly(question)" v-model="question.description" class="inline-input inline-description" maxlength="200" :placeholder="$t('interviewProcess.roundDescPlaceholder')" />
+                        <el-input v-if="!isDisplayOnly(question)" v-model="question.description" class="inline-input inline-description" maxlength="500" :placeholder="$t('interviewProcess.roundDescPlaceholder')" />
                         <ElButton v-if="isChoiceQuestion(question) && canWrite" text type="primary" :disabled="(question.options?.length ?? 0) >= 20" @click="addOption(question)">{{ $t('screeningForms.addOption') }}</ElButton>
                       </el-col>
                       <el-col v-if="canWrite" :span="1" class="center question-actions">
@@ -136,6 +136,7 @@ import Sortable from 'sortablejs'
 import { EditPen, Document, Select, CircleCheck, ArrowDown, More, PriceTag } from '@element-plus/icons-vue'
 import ChoiceOptions from './ChoiceOptions.vue'
 import EspMain from '@/components/EspMain/index.vue'
+import type { PreviewQuestion } from '@/views/jobPosition/jobPreview'
 import type User from '@/api/interface/user'
 import type { ScreeningFormRequest, ScreeningQuestion, ScreeningQuestionType } from '@/api/interface/screeningQuestionsForm'
 import { getUserList } from '@/api/modules/common'
@@ -225,6 +226,25 @@ const form = reactive({
 })
 
 const typeOf = (question: Question) => types.value.find(type => type.id === question.screening_question_type)
+const getPreviewQuestions = (): PreviewQuestion[] => {
+  if (!ready.value || loading.value) throw new Error('Screening form is not ready')
+  return form.questions.map(question => {
+    const type = typeOf(question)
+    if (!type) throw new Error(`Unknown screening question type: ${question.screening_question_type}`)
+    return {
+      code: type.code,
+      label: question.label,
+      description: question.description ?? '',
+      options: [...(question.options ?? [])],
+      defaultOption: question.default_option ?? null,
+      mandatory: !!question.is_mandatory,
+      multiSelect: !!question.is_drop_down_multi_select,
+      maxChars: question.max_chars && question.max_chars > 0 ? question.max_chars : null,
+      headingLevel: type.code === 'HN' ? question.heading_level ?? 1 : null
+    }
+  })
+}
+defineExpose({ getPreviewQuestions })
 const HeadingIcon = defineComponent({
   render: () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2.5, 'stroke-linecap': 'round', 'aria-hidden': 'true' },
     [h('path', { d: 'M6 4v16M18 4v16M6 12h12' })])
