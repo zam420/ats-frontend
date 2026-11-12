@@ -121,11 +121,11 @@ const state = reactive<QuillEditorState>({
               // [{ header: [1, 2, 3, 4, 5, 6, false] }, { font: [] }, { size: [] }],
               [{ header: [1, 2, 3, 4, 5, 6, false] }, { size: [] }],
               ['bold', 'italic', 'underline', 'strike'],
-              ['blockquote', 'code-block'],
+              // ['blockquote', 'code-block'],
               [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
-              [{ script: 'sub' }, { script: 'super' }],
-              [{ align: [] }],
-              [{ color: [] }, { background: [] }],
+              // [{ script: 'sub' }, { script: 'super' }],
+              // [{ align: [] }],
+              // [{ color: [] }, { background: [] }],
               ['link'],
               ['clean']
             ]

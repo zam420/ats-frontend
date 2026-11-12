@@ -21,7 +21,7 @@
       <p class="posted-date">{{ $t('jobPosition.previewPostedDate') }}: {{ postedDate }}</p>
       <section class="job-preview-description">
         <hr class="description-divider" />
-        <div class="ql-editor preview-description" v-html="description"></div>
+        <div class="ql-editor job-rich-text preview-description" v-html="description"></div>
       </section>
     </article>
   </EspMain>
@@ -34,6 +34,7 @@ import { readJobPreview } from './jobPreview'
 import moment from 'moment'
 import { DATE_FORMAT } from '@/config'
 import '@vueup/vue-quill/dist/vue-quill.snow.css'
+import './jobRichText.less'
 
 const route = useRoute()
 const preview = ref<ReturnType<typeof readJobPreview>>(null)

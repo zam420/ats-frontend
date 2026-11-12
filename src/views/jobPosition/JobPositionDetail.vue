@@ -18,7 +18,7 @@
       <template #rich="{ item }">
         <div class="rich-item">
           <div class="rich-label">{{ item.label }}</div>
-          <div class="ql-editor rich-content" v-html="state.richText[item.prop] ?? ''"></div>
+          <div class="ql-editor job-rich-text rich-content" v-html="state.richText[item.prop] ?? ''"></div>
         </div>
       </template>
     </EspDetail>
@@ -48,6 +48,7 @@ import { isArray, isString } from '@/utils/is'
 import { UserPermissionEnum } from '@/enums/userPermission'
 import { useLocale } from '@/hooks/useLocale'
 import { jobRichTextToHtml } from './jobRichText'
+import './jobRichText.less'
 const { $t } = useLocale()
 interface ReactiveParams {
   createdDetailForm: Form.FormItem[]
