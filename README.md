@@ -58,6 +58,11 @@ the current tenant and, when
 available, its logo using the authenticated tenant endpoints. Allow pop-ups
 for the application if the preview does not open.
 
+On the Screening Questions tab of the job create/edit form, the first available
+screening form is selected by default. Edits and the selected form are temporary
+and are not saved with the job or to the shared screening form. Loading forms
+requires the `sqts` permission.
+
 ## Project structure
  src: 
 

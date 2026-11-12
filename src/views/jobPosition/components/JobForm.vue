@@ -39,6 +39,20 @@
       </el-tab-pane>
       <el-tab-pane :label="$t('jobPosition.screeningQuestions')" name="questions">
         <p class="tab-subtitle">{{ $t('jobPosition.questionsTabSubtitle') }}</p>
+        <template v-if="!readOnly">
+          <el-alert :title="$t('screeningForms.jobEditsTemporary')" type="info" :closable="false" show-icon />
+          <el-form label-position="top" class="screening-selection">
+            <el-form-item :label="$t('screeningForms.name')">
+              <el-select v-model="selectedScreeningFormId" filterable :loading="screeningFormsLoading">
+                <el-option v-for="form in screeningForms" :key="form.id" :label="form.name" :value="form.id" />
+              </el-select>
+            </el-form-item>
+          </el-form>
+          <p v-if="screeningFormsLoaded && !screeningForms.length" role="status">{{ $t('screeningForms.noFormsAvailable') }}</p>
+          <KeepAlive>
+            <ScreeningFormPage v-if="selectedScreeningFormId" :key="selectedScreeningFormId" embedded :form-id="selectedScreeningFormId" />
+          </KeepAlive>
+        </template>
       </el-tab-pane>
       <el-tab-pane :label="$t('jobPosition.configuration')" name="configuration">
         <p class="tab-subtitle">{{ $t('jobPosition.configurationTabSubtitle') }}</p>
@@ -123,6 +137,9 @@ import { FormItemTypeEnum } from '@/enums/formItemTypeEnum'
 import { jobRichTextToHtml } from '../jobRichText'
 import RecruitmentPipelineForm from '@/views/settings/recruitmentPipeline/components/RecruitmentPipelineForm.vue'
 import EvaluationForm from '@/views/settings/evaluationPlan/components/EvaluationForm.vue'
+import ScreeningFormPage from '@/views/settings/screeningQuestionsForm/ScreeningFormPage.vue'
+import { getScreeningFormsList } from '@/api/modules/screeningQuestionsForm'
+import type { ScreeningFormListItem } from '@/api/interface/screeningQuestionsForm'
 import { newPreviewStorageKey } from '../jobPreview'
 
 interface ParamsProps {
@@ -150,6 +167,10 @@ const { $t } = useLocale()
 
 const activeTab = ref('description')
 const jobReady = ref(!props.isEdit)
+const screeningForms = ref<ScreeningFormListItem[]>([])
+const selectedScreeningFormId = ref('')
+const screeningFormsLoading = ref(false)
+const screeningFormsLoaded = ref(false)
 const evaluationPlanRoundTypes = ref<InterviewProcess.RoundType[]>([])
 const recruitmentPipelineRoundTypes = ref<RecruitmentPipeline.RoundType[]>([])
 const espBasicRef = ref()
@@ -489,10 +510,27 @@ onMounted(() => {
   if (props.isEdit) {
     initData()
   }
+  if (!props.readOnly) {
+    screeningFormsLoading.value = true
+    getScreeningFormsList().then(response => {
+      if (!response?.success || !Array.isArray(response.result)) throw new Error('Screening forms are missing')
+      screeningForms.value = response.result
+      selectedScreeningFormId.value = response.result[0]?.id ?? ''
+      screeningFormsLoaded.value = true
+    }).catch(error => {
+      console.error('Failed to load screening forms', error)
+      ElMessage.error($t('screeningForms.listLoadingError'))
+    }).finally(() => {
+      screeningFormsLoading.value = false
+    })
+  }
 })
 </script>
 <style lang="less" scoped>
 @import '@/styles/interviewer-select.less';
+
+.screening-selection { margin-top: 16px; }
+.screening-selection :deep(.el-select) { width: 100%; max-width: 320px; }
 
 .job-tabs {
   padding: .8em 0 0;

@@ -1,6 +1,6 @@
 <template>
-  <EspMain :title="title">
-    <template #right>
+  <component :is="embedded ? 'div' : EspMain" :title="embedded ? undefined : title">
+    <template #right v-if="!embedded">
       <ElButton @click="goBack">{{ $t('button.cancel') }}</ElButton>
       <ElButton v-if="ready && canWrite && isEdit && has(SQTC)" class="btn-light" @click="saveAs">{{ $t('interviewProcess.saveAs') }}</ElButton>
       <ElButton v-if="ready && canWrite" class="btn-primary-gradient" :loading="saving" @click="save">{{ $t('button.save') }}</ElButton>
@@ -8,7 +8,7 @@
     <div v-loading="loading">
       <template v-if="ready">
         <el-form ref="formRef" class="screening-form" :model="form" label-position="top" require-asterisk-position="right" :disabled="!canWrite">
-          <el-row :gutter="20">
+          <el-row v-if="!embedded" :gutter="20">
             <el-col :span="6">
               <el-form-item :label="$t('screeningForms.name')" prop="name" :rules="[{ required: true, whitespace: true, message: $t('form.required'), trigger: 'blur' }]">
                 <el-input v-model="form.name" maxlength="100" />
@@ -27,7 +27,7 @@
               </el-form-item>
             </el-col>
           </el-row>
-          <el-row v-if="!isTemplate && canWrite" :gutter="20" class="share-section">
+          <el-row v-if="!embedded && !isTemplate && canWrite" :gutter="20" class="share-section">
             <el-col :span="6" class="share-controls">
               <div class="share-label">{{ $t('interviewProcess.shareWith') }}</div>
               <el-radio-group v-model="shareMode" @change="form.shared_with_user_ids = []">
@@ -124,7 +124,7 @@
         </el-form>
       </template>
     </div>
-  </EspMain>
+  </component>
 </template>
 
 <script setup lang="ts">
@@ -132,6 +132,7 @@ import type { FormInstance } from 'element-plus'
 import Sortable from 'sortablejs'
 import { EditPen, Document, Select, CircleCheck, ArrowDown, More } from '@element-plus/icons-vue'
 import ChoiceOptions from './ChoiceOptions.vue'
+import EspMain from '@/components/EspMain/index.vue'
 import type User from '@/api/interface/user'
 import type { ScreeningFormRequest, ScreeningQuestion, ScreeningQuestionType } from '@/api/interface/screeningQuestionsForm'
 import { getUserList } from '@/api/modules/common'
@@ -143,18 +144,23 @@ import { useGlobalStore } from '@/store/modules/global'
 import { ROUTER_SETTINGS_SCREENING_FORMS } from '@/router/routerName'
 
 type Question = ScreeningQuestion & { key: number }
+const props = withDefaults(defineProps<{ embedded?: boolean; formId?: string }>(), {
+  embedded: false,
+  formId: ''
+})
 const { SQTC, SQTE, SQTA, SQTSA } = UserPermissionEnum
 const { $t } = useLocale()
 const route = useRoute()
 const router = useRouter()
 const store = useGlobalStore()
 const has = (permission: UserPermissionEnum) => store.permissions.includes(permission)
-const isEdit = computed(() => route.name !== 'ROUTER_SETTINGS_SCREENING_FORMS_CREATE')
-const forcedReadOnly = computed(() => route.name === 'ROUTER_SETTINGS_SCREENING_FORMS_VIEW' || route.query.readonly === '1')
+const isEdit = computed(() => props.embedded || route.name !== 'ROUTER_SETTINGS_SCREENING_FORMS_CREATE')
+const forcedReadOnly = computed(() => !props.embedded && (route.name === 'ROUTER_SETTINGS_SCREENING_FORMS_VIEW' || route.query.readonly === '1'))
 const systemTemplate = ref(route.query.template === '1')
 const isTemplate = computed(() => systemTemplate.value)
 const ownerVisible = computed(() => has(SQTA) && !isTemplate.value)
 const canWrite = computed(() => {
+  if (props.embedded) return true
   if (forcedReadOnly.value) return false
   if (!isEdit.value) return isTemplate.value ? has(SQTSA) : has(SQTC)
   if (isTemplate.value) return has(SQTSA)
@@ -358,8 +364,9 @@ onMounted(async () => {
     users.value = usersResult.result
     form.owner_id = store.userInfo?.id ?? ''
     if (isEdit.value) {
-      if (typeof route.params.id !== 'string') throw new Error('Form ID is missing')
-      const result = await getScreeningForm(route.params.id)
+      const id = props.embedded ? props.formId : route.params.id
+      if (typeof id !== 'string' || !id) throw new Error('Form ID is missing')
+      const result = await getScreeningForm(id)
       const detail = result?.result
       if (!detail || !Array.isArray(detail.questions)) throw new Error('Form details are missing')
       if (detail.questions.some(question => !Object.prototype.hasOwnProperty.call(question, 'default_option'))) {
@@ -429,6 +436,7 @@ onBeforeUnmount(() => {
   sortable?.destroy()
   typeSortable?.destroy()
 })
+onDeactivated(endDrag)
 </script>
 <style lang="less" scoped>
 @import '../evaluationPlan/index.less';

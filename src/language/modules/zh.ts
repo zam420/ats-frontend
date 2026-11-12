@@ -36,6 +36,9 @@ export default {
     minQuestions: '请至少添加一个问题。',
     maxQuestions: '表单最多可包含 10 个问题。',
     loadingError: '无法加载筛选问题表单。',
+    listLoadingError: '无法加载筛选问题表单列表。',
+    noFormsAvailable: '没有可用的筛选问题表单。',
+    jobEditsTemporary: '对筛选问题的修改只是临时的，不会随职位保存。',
     saveError: '无法保存筛选问题表单。'
   },
   auth: {

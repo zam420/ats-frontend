@@ -4,6 +4,8 @@ import type { ScreeningFormDetail, ScreeningFormListItem, ScreeningFormRequest, 
 
 export const getScreeningForms = (tab: string, params: Record<string, unknown>) =>
   http.get<ResPage<ScreeningFormListItem>>(`/api/sqform/${tab}`, params)
+export const getScreeningFormsList = () =>
+  http.get<ScreeningFormListItem[]>('/api/sqform/list')
 export const getScreeningForm = (id: string) =>
   http.get<ScreeningFormDetail>(`/api/sqform/${encodeURIComponent(id)}`)
 export const getScreeningQuestionTypes = () =>

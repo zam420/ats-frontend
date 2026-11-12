@@ -7,8 +7,8 @@ export default {
     name: 'Form Name',
     questionSequence: 'Questions',
     all: 'All',
-    questionTypes: 'Question Types',
-    questions: 'Added Questions',
+    questionTypes: 'Control Types',
+    questions: 'Added Controls',
     add: 'Add',
     questionLabel: 'Question label',
     questionLabelPlaceholder: 'Label (Please input)',
@@ -36,6 +36,9 @@ export default {
     minQuestions: 'Please add at least one question.',
     maxQuestions: 'A form may have at most 10 questions.',
     loadingError: 'Unable to load the screening questions form.',
+    listLoadingError: 'Unable to load screening questions forms.',
+    noFormsAvailable: 'No screening questions forms are available.',
+    jobEditsTemporary: 'Changes to screening questions are temporary and will not be saved with the job.',
     saveError: 'Unable to save the screening questions form.'
   },
   auth: {
