@@ -12,8 +12,6 @@ declare namespace JobPosition {
     evaluation_plan_id: number | string
     work_location: string
     description: string
-    mandatory_requirements: string
-    preferred_requirements?: string
     requisition_id: string
     num_of_openings: number
     office: string
@@ -66,8 +64,6 @@ declare namespace JobPosition {
     hr_recruiter_id: number
     hr_recruiter_name: string
     description: string
-    mandatory_requirements: string
-    preferred_requirements?: string
     requisition_id: string
     num_of_openings: number
     office: string

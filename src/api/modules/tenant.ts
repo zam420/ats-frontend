@@ -21,6 +21,12 @@ export const getTenants = (params: Record<string, unknown>) =>
 export const getTenant = (id: string) =>
   http.get<Tenant>(`/api/tenant/${encodeURIComponent(id)}`)
 
+export const getCurrentTenant = () =>
+  http.get<Tenant>('/api/tenant/current')
+
+export const getCurrentTenantLogo = () =>
+  http.getFile<never>('/api/tenant/current/logo', undefined, { noLoading: true })
+
 export const getTenantLogo = (id: string) =>
   http.getFile<never>(`/api/tenant/${encodeURIComponent(id)}/logo`, undefined, { noLoading: true })
 

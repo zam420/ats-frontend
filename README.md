@@ -42,6 +42,22 @@ on the backend filesystem in `tenant-logos` under `ats.storage.root` (default
 `java_backend/src/main/resources/sql/sprint_14.sql` when schema auto-update is
 disabled. Existing role grants must include `clnm` for the menu to appear.
 
+`GET /api/tenant/current/logo` returns the signed-in user's active tenant logo
+and requires `clnc`, like `GET /api/tenant/current`. It uses a private,
+revalidating browser cache with an ETag, so permission and tenant selection are
+checked again before a cached response is reused. Because authentication uses a
+bearer token, fetch the logo with the Authorization header rather than relying
+on a bare image URL.
+
+## Job position preview
+
+The create/edit form opens the preview in a new tab using a snapshot of the
+unsaved title, description, employment type, work arrangement and work
+locations. The preview displays the current date as the posted date and loads
+the current tenant and, when
+available, its logo using the authenticated tenant endpoints. Allow pop-ups
+for the application if the preview does not open.
+
 ## Project structure
  src: 
 

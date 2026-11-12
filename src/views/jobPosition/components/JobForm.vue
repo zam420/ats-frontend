@@ -4,6 +4,7 @@
       <EspStatus :type="statusType">{{ statusText }}</EspStatus>
     </template>
     <template #right>
+      <ElButton v-if="!readOnly" :disabled="!jobReady" @click="preview">{{ $t('jobPosition.preview') }}</ElButton>
       <ElButton @click="goBack">{{ $t('button.cancel') }}</ElButton>
       <ElButton v-if="!readOnly" @click="save" class="btn-primary-gradient">{{ $t('button.save') }}</ElButton>
     </template>
@@ -33,37 +34,10 @@
                 />
               </el-col>
             </el-row>
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <EspQuillEditor
-                  ref="jobReqRef"
-                  v-model:content="state.jobReq"
-                  :label="$t('jobPosition.mandatoryRequirements')"
-                  :select-options="[]"
-                  :hide-insert-field="true"
-                  :compact="true"
-                  :read-only="readOnly"
-                  :match-editable-layout="true"
-                />
-              </el-col>
-              <el-col :span="12">
-                <EspQuillEditor
-                  ref="jobPrefReqRef"
-                  v-model:content="state.jobPrefReq"
-                  :label="$t('jobPosition.preferredRequirements')"
-                  :select-options="[]"
-                  :hide-insert-field="true"
-                  :compact="true"
-                  :required="false"
-                  :read-only="readOnly"
-                  :match-editable-layout="true"
-                />
-              </el-col>
-            </el-row>
           </template>
         </EspForm>
       </el-tab-pane>
-      <el-tab-pane :label="$t('jobPosition.candidateQuestions')" name="questions">
+      <el-tab-pane :label="$t('jobPosition.screeningQuestions')" name="questions">
         <p class="tab-subtitle">{{ $t('jobPosition.questionsTabSubtitle') }}</p>
       </el-tab-pane>
       <el-tab-pane :label="$t('jobPosition.configuration')" name="configuration">
@@ -140,15 +114,16 @@ import {
 import JobPosition from '@/api/interface/jobPosition'
 import InterviewProcess from '@/api/interface/evaluationPlan'
 import RecruitmentPipeline from '@/api/interface/recruitmentPipeline'
-import { WorkLocationEnum } from '@/enums/workLocationEnum'
+import { WorkLocation, WorkLocationEnum } from '@/enums/workLocationEnum'
 import { JobStatusEnum, JobStatus } from '@/enums/jobStatusEnum'
 import { useLocale } from '@/hooks/useLocale'
-import { ROUTER_JOB_POSITION } from '@/router/routerName'
+import { ROUTER_JOB_POSITION, ROUTER_JOB_POSITION_CREATE_PREVIEW, ROUTER_JOB_POSITION_EDIT_PREVIEW } from '@/router/routerName'
 import { isArray } from '@/utils/is'
 import { FormItemTypeEnum } from '@/enums/formItemTypeEnum'
 import { jobRichTextToHtml } from '../jobRichText'
 import RecruitmentPipelineForm from '@/views/settings/recruitmentPipeline/components/RecruitmentPipelineForm.vue'
 import EvaluationForm from '@/views/settings/evaluationPlan/components/EvaluationForm.vue'
+import { newPreviewStorageKey } from '../jobPreview'
 
 interface ParamsProps {
   title: string // 标题
@@ -160,8 +135,6 @@ interface ReactiveParams {
   status?: string | number // 状态
   baseForm: Form.FormItem[]
   jobDesc: string
-  jobReq: string
-  jobPrefReq: string
   internalDetailsForm: Form.FormItem[]
   hiringTeamForm: Form.FormItem[]
   pipelineForm: Form.FormItem[]
@@ -176,12 +149,11 @@ const router = useRouter()
 const { $t } = useLocale()
 
 const activeTab = ref('description')
+const jobReady = ref(!props.isEdit)
 const evaluationPlanRoundTypes = ref<InterviewProcess.RoundType[]>([])
 const recruitmentPipelineRoundTypes = ref<RecruitmentPipeline.RoundType[]>([])
 const espBasicRef = ref()
 const jobDescRef = ref()
-const jobReqRef = ref()
-const jobPrefReqRef = ref()
 const espInternalDetailsRef = ref()
 const espHiringTeamRef = ref()
 const espPipelineRef = ref()
@@ -190,8 +162,6 @@ const state = reactive<ReactiveParams>({
   status: undefined,
   baseForm: cloneDeep(JOB_POSITION_BASIC_FORM),
   jobDesc: '',
-  jobReq: '',
-  jobPrefReq: '',
   internalDetailsForm: cloneDeep(JOB_POSITION_INTERNAL_DETAILS_FORM),
   hiringTeamForm: cloneDeep(JOB_POSITION_HIRING_TEAM_FORM),
   pipelineForm: cloneDeep(JOB_POSITION_PIPELINE_FORM),
@@ -237,17 +207,80 @@ const selectedEvaluationId = computed(() => {
   return value == null || value === '' ? '' : String(value)
 })
 
+const findOptionLabel = (options: Form.FormSelect[], value: string | number): string | undefined => {
+  for (const option of options) {
+    if (String(option.value) === String(value)) return option.label
+    const child = findOptionLabel(option.children ?? [], value)
+    if (child) return child
+  }
+  return undefined
+}
+
+const previewFieldLabel = (prop: string): string => {
+  const field = state.baseForm.find(item => item.prop === prop)
+  const values: unknown[] = Array.isArray(field?.value) ? field.value : [field?.value]
+  return values.flatMap(value => {
+    if (value == null || value === '') return []
+    if (typeof value !== 'string' && typeof value !== 'number') throw new Error(`Invalid ${prop} value`)
+    const label = findOptionLabel(field?.options ?? [], value)
+      ?? (prop === 'work_location' ? WorkLocation[String(value)]?.name : undefined)
+    if (!label) throw new Error(`Unable to resolve ${prop} option: ${value}`)
+    return [label]
+  }).join(', ')
+}
+
+const preview = () => {
+  let employmentType: string
+  let workArrangement: string
+  let workLocation: string
+  try {
+    employmentType = previewFieldLabel('employment_type_id')
+    workArrangement = previewFieldLabel('work_arrangement_type_id')
+    workLocation = previewFieldLabel('work_location')
+  } catch (error) {
+    console.error('Failed to resolve job preview details', error)
+    ElMessage.error($t('jobPosition.previewFieldsError'))
+    return
+  }
+  let key = ''
+  try {
+    key = newPreviewStorageKey()
+    sessionStorage.setItem(key, JSON.stringify({
+      title: state.baseForm.find(item => item.prop === 'title')?.value ?? '',
+      description: jobDescRef.value?.getContent() ?? state.jobDesc,
+      employmentType,
+      workArrangement,
+      workLocation
+    }))
+    const path = props.isEdit ? ROUTER_JOB_POSITION_EDIT_PREVIEW : ROUTER_JOB_POSITION_CREATE_PREVIEW
+    const href = router.resolve({ path: `/${path}`, query: { preview: key } }).href
+    const page = window.open(href, '_blank')
+    if (!page) throw new Error('Preview window blocked')
+    page.opener = null
+  } catch (error) {
+    console.error('Failed to open job preview', error)
+    ElMessage.error($t('jobPosition.previewOpenError'))
+  } finally {
+    if (key) {
+      try {
+        sessionStorage.removeItem(key)
+      } catch (error) {
+        console.error('Failed to remove temporary job preview data', error)
+      }
+    }
+  }
+}
+
 const save = async () => {
   if (props.readOnly) return
   const basicValid = await espBasicRef.value.validateFrom(null, null, false)
   const descValid = jobDescRef.value?.validate()
-  const reqValid = jobReqRef.value?.validate()
   const internalDetailsValid = await espInternalDetailsRef.value.validateFrom(null, null, false)
   const hiringTeamValid = await espHiringTeamRef.value.validateFrom(null, null, false)
   const pipelineValid = await espPipelineRef.value.validateFrom(null, null, false)
   const evaluationValid = await espEvaluationRef.value.validateFrom(null, null, false)
-  if (!basicValid || !descValid || !reqValid || !internalDetailsValid || !hiringTeamValid || !pipelineValid || !evaluationValid) {
-    activeTab.value = !basicValid || !descValid || !reqValid
+  if (!basicValid || !descValid || !internalDetailsValid || !hiringTeamValid || !pipelineValid || !evaluationValid) {
+    activeTab.value = !basicValid || !descValid
       ? 'description'
       : !internalDetailsValid || !hiringTeamValid ? 'configuration' : !pipelineValid ? 'pipeline' : 'evaluation'
     ElMessage.error($t('form.requiredError'))
@@ -255,9 +288,7 @@ const save = async () => {
   }
   const baseForm = getObjectByForms(state.baseForm)
   const detailForm = {
-    description: jobDescRef.value.getContent(),
-    mandatory_requirements: jobReqRef.value.getContent(),
-    preferred_requirements: jobPrefReqRef.value.getContent()
+    description: jobDescRef.value.getContent()
   }
   const formData: Record<string, any> = {
     ...baseForm,
@@ -425,12 +456,11 @@ const getFormsByRes = (
 const initData = () => {
   if (props.id) {
     getJobPositionDetail(props.id).then(res => {
+      if (!res?.success || !res.result) throw new Error('Job details are missing')
       const result = (res.result ?? {}) as JobPosition.JobPositionDetail
       state.status = result?.status ?? 0
       state.baseForm = getFormsByRes(state.baseForm, result, espBasicRef.value)
       state.jobDesc = jobRichTextToHtml(result?.description)
-      state.jobReq = jobRichTextToHtml(result?.mandatory_requirements)
-      state.jobPrefReq = jobRichTextToHtml(result?.preferred_requirements)
       const index = state.baseForm.findIndex(item => item.prop === 'work_location')
       if (index !== -1) {
         state.baseForm[index] = disabledWorkLocation(state.baseForm[index])
@@ -439,6 +469,10 @@ const initData = () => {
       state.hiringTeamForm = getFormsByRes(state.hiringTeamForm, result, espHiringTeamRef.value)
       state.pipelineForm = getFormsByRes(state.pipelineForm, result, espPipelineRef.value)
       state.evaluationForm = getFormsByRes(state.evaluationForm, result, espEvaluationRef.value)
+      jobReady.value = true
+    }).catch(error => {
+      console.error('Failed to load job details', error)
+      ElMessage.error($t('jobPosition.previewJobLoadError'))
     })
   }
 }

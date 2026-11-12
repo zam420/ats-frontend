@@ -113,9 +113,7 @@ const initData = () => {
       state.createdDetailForm = getFormsByRes(state.createdDetailForm, result)
       state.basicDetailForm = getFormsByRes(state.basicDetailForm, result)
       state.richText = {
-        description: jobRichTextToHtml(result?.description),
-        mandatory_requirements: jobRichTextToHtml(result?.mandatory_requirements),
-        preferred_requirements: jobRichTextToHtml(result?.preferred_requirements)
+        description: jobRichTextToHtml(result?.description)
       }
       state.extendedQuestions = result?.extended_questions ?? []
       if (state.extendedQuestions?.length) {

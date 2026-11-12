@@ -107,22 +107,7 @@ export const JOB_POSITION_DETAIL_FORM: Form.FormItem[] = [
     required: true,
     col: 12,
     maxlength: 10000
-  },
-  {
-    label: $t('jobPosition.jobRequirements'),
-    prop: 'mandatory_requirements',
-    type: FormItemTypeEnum.TEXTAREA,
-    required: true,
-    col: 12,
-    maxlength: 5000
-  },
-  {
-    label: $t('jobPosition.preferredRequirements'),
-    prop: 'preferred_requirements',
-    type: FormItemTypeEnum.TEXTAREA,
-    col: 12,
-    maxlength: 5000
-  },
+  }
 ]
 export const JOB_POSITION_INTERNAL_DETAILS_FORM: Form.FormItem[] = [
   {
@@ -241,22 +226,6 @@ export const JOB_POSITION_DETAIL_DETAIL: Form.DetailItem[] = [
     prop: 'description',
     isFontBold: true,
     col: 24,
-    slotName: 'rich'
-  },
-  {
-    label: $t('jobPosition.mandatoryRequirements'),
-    prop: 'mandatory_requirements',
-    isFontBold: true,
-    isPaddingTop: true,
-    col: 12,
-    slotName: 'rich'
-  },
-  {
-    label: $t('jobPosition.preferredRequirements'),
-    prop: 'preferred_requirements',
-    isFontBold: true,
-    isPaddingTop: true,
-    col: 12,
     slotName: 'rich'
   }
 ]
