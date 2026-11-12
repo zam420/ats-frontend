@@ -20,7 +20,7 @@
       </div>
       <p class="posted-date">{{ $t('jobPosition.previewPostedDate') }}: {{ postedDate }}</p>
       <section class="job-preview-description">
-        <h2>{{ $t('jobPosition.jobDescription') }}</h2>
+        <hr class="description-divider" />
         <div class="ql-editor preview-description" v-html="description"></div>
       </section>
     </article>
@@ -107,8 +107,8 @@ onBeforeUnmount(() => {
 .job-title { font-size: 28px; margin: 0 0 8px; overflow-wrap: anywhere; }
 .job-facts { display: flex; flex-wrap: wrap; gap: 8px 24px; }
 .job-fact span { font-weight: 600; }
-.posted-date { margin: 12px 0 28px; }
-section h2 { font-size: 18px; margin: 0 0 12px; }
+.posted-date { margin: 12px 0 18px; }
+.description-divider { border: 0; border-top: 1px solid var(--el-border-color); margin: 0 0 28px; }
 .preview-description { padding: 0; font-size: 14px; overflow-wrap: anywhere; }
 .el-alert { margin-bottom: 16px; }
 </style>

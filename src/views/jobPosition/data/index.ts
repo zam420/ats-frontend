@@ -33,6 +33,7 @@ export const JOB_POSITION_TABLE: Table.ColumnProps[] = [
     prop: 'title',
     label: $t('jobPosition.jobTitle'),
     link: ROUTER_JOB_POSITION_DETAIL,
+    width: 300,
     filter: false
   },
   {
