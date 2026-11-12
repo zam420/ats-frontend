@@ -594,6 +594,7 @@ export default {
     descriptionTabSubtitle: 'Define the position and its requirements.',
     questionsTabSubtitle: 'Screening questions will be configured here.',
     preview: 'Job Position Preview',
+    previewButton: 'Preview',
     previewOpenError: 'Could not open the preview. Check that pop-ups are allowed.',
     previewJobLoadError: 'Could not load the job position.',
     previewUnavailable: 'This preview is unavailable. Open it again from the job form.',

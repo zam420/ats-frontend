@@ -4,7 +4,7 @@
       <EspStatus :type="statusType">{{ statusText }}</EspStatus>
     </template>
     <template #right>
-      <ElButton v-if="!readOnly" :disabled="!jobReady" @click="preview">{{ $t('jobPosition.preview') }}</ElButton>
+      <ElButton v-if="!readOnly" :disabled="!jobReady" @click="preview">{{ $t('jobPosition.previewButton') }}</ElButton>
       <ElButton @click="goBack">{{ $t('button.cancel') }}</ElButton>
       <ElButton v-if="!readOnly" @click="save" class="btn-primary-gradient">{{ $t('button.save') }}</ElButton>
     </template>

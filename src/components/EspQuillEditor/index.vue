@@ -118,7 +118,8 @@ const state = reactive<QuillEditorState>({
       toolbar: {
         container: props.fullToolbar
           ? [
-              [{ header: [1, 2, 3, 4, 5, 6, false] }, { font: [] }, { size: [] }],
+              // [{ header: [1, 2, 3, 4, 5, 6, false] }, { font: [] }, { size: [] }],
+              [{ header: [1, 2, 3, 4, 5, 6, false] }, { size: [] }],
               ['bold', 'italic', 'underline', 'strike'],
               ['blockquote', 'code-block'],
               [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],

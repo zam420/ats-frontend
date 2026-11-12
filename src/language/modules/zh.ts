@@ -594,6 +594,7 @@ export default {
     descriptionTabSubtitle: '定义职位及其要求。',
     questionsTabSubtitle: '筛选问题将在此配置。',
     preview: '职位预览',
+    previewButton: '预览',
     previewOpenError: '无法打开预览。请检查是否允许弹出窗口。',
     previewJobLoadError: '无法加载职位信息。',
     previewUnavailable: '此预览不可用。请从职位表单重新打开。',
