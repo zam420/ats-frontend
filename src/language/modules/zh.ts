@@ -612,6 +612,7 @@ export default {
     separateTab: '单独标签页',
     additionalQuestions: '其他问题',
     applyForThisJob: '申请此职位',
+    submitApplication: '提交申请',
     yourApplication: '您的申请',
     firstName: '名字',
     lastName: '姓氏',

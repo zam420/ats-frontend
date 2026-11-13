@@ -9,7 +9,16 @@
           <img v-if="logoUrl" :src="logoUrl" :alt="company?.name ?? ''" class="company-logo" />
         </div>
         <div class="company-heading">
-          <h1 class="job-title">{{ preview.title }}</h1>
+          <div class="job-title-row">
+            <h1 class="job-title">{{ preview.title }}</h1>
+            <el-button
+              v-if="preview.screeningDisplayMode === 'description'"
+              type="primary"
+              @click="scrollToApplication"
+            >
+              {{ $t('jobPosition.applyForThisJob') }}
+            </el-button>
+          </div>
           <div v-if="company" class="company-name">{{ company.name }}</div>
         </div>
       </header>
@@ -27,6 +36,7 @@
           <h1>{{ $t('jobPosition.additionalQuestions') }}</h1>
           <ScreeningQuestionsPreview v-if="preview.questions.length" class="additional-questions-content" :questions="preview.questions" />
         </section>
+        <el-button type="primary" class="submit-application-button">{{ $t('jobPosition.submitApplication') }}</el-button>
       </template>
       <el-tabs v-else v-model="activePreviewTab" class="preview-tabs">
         <el-tab-pane :label="$t('jobPosition.jobDescription')" name="description">
@@ -38,6 +48,7 @@
             <h1>{{ $t('jobPosition.additionalQuestions') }}</h1>
             <ScreeningQuestionsPreview v-if="preview.questions.length" class="additional-questions-content" :questions="preview.questions" />
           </section>
+          <el-button type="primary" class="submit-application-button">{{ $t('jobPosition.submitApplication') }}</el-button>
         </el-tab-pane>
       </el-tabs>
     </article>
@@ -66,6 +77,10 @@ const activePreviewTab = ref('description')
 const description = computed(() => jobRichTextToHtml(preview.value?.description))
 const postedDate = moment().format(DATE_FORMAT)
 let disposed = false
+
+const scrollToApplication = () => {
+  document.getElementById('your-application-heading')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
 
 onMounted(async () => {
   try {
@@ -121,8 +136,9 @@ onBeforeUnmount(() => {
 .logo-slot { width: 100px; height: 100px; flex: 0 0 100px; }
 .company-logo { width: 100px; height: 100px; object-fit: contain; }
 .company-heading { min-width: 0; }
+.job-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .company-name { font-size: 18px; font-weight: 600; }
-.job-title { font-size: 28px; margin: 0 0 8px; overflow-wrap: anywhere; }
+.job-title { min-width: 0; flex: 1; font-size: 28px; margin: 0 0 8px; overflow-wrap: anywhere; }
 .job-facts { display: flex; flex-wrap: wrap; gap: 8px 24px; }
 .job-fact span { font-weight: 600; }
 .posted-date { margin: 12px 0 18px; }
@@ -133,5 +149,6 @@ onBeforeUnmount(() => {
 .additional-questions { margin-top: 28px; padding-bottom: 28px;}
 .additional-questions h1 { font-size: 24px; font-weight: 600; }
 .additional-questions-content { margin-top: 20px; }
+.submit-application-button { margin-top: 20px; margin-bottom: 28px; }
 .el-alert { margin-bottom: 16px; }
 </style>

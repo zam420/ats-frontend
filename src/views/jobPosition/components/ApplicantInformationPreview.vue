@@ -1,6 +1,6 @@
 <template>
   <section class="applicant-information">
-    <h1 v-if="showHeading">{{ $t('jobPosition.yourApplication') }}</h1>
+    <h1 v-if="showHeading" id="your-application-heading">{{ $t('jobPosition.yourApplication') }}</h1>
     <div class="application-field">
       <label for="application-first-name">{{ $t('jobPosition.firstName') }}<span class="required" aria-hidden="true"> *</span></label>
       <el-input id="application-first-name" required aria-required="true" />
