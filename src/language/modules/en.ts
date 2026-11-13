@@ -612,6 +612,7 @@ export default {
     separateTab: 'Separate tab',
     additionalQuestions: 'Additional Questions',
     applyForThisJob: 'Apply for this job',
+    apply: 'Apply',
     submitApplication: 'Submit Application',
     yourApplication: 'Your Application',
     firstName: 'First Name',

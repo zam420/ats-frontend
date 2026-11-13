@@ -16,7 +16,7 @@
               type="primary"
               @click="scrollToApplication"
             >
-              {{ $t('jobPosition.applyForThisJob') }}
+              {{ $t('jobPosition.apply') }}
             </el-button>
           </div>
           <div v-if="company" class="company-name">{{ company.name }}</div>
@@ -135,7 +135,7 @@ onBeforeUnmount(() => {
 .company-header { display: flex; align-items: center; gap: 20px; margin-bottom: 24px; }
 .logo-slot { width: 100px; height: 100px; flex: 0 0 100px; }
 .company-logo { width: 100px; height: 100px; object-fit: contain; }
-.company-heading { min-width: 0; }
+.company-heading { min-width: 0; flex: 1; }
 .job-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .company-name { font-size: 18px; font-weight: 600; }
 .job-title { min-width: 0; flex: 1; font-size: 28px; margin: 0 0 8px; overflow-wrap: anywhere; }
