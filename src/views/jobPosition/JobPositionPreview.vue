@@ -22,6 +22,7 @@
       <template v-if="preview.screeningDisplayMode === 'description'">
         <hr class="description-divider" />
         <div class="ql-editor job-rich-text preview-description" v-html="description"></div>
+        <ApplicantInformationPreview />
         <section class="additional-questions">
           <h1>{{ $t('jobPosition.additionalQuestions') }}</h1>
           <ScreeningQuestionsPreview v-if="preview.questions.length" class="additional-questions-content" :questions="preview.questions" />
@@ -31,8 +32,12 @@
         <el-tab-pane :label="$t('jobPosition.jobDescription')" name="description">
           <div class="ql-editor job-rich-text preview-description" v-html="description"></div>
         </el-tab-pane>
-        <el-tab-pane :label="$t('jobPosition.additionalQuestions')" name="questions">
-          <ScreeningQuestionsPreview :questions="preview.questions" />
+        <el-tab-pane :label="$t('jobPosition.applyForThisJob')" name="questions">
+          <ApplicantInformationPreview :show-heading="false" />
+          <section class="additional-questions">
+            <h1>{{ $t('jobPosition.additionalQuestions') }}</h1>
+            <ScreeningQuestionsPreview v-if="preview.questions.length" class="additional-questions-content" :questions="preview.questions" />
+          </section>
         </el-tab-pane>
       </el-tabs>
     </article>
@@ -44,6 +49,7 @@ import { getCurrentTenant, getCurrentTenantLogo, type Tenant } from '@/api/modul
 import { jobRichTextToHtml } from './jobRichText'
 import { readJobPreview } from './jobPreview'
 import ScreeningQuestionsPreview from './components/ScreeningQuestionsPreview.vue'
+import ApplicantInformationPreview from './components/ApplicantInformationPreview.vue'
 import moment from 'moment'
 import { DATE_FORMAT } from '@/config'
 import '@vueup/vue-quill/dist/vue-quill.snow.css'
@@ -120,10 +126,10 @@ onBeforeUnmount(() => {
 .job-facts { display: flex; flex-wrap: wrap; gap: 8px 24px; }
 .job-fact span { font-weight: 600; }
 .posted-date { margin: 12px 0 18px; }
-.description-divider { border: 0; border-top: 1px solid var(--el-border-color); margin: 0 0 28px; }
-.preview-description { height: auto; overflow-y: visible; padding: 0; font-size: 14px; overflow-wrap: anywhere; }
-.preview-tabs :deep(.el-tabs__header) { margin-bottom: 28px; }
-.preview-tabs :deep(.el-tabs__content) { padding-bottom: 28px; }
+.description-divider { border: 0; border-top: 1px solid var(--el-border-color); margin: 0 0 0px; }
+.preview-description { height: auto; overflow-y: visible; padding: 0; font-size: 14px; overflow-wrap: anywhere; margin-top:28px; }
+.preview-tabs :deep(.el-tabs__header) { margin-bottom: 0px; }
+// .preview-tabs :deep(.el-tabs__content) { padding-bottom: 28px; }
 .additional-questions { margin-top: 28px; padding-bottom: 28px;}
 .additional-questions h1 { font-size: 24px; font-weight: 600; }
 .additional-questions-content { margin-top: 20px; }
