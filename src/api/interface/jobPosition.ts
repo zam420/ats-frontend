@@ -3,12 +3,14 @@ import RecruitmentPipeline from './recruitmentPipeline'
 import type { ScreeningFormListItem, ScreeningQuestion, ScreeningQuestionType } from './screeningQuestionsForm'
 
 declare namespace JobPosition {
+  type ApplicationQuestionsDisplayMode = 'WITH_DESCRIPTION' | 'SEPARATE_TABS'
   interface JonPositionInfo {
     id: number
     title: string
     project_id: number
     employment_type_id: number
     work_arrangement_type_id: number
+    application_questions_display_mode: ApplicationQuestionsDisplayMode
     screening_questions: Array<Omit<ScreeningQuestion, 'id' | 'screening_question_type'> & { screening_question_type_id: number }>
     recruitment_pipeline_rounds: RecruitmentPipeline.RoundParam[]
     evaluation_plan_rounds: InterviewProcess.RoundParam[]
@@ -56,6 +58,7 @@ declare namespace JobPosition {
     employment_type?: number
     work_arrangement_type_id?: number
     work_arrangement_type?: number
+    application_questions_display_mode: ApplicationQuestionsDisplayMode
     screening_questions?: Array<Omit<ScreeningQuestion, 'screening_question_type'> & { screening_question_type_id: number }> | null
     recruitment_pipeline_rounds?: RecruitmentPipeline.RoundParam[] | null
     evaluation_plan_rounds?: InterviewProcess.RoundParam[] | null

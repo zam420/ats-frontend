@@ -424,7 +424,8 @@ const save = async () => {
     ...baseForm,
     ...detailForm,
     ...getObjectByForms(state.internalDetailsForm),
-    ...getObjectByForms(state.hiringTeamForm)
+    ...getObjectByForms(state.hiringTeamForm),
+    application_questions_display_mode: screeningDisplayMode.value === 'description' ? 'WITH_DESCRIPTION' : 'SEPARATE_TABS'
   }
   try {
     if (!screeningFormRef.value) throw new Error('Screening editor is not ready')
@@ -610,6 +611,10 @@ const initData = () => {
     getJobPositionDetail(props.id).then(res => {
       if (!res?.success || !res.result) throw new Error('Job details are missing')
       const result = (res.result ?? {}) as JobPosition.JobPositionDetail
+      if (result.application_questions_display_mode !== 'WITH_DESCRIPTION' && result.application_questions_display_mode !== 'SEPARATE_TABS') {
+        throw new Error('Invalid application questions display mode')
+      }
+      screeningDisplayMode.value = result.application_questions_display_mode === 'WITH_DESCRIPTION' ? 'description' : 'tab'
       state.status = result?.status ?? 0
       state.baseForm = getFormsByRes(state.baseForm, result, espBasicRef.value)
       state.jobDesc = jobRichTextToHtml(result?.description)
