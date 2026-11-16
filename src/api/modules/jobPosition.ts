@@ -17,7 +17,7 @@ export const getJobPositionListForCv = () => {
 }
 // 获取 Job Position 表单下拉数据
 export const getJobFieldsData = () => {
-  return http.get<JobPosition.JobFieldsData>('api/job/jobFieldsData')
+  return http.get<JobPosition.JobFieldsData>('api/job/fieldsdata')
 }
 
 // 创建 Job Position

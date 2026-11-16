@@ -32,7 +32,7 @@
         <hr class="description-divider" />
         <div class="ql-editor job-rich-text preview-description" v-html="description"></div>
         <ApplicantInformationPreview />
-        <section class="additional-questions">
+        <section v-if="preview.questions.length" class="additional-questions">
           <h1>{{ $t('jobPosition.additionalQuestions') }}</h1>
           <ScreeningQuestionsPreview v-if="preview.questions.length" class="additional-questions-content" :questions="preview.questions" />
         </section>
@@ -44,7 +44,7 @@
         </el-tab-pane>
         <el-tab-pane :label="$t('jobPosition.applyForThisJob')" name="questions">
           <ApplicantInformationPreview :show-heading="false" />
-          <section class="additional-questions">
+          <section v-if="preview.questions.length" class="additional-questions">
             <h1>{{ $t('jobPosition.additionalQuestions') }}</h1>
             <ScreeningQuestionsPreview v-if="preview.questions.length" class="additional-questions-content" :questions="preview.questions" />
           </section>

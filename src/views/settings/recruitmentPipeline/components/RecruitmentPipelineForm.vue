@@ -1,9 +1,9 @@
 <template>
   <component :is="stagesOnly ? 'div' : EspMain" :title="stagesOnly ? undefined : isReadOnly ? $t('recruitmentPipeline.pipelineDetail') : title">
-    <template #right v-if="!stagesOnly && accessReady && !isReadOnly">
-      <ElButton @click="goBack">{{ $t('button.cancel') }}</ElButton>
-      <ElButton v-if="isEdit" @click="saveAs" class="btn-light">{{ $t('interviewProcess.saveAs') }}</ElButton>
-      <ElButton @click="save" class="btn-primary-gradient">{{ $t('button.save') }}</ElButton>
+    <template #right v-if="!stagesOnly">
+      <ElButton @click="goBack">{{ $t(isReadOnly ? 'button.back' : 'button.cancel') }}</ElButton>
+      <ElButton v-if="accessReady && !isReadOnly && isEdit" @click="saveAs" class="btn-light">{{ $t('interviewProcess.saveAs') }}</ElButton>
+      <ElButton v-if="accessReady && !isReadOnly" @click="save" class="btn-primary-gradient">{{ $t('button.save') }}</ElButton>
     </template>
     <div :class="{ 'read-only': isReadOnly }">
       <EspForm v-if="!stagesOnly" ref="formRef" v-model="state.baseForm" />
@@ -59,7 +59,7 @@
         <p v-if="!hidePreviewErrors" role="alert">{{ $t('recruitmentPipeline.previewLoadError') }}</p>
       </template>
       <el-row v-else :gutter="20" class="view-content" v-loading="stagesOnly && previewLoading">
-        <el-col v-if="!stagesOnly" :span="6">
+        <el-col v-if="!stagesOnly || !isReadOnly" :span="6">
           <div class="step-panel">
             <div class="title">{{ $t('recruitmentPipeline.stageTypes') }}</div>
             <div class="content" ref="roundTypeRef">
@@ -73,10 +73,10 @@
             </div>
           </div>
         </el-col>
-        <el-col :span="stagesOnly ? 24 : 18">
+        <el-col :span="stagesOnly && isReadOnly ? 24 : 18">
           <div class="process-panel">
-            <div class="title">{{ $t(stagesOnly ? 'recruitmentPipeline.recruitmentPlanStages' : 'recruitmentPipeline.addedStages') }}</div>
-            <div v-if="!stagesOnly">{{ $t('recruitmentPipeline.dragProcess') }}</div>
+            <div class="title">{{ $t(stagesOnly && isReadOnly ? 'recruitmentPipeline.recruitmentPlanStages' : 'recruitmentPipeline.addedStages') }}</div>
+            <div v-if="!stagesOnly || !isReadOnly">{{ $t('recruitmentPipeline.dragProcess') }}</div>
             <div class="content">
               <div ref="processRef">
                 <div
@@ -118,7 +118,7 @@
                                 :placeholder="roundTypeOf(item.round_type)?.subLabel"
                               />
                               <el-input
-                                v-if="!stagesOnly || item.description?.trim()"
+                                v-if="!stagesOnly || !isReadOnly || item.description?.trim()"
                                 v-model="item.description"
                                 :readonly="isReadOnly"
                                 class="inline-input"
@@ -142,7 +142,7 @@
                       </el-dropdown>
                     </el-col>
                     <el-col :span="14" v-if="item.round_type !== ''"></el-col>
-                    <el-col :span="1" class="center" v-if="item.round_type !== '' && isCustomRound(item)">
+                    <el-col :span="1" class="center" v-if="!isReadOnly && item.round_type !== '' && isCustomRound(item)">
                       <i class="iconfont icon-delete" @click="deleteRound(index)"></i>
                     </el-col>
                   </el-row>
@@ -215,6 +215,7 @@ interface ParamsProps {
   stagesOnly?: boolean
   hidePreviewErrors?: boolean
   roundTypes?: RecruitmentPipeline.RoundType[]
+  initialRounds?: RecruitmentPipeline.RoundParam[]
   isTemplate?: boolean // create a system template
 }
 
@@ -245,7 +246,7 @@ const props = withDefaults(defineProps<ParamsProps>(), {
 })
 const state = reactive<ReactiveParams>({
   baseForm: cloneDeep(RECRUITMENT_PIPELINE_FORM),
-  processList: [],
+  processList: cloneDeep(props.initialRounds ?? []),
   isDragOver: false,
   dragIndex: 0,
   dropAfter: false,
@@ -255,6 +256,10 @@ const state = reactive<ReactiveParams>({
   shareMode: 'none',
   shareUserIds: []
 })
+const getRounds = () => state.processList.map((round, order) => ({
+  round_type: round.round_type, name: round.name, description: round.description, order
+}))
+defineExpose({ getRounds })
 
 const isSystemTemplate = ref(false)
 const previewLoading = ref(false)
@@ -471,13 +476,14 @@ const setRoundType = (item: RecruitmentPipeline.RoundParam | null, value: number
 const deleteRound = (index: number) => {
   state.processList.splice(index, 1)
 }
-
 const roundTypeOf = (value: unknown) => state.allRoundTypes.find(type => type.value === value)
 
 // Only custom stages can be removed, reordered or have their type changed
 const isCustomRound = (item: RecruitmentPipeline.RoundParam) =>
   !!(roundTypeOf(item.round_type) as any)?.isCustom
 
+const emit = defineEmits<{ (event: 'default-rounds', rounds: RecruitmentPipeline.RoundParam[]): void }>()
+let defaultRoundsInitialized = false
 const setRoundTypes = (roundTypes: RecruitmentPipeline.RoundType[]) => {
   const types = roundTypes.map(type => ({
     value: type.id,
@@ -488,10 +494,16 @@ const setRoundTypes = (roundTypes: RecruitmentPipeline.RoundType[]) => {
   state.allRoundTypes = types
   state.roundTypeList = types.filter(type => type.isCustom)
   // New pipelines start with every core (non-custom) stage in place
-  if (!props.isEdit) {
+  if (!props.isEdit && !props.stagesOnly) {
     state.processList = types
       .filter(type => !type.isCustom)
       .map(type => newRound(type.value as number))
+  }
+  if (props.stagesOnly && !props.readOnly && props.initialRounds && !props.initialRounds.length
+      && !defaultRoundsInitialized && types.length) {
+    defaultRoundsInitialized = true
+    state.processList = types.filter(type => !type.isCustom).map(type => newRound(type.value as number))
+    emit('default-rounds', getRounds())
   }
 }
 
@@ -504,31 +516,13 @@ const loadRoundTypes = async () => {
   setRoundTypes(res?.result ?? [])
 }
 
-onMounted(async () => {
-  if (props.stagesOnly) {
-    previewLoading.value = true
-    try {
-      await initData()
-    } catch (error) {
-      previewError.value = true
-      console.error('Failed to load recruitment pipeline stages', error)
-    } finally {
-      previewLoading.value = false
-    }
-    return
-  }
-  await loadRoundTypes()
-  const userRes = await getUserList(ShareTypeEnum.INTERVIEWER)
-  state.userList = (userRes?.result ?? []).map(user => ({
-    label: user.name,
-    value: user.id,
-    subLabel: user.email
-  }))
-  usersLoaded.value = true
+let processSortable: Sortable | undefined
+let typesSortable: Sortable | undefined
+const setupDragAndDrop = () => {
   // Drag to reorder the added rounds
   const listWithHandle = processRef.value
-  if (!Sortable.get(listWithHandle)) {
-    Sortable.create(listWithHandle, {
+  if (listWithHandle && !Sortable.get(listWithHandle)) {
+    processSortable = Sortable.create(listWithHandle, {
       handle: '.order',
       // core stages never move themselves, but custom stages can be dropped anywhere
       filter: '.fixed-round',
@@ -545,8 +539,8 @@ onMounted(async () => {
 
   // Drag a round type onto the added rounds
   const roundTypeHtml = roundTypeRef.value
-  if (!Sortable.get(roundTypeHtml)) {
-    Sortable.create(roundTypeHtml, {
+  if (roundTypeHtml && !Sortable.get(roundTypeHtml)) {
+    typesSortable = Sortable.create(roundTypeHtml, {
       handle: '.step',
       group: {
         name: 'shared',
@@ -577,11 +571,41 @@ onMounted(async () => {
     })
   }
 
+}
+
+onMounted(async () => {
+  if (props.stagesOnly) {
+    previewLoading.value = true
+    try {
+      if (!props.initialRounds) await initData()
+    } catch (error) {
+      previewError.value = true
+      console.error('Failed to load recruitment pipeline stages', error)
+    } finally {
+      previewLoading.value = false
+    }
+    await nextTick()
+    if (!props.readOnly && !previewError.value) setupDragAndDrop()
+    return
+  }
+  await loadRoundTypes()
+  const userRes = await getUserList(ShareTypeEnum.INTERVIEWER)
+  state.userList = (userRes?.result ?? []).map(user => ({
+    label: user.name,
+    value: user.id,
+    subLabel: user.email
+  }))
+  usersLoaded.value = true
+  setupDragAndDrop()
   if (props.isEdit) {
     setTimeout(() => {
       initData()
     }, 100)
   }
+})
+onBeforeUnmount(() => {
+  processSortable?.destroy()
+  typesSortable?.destroy()
 })
 </script>
 <style lang="less" scoped>

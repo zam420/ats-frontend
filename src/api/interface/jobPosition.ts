@@ -1,5 +1,6 @@
 import InterviewProcess from './evaluationPlan'
 import RecruitmentPipeline from './recruitmentPipeline'
+import type { ScreeningFormListItem, ScreeningQuestion, ScreeningQuestionType } from './screeningQuestionsForm'
 
 declare namespace JobPosition {
   interface JonPositionInfo {
@@ -8,8 +9,9 @@ declare namespace JobPosition {
     project_id: number
     employment_type_id: number
     work_arrangement_type_id: number
-    recruitment_pipeline_id: number | string
-    evaluation_plan_id: number | string
+    screening_questions: Array<Omit<ScreeningQuestion, 'id' | 'screening_question_type'> & { screening_question_type_id: number }>
+    recruitment_pipeline_rounds: RecruitmentPipeline.RoundParam[]
+    evaluation_plan_rounds: InterviewProcess.RoundParam[]
     work_location: string
     description: string
     requisition_id: string
@@ -54,10 +56,9 @@ declare namespace JobPosition {
     employment_type?: number
     work_arrangement_type_id?: number
     work_arrangement_type?: number
-    recruitment_pipeline_id?: number | string
-    recruitment_pipeline?: string
-    evaluation_plan_id?: number | string
-    evaluation_plan?: string
+    screening_questions?: Array<Omit<ScreeningQuestion, 'screening_question_type'> & { screening_question_type_id: number }> | null
+    recruitment_pipeline_rounds?: RecruitmentPipeline.RoundParam[] | null
+    evaluation_plan_rounds?: InterviewProcess.RoundParam[] | null
     recruiters?: string[]
     hiring_managers?: string[]
     hr_coordinators: CommonEnum.enumItem[] | string
@@ -96,10 +97,12 @@ declare namespace JobPosition {
     work_arrangement_types: FieldOption[]
     recruitment_pipelines: FieldOption[]
     evaluation_plans: FieldOption[]
+    screening_questions_forms: ScreeningFormListItem[]
     recruiters: FieldOption[]
     hiring_managers: FieldOption[]
     evaluation_plan_round_types: InterviewProcess.RoundType[]
     recruitment_pipeline_round_types: RecruitmentPipeline.RoundType[]
+    screening_question_types: ScreeningQuestionType[]
   }
 }
 export default JobPosition

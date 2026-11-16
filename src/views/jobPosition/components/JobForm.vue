@@ -5,8 +5,8 @@
     </template>
     <template #right>
       <ElButton v-if="!readOnly" :disabled="!jobReady" @click="preview">{{ $t('jobPosition.previewButton') }}</ElButton>
-      <ElButton @click="goBack">{{ $t('button.cancel') }}</ElButton>
-      <ElButton v-if="!readOnly" @click="save" class="btn-primary-gradient">{{ $t('button.save') }}</ElButton>
+      <ElButton @click="goBack">{{ $t(readOnly ? 'button.back' : 'button.cancel') }}</ElButton>
+      <ElButton v-if="!readOnly" :disabled="!jobReady || templateLoading" @click="save" class="btn-primary-gradient">{{ $t('button.save') }}</ElButton>
     </template>
     <el-tabs v-model="activeTab" class="job-tabs">
       <el-tab-pane :label="$t('jobPosition.jobDescription')" name="description">
@@ -39,28 +39,9 @@
       </el-tab-pane>
       <el-tab-pane :label="$t('jobPosition.screeningQuestions')" name="questions">
         <p class="tab-subtitle">{{ $t('jobPosition.questionsTabSubtitle') }}</p>
-        <template v-if="!readOnly">
-          <el-alert :title="$t('screeningForms.jobEditsTemporary')" type="info" :closable="false" show-icon />
-          <el-form label-position="top" class="screening-selection">
-            <div class="screening-selection-fields">
-                <el-form-item :label="$t('screeningForms.name')">
-                  <el-select v-model="selectedScreeningFormId" filterable :loading="screeningFormsLoading">
-                    <el-option v-for="form in screeningForms" :key="form.id" :label="form.name" :value="form.id" />
-                  </el-select>
-                </el-form-item>
-                <el-form-item :label="$t('jobPosition.screeningDisplayMode')">
-                  <el-select v-model="screeningDisplayMode">
-                    <el-option value="description" :label="$t('jobPosition.withJobDescription')" />
-                    <el-option value="tab" :label="$t('jobPosition.separateTab')" />
-                  </el-select>
-                </el-form-item>
-            </div>
-          </el-form>
-          <p v-if="screeningFormsLoaded && !screeningForms.length" role="status">{{ $t('screeningForms.noFormsAvailable') }}</p>
-          <KeepAlive>
-            <ScreeningFormPage v-if="selectedScreeningFormId" :key="selectedScreeningFormId" ref="screeningFormRef" embedded :form-id="selectedScreeningFormId" />
-          </KeepAlive>
-        </template>
+        <ElButton v-if="!readOnly" @click="openTemplateDialog('questions')">{{ $t('jobPosition.loadFromTemplates') }}</ElButton>
+        <ScreeningFormPage v-if="jobReady && screeningQuestionTypes !== null" :key="questionEditorKey" ref="screeningFormRef" embedded
+          :initial-questions="screeningQuestions" :question-types="screeningQuestionTypes" :read-only="readOnly" />
       </el-tab-pane>
       <el-tab-pane :label="$t('jobPosition.configuration')" name="configuration">
         <p class="tab-subtitle">{{ $t('jobPosition.configurationTabSubtitle') }}</p>
@@ -79,32 +60,49 @@
           class="interviewer-select"
           @mouseover="showFullTagText"
         />
+        <EspForm :title="$t('jobPosition.jobDisplayConfiguration')" :model-value="[]" :disabled="readOnly">
+          <template #info>
+            <el-row :gutter="20">
+              <el-col :span="6">
+                <el-form-item :label="$t('jobPosition.screeningDisplayMode')">
+                  <el-select v-model="screeningDisplayMode" :disabled="readOnly">
+                    <el-option value="description" :label="$t('jobPosition.withJobDescription')" />
+                    <el-option value="tab" :label="$t('jobPosition.separateTab')" />
+                  </el-select>
+                </el-form-item>
+              </el-col>
+            </el-row>
+          </template>
+        </EspForm>
       </el-tab-pane>
       <el-tab-pane :label="$t('jobPosition.recruitmentPipeline')" name="pipeline">
         <p v-if="!readOnly" class="tab-subtitle">{{ $t('jobPosition.pipelineTabSubtitle') }}</p>
-        <EspForm v-if="!readOnly" ref="espPipelineRef" v-model="state.pipelineForm" />
+        <ElButton v-if="!readOnly" @click="openTemplateDialog('pipeline')">{{ $t('jobPosition.loadFromTemplates') }}</ElButton>
         <RecruitmentPipelineForm
-          v-if="selectedPipelineId"
-          :key="selectedPipelineId"
-          :id="selectedPipelineId"
+          v-if="jobReady"
+          :key="pipelineEditorKey"
+          ref="pipelineEditorRef"
           :title="''"
           :is-edit="true"
-          :read-only="true"
+          :read-only="readOnly"
           :stages-only="true"
+          :initial-rounds="recruitmentRounds"
           :hide-preview-errors="readOnly"
           :round-types="recruitmentPipelineRoundTypes"
+          @default-rounds="recordDefaultPipelineRounds"
         />
       </el-tab-pane>
       <el-tab-pane :label="$t('jobPosition.interviewProcessTemplate')" name="evaluation">
         <p v-if="!readOnly" class="tab-subtitle">{{ $t('jobPosition.evaluationTabSubtitle') }}</p>
-        <EspForm v-if="!readOnly" ref="espEvaluationRef" v-model="state.evaluationForm" />
+        <ElButton v-if="!readOnly" @click="openTemplateDialog('evaluation')">{{ $t('jobPosition.loadFromTemplates') }}</ElButton>
         <EvaluationForm
-          v-if="selectedEvaluationId"
-          :key="selectedEvaluationId"
-          :id="selectedEvaluationId"
+          v-if="jobReady"
+          :key="evaluationEditorKey"
+          ref="evaluationEditorRef"
           :title="''"
           :is-edit="true"
           :rounds-only="true"
+          :initial-rounds="evaluationRounds"
           :read-only="readOnly"
           :hide-preview-errors="readOnly"
           :round-types="evaluationPlanRoundTypes"
@@ -114,6 +112,16 @@
         <p class="tab-subtitle">{{ $t('jobPosition.feedbackTabSubtitle') }}</p>
       </el-tab-pane>
     </el-tabs>
+    <el-dialog v-model="templateDialogOpen" :title="$t('jobPosition.loadFromTemplates')" width="500px"
+      :show-close="!templateLoading" :close-on-click-modal="!templateLoading" :close-on-press-escape="!templateLoading">
+      <el-alert v-if="templateHasChanges" :title="$t('jobPosition.templateUnsavedWarning')" type="warning" :closable="false" show-icon />
+      <el-select v-model="templateSelection" filterable :disabled="templateLoading" :loading="templateLoading" class="template-select" @change="loadTemplate">
+        <el-option v-for="option in templateOptions" :key="option.value" :label="option.label" :value="option.value" />
+      </el-select>
+      <template #footer>
+        <ElButton :disabled="templateLoading" @click="templateDialogOpen = false">{{ $t('button.cancel') }}</ElButton>
+      </template>
+    </el-dialog>
   </EspMain>
 </template>
 <script setup lang="ts" name="JobPositionForm">
@@ -122,9 +130,7 @@ import type { FormRules } from 'element-plus'
 import {
   JOB_POSITION_BASIC_FORM,
   JOB_POSITION_INTERNAL_DETAILS_FORM,
-  JOB_POSITION_HIRING_TEAM_FORM,
-  JOB_POSITION_PIPELINE_FORM,
-  JOB_POSITION_EVALUATION_FORM
+  JOB_POSITION_HIRING_TEAM_FORM
 } from '../data'
 import { getObjectByForms, isEmpty } from '@/utils'
 import {
@@ -146,8 +152,10 @@ import { jobRichTextToHtml } from '../jobRichText'
 import RecruitmentPipelineForm from '@/views/settings/recruitmentPipeline/components/RecruitmentPipelineForm.vue'
 import EvaluationForm from '@/views/settings/evaluationPlan/components/EvaluationForm.vue'
 import ScreeningFormPage from '@/views/settings/screeningQuestionsForm/ScreeningFormPage.vue'
-import { getScreeningFormsList } from '@/api/modules/screeningQuestionsForm'
-import type { ScreeningFormListItem } from '@/api/interface/screeningQuestionsForm'
+import { getScreeningForm } from '@/api/modules/screeningQuestionsForm'
+import { getRecruitmentPipelineDetail } from '@/api/modules/recruitmentPipeline'
+import { getInterviewProcessDetail } from '@/api/modules/evaluationPlan'
+import type { ScreeningFormListItem, ScreeningQuestion, ScreeningQuestionType } from '@/api/interface/screeningQuestionsForm'
 import { newPreviewStorageKey, type PreviewQuestion, type ScreeningDisplayMode } from '../jobPreview'
 
 interface ParamsProps {
@@ -162,8 +170,6 @@ interface ReactiveParams {
   jobDesc: string
   internalDetailsForm: Form.FormItem[]
   hiringTeamForm: Form.FormItem[]
-  pipelineForm: Form.FormItem[]
-  evaluationForm: Form.FormItem[]
 }
 
 const props = withDefaults(defineProps<ParamsProps>(), {
@@ -176,27 +182,37 @@ const { $t } = useLocale()
 const activeTab = ref('description')
 const jobReady = ref(!props.isEdit)
 const screeningForms = ref<ScreeningFormListItem[]>([])
-const selectedScreeningFormId = ref('')
+const screeningQuestionTypes = ref<ScreeningQuestionType[] | null>(null)
 const screeningDisplayMode = ref<ScreeningDisplayMode>('description')
 const screeningFormRef = ref<InstanceType<typeof ScreeningFormPage>>()
-const screeningFormsLoading = ref(false)
-const screeningFormsLoaded = ref(false)
+const pipelineEditorRef = ref<InstanceType<typeof RecruitmentPipelineForm>>()
+const evaluationEditorRef = ref<InstanceType<typeof EvaluationForm>>()
+const screeningQuestions = ref<ScreeningQuestion[]>([])
+const recruitmentRounds = ref<RecruitmentPipeline.RoundParam[]>([])
+const evaluationRounds = ref<InterviewProcess.RoundParam[]>([])
+const questionEditorKey = ref(0)
+const pipelineEditorKey = ref(0)
+const evaluationEditorKey = ref(0)
+const templateDialogOpen = ref(false)
+const templateLoading = ref(false)
+const templateSelection = ref<string | number>('')
+const templateKind = ref<'questions' | 'pipeline' | 'evaluation'>('questions')
+const pipelineOptions = ref<Form.FormSelect[]>([])
+const evaluationOptions = ref<Form.FormSelect[]>([])
+const savedTabData = reactive({ questions: '[]', pipeline: '[]', evaluation: '[]' })
+const templateHasChanges = ref(false)
 const evaluationPlanRoundTypes = ref<InterviewProcess.RoundType[]>([])
 const recruitmentPipelineRoundTypes = ref<RecruitmentPipeline.RoundType[]>([])
 const espBasicRef = ref()
 const jobDescRef = ref()
 const espInternalDetailsRef = ref()
 const espHiringTeamRef = ref()
-const espPipelineRef = ref()
-const espEvaluationRef = ref()
 const state = reactive<ReactiveParams>({
   status: undefined,
   baseForm: cloneDeep(JOB_POSITION_BASIC_FORM),
   jobDesc: '',
   internalDetailsForm: cloneDeep(JOB_POSITION_INTERNAL_DETAILS_FORM),
-  hiringTeamForm: cloneDeep(JOB_POSITION_HIRING_TEAM_FORM),
-  pipelineForm: cloneDeep(JOB_POSITION_PIPELINE_FORM),
-  evaluationForm: cloneDeep(JOB_POSITION_EVALUATION_FORM)
+  hiringTeamForm: cloneDeep(JOB_POSITION_HIRING_TEAM_FORM)
 })
 const internalDetailsRules: FormRules = {
   requisition_id: [
@@ -229,14 +245,89 @@ const statusType = computed(() => {
   }
   return colors[state.status ?? ''] ?? 'default'
 })
-const selectedPipelineId = computed(() => {
-  const value = state.pipelineForm.find(item => item.prop === 'recruitment_pipeline_id')?.value
-  return value == null || value === '' ? '' : String(value)
-})
-const selectedEvaluationId = computed(() => {
-  const value = state.evaluationForm.find(item => item.prop === 'evaluation_plan_id')?.value
-  return value == null || value === '' ? '' : String(value)
-})
+const templateOptions = computed(() => templateKind.value === 'questions'
+  ? screeningForms.value.map(form => ({ label: form.name, value: form.id }))
+  : templateKind.value === 'pipeline' ? pipelineOptions.value : evaluationOptions.value)
+
+const questionPayload = (questions: ScreeningQuestion[]) => questions.map((question, order) => ({
+  label: question.label, description: question.description, screening_question_type_id: question.screening_question_type,
+  order, options: question.options, default_option: question.default_option,
+  is_mandatory: question.is_mandatory, is_drop_down_multi_select: question.is_drop_down_multi_select,
+  max_chars: question.max_chars, heading_level: question.heading_level ?? null
+}))
+const pipelinePayload = (rounds: RecruitmentPipeline.RoundParam[]) =>
+  rounds.map(({ round_type, name, description }, order) => ({ round_type, name, description, order }))
+const evaluationPayload = (rounds: InterviewProcess.RoundParam[]) =>
+  rounds.map(({ round_type, name, description, interviewers }, order) => ({
+    round_type, name, description, interviewers: interviewers ?? [], order
+  }))
+const currentTabData = (kind: 'questions' | 'pipeline' | 'evaluation') => {
+  if (kind === 'questions') {
+    if (!screeningFormRef.value) throw new Error('Screening editor is not ready')
+    return screeningFormRef.value.getQuestions()
+  }
+  if (kind === 'pipeline') {
+    if (!pipelineEditorRef.value) throw new Error('Pipeline editor is not ready')
+    return pipelineEditorRef.value.getRounds()
+  }
+  if (!evaluationEditorRef.value) throw new Error('Evaluation editor is not ready')
+  return evaluationEditorRef.value.getRounds()
+}
+const recordDefaultPipelineRounds = (rounds: RecruitmentPipeline.RoundParam[]) => {
+  if (!recruitmentRounds.value.length) {
+    savedTabData.pipeline = JSON.stringify(rounds)
+  }
+}
+const openTemplateDialog = (kind: 'questions' | 'pipeline' | 'evaluation') => {
+  try {
+    const data = currentTabData(kind)
+    const emptyEditTab = props.isEdit && (kind === 'questions' || kind === 'evaluation') && data.length === 0
+    templateHasChanges.value = !emptyEditTab && JSON.stringify(data) !== savedTabData[kind]
+    templateKind.value = kind
+    templateSelection.value = ''
+    templateDialogOpen.value = true
+  } catch (error) {
+    console.error('Cannot open template dialog', error)
+    ElMessage.error($t('jobPosition.previewScreeningError'))
+  }
+}
+const loadTemplate = async () => {
+  if (!templateSelection.value || templateLoading.value) return
+  templateLoading.value = true
+  try {
+    if (templateKind.value === 'questions') {
+      const response = await getScreeningForm(String(templateSelection.value))
+      if (!response?.success || !Array.isArray(response.result?.questions)) throw new Error('Screening template is missing')
+      screeningQuestions.value = cloneDeep(response.result.questions).sort((a, b) => a.order - b.order)
+      savedTabData.questions = JSON.stringify(questionPayload(screeningQuestions.value))
+      questionEditorKey.value++
+    } else if (templateKind.value === 'pipeline') {
+      const response = await getRecruitmentPipelineDetail(templateSelection.value)
+      if (!response?.success || !Array.isArray(response.result?.rounds)) throw new Error('Pipeline template is missing')
+      recruitmentRounds.value = response.result.rounds.map(round => ({
+        round_type: Number(round.round_type), name: round.name, description: round.description, order: round.order
+      }))
+      savedTabData.pipeline = JSON.stringify(pipelinePayload(recruitmentRounds.value))
+      pipelineEditorKey.value++
+    } else {
+      const response = await getInterviewProcessDetail(templateSelection.value)
+      if (!response?.success || !Array.isArray(response.result?.rounds)) throw new Error('Evaluation template is missing')
+      evaluationRounds.value = response.result.rounds.map(round => ({
+        round_type: Number(round.round_type), name: round.name, description: round.description, order: round.order,
+        interviewers: (round.interviewers ?? []).map(user => typeof user === 'object' ? user.id : user)
+      }))
+      savedTabData.evaluation = JSON.stringify(evaluationPayload(evaluationRounds.value))
+      evaluationEditorKey.value++
+    }
+    templateDialogOpen.value = false
+  } catch (error) {
+    console.error('Failed to load job template', error)
+    ElMessage.error($t('jobPosition.templateLoadError'))
+    templateSelection.value = ''
+  } finally {
+    templateLoading.value = false
+  }
+}
 
 const findOptionLabel = (options: Form.FormSelect[], value: string | number): string | undefined => {
   for (const option of options) {
@@ -266,9 +357,8 @@ const preview = () => {
   let workLocation: string
   let questions: PreviewQuestion[]
   try {
-    if (!screeningFormsLoaded.value) throw new Error('Screening forms are not ready')
-    if (selectedScreeningFormId.value && !screeningFormRef.value) throw new Error('Screening form is not ready')
-    questions = screeningFormRef.value?.getPreviewQuestions() ?? []
+    if (!screeningFormRef.value) throw new Error('Screening form is not ready')
+    questions = screeningFormRef.value.getPreviewQuestions()
   } catch (error) {
     console.error('Failed to prepare screening questions for preview', error)
     ElMessage.error($t('jobPosition.previewScreeningError'))
@@ -320,12 +410,9 @@ const save = async () => {
   const descValid = jobDescRef.value?.validate()
   const internalDetailsValid = await espInternalDetailsRef.value.validateFrom(null, null, false)
   const hiringTeamValid = await espHiringTeamRef.value.validateFrom(null, null, false)
-  const pipelineValid = await espPipelineRef.value.validateFrom(null, null, false)
-  const evaluationValid = await espEvaluationRef.value.validateFrom(null, null, false)
-  if (!basicValid || !descValid || !internalDetailsValid || !hiringTeamValid || !pipelineValid || !evaluationValid) {
+  if (!basicValid || !descValid || !internalDetailsValid || !hiringTeamValid) {
     activeTab.value = !basicValid || !descValid
-      ? 'description'
-      : !internalDetailsValid || !hiringTeamValid ? 'configuration' : !pipelineValid ? 'pipeline' : 'evaluation'
+      ? 'description' : 'configuration'
     ElMessage.error($t('form.requiredError'))
     return
   }
@@ -337,18 +424,36 @@ const save = async () => {
     ...baseForm,
     ...detailForm,
     ...getObjectByForms(state.internalDetailsForm),
-    ...getObjectByForms(state.hiringTeamForm),
-    ...getObjectByForms(state.pipelineForm),
-    ...getObjectByForms(state.evaluationForm)
+    ...getObjectByForms(state.hiringTeamForm)
+  }
+  try {
+    if (!screeningFormRef.value) throw new Error('Screening editor is not ready')
+    if (!screeningFormRef.value.validateQuestions()) {
+      activeTab.value = 'questions'
+      return
+    }
+    formData.screening_questions = currentTabData('questions')
+    formData.recruitment_pipeline_rounds = currentTabData('pipeline')
+    formData.evaluation_plan_rounds = currentTabData('evaluation')
+  } catch (error) {
+    console.error('Failed to collect job application fields', error)
+    ElMessage.error($t('jobPosition.previewScreeningError'))
+    return
+  }
+  if (!formData.recruitment_pipeline_rounds.length) {
+    activeTab.value = 'pipeline'
+    ElMessage.error($t('jobPosition.recruitmentStageRequired'))
+    return
+  }
+  if (!formData.evaluation_plan_rounds.length) {
+    activeTab.value = 'evaluation'
+    ElMessage.error($t('jobPosition.evaluationRoundRequired'))
+    return
   }
   formData.hiring_managers = state.hiringTeamForm.find(item => item.prop === 'hiring_managers')?.value ?? []
   formData.employment_type = formData.employment_type_id
-  formData.evaluation_plan = formData.evaluation_plan_id
-  formData.recruitment_pipeline = formData.recruitment_pipeline_id
   formData.work_arrangement_type = formData.work_arrangement_type_id
   delete formData.employment_type_id
-  delete formData.evaluation_plan_id
-  delete formData.recruitment_pipeline_id
   delete formData.work_arrangement_type_id
   let saveFun = createJobPosition
   if (props.isEdit) {
@@ -368,6 +473,9 @@ const save = async () => {
       return
     }
     ElMessage.error({ message: res?.message })
+  }).catch(error => {
+    console.error('Failed to save job position', error)
+    ElMessage.error($t('jobPosition.jobSaveError'))
   })
 }
 
@@ -406,13 +514,16 @@ getJobFieldsData().then(res => {
   setOptions(state.baseForm, 'work_arrangement_type_id', data.work_arrangement_types)
   setOptions(state.hiringTeamForm, 'recruiters', data.recruiters, true)
   setOptions(state.hiringTeamForm, 'hiring_managers', data.hiring_managers, true)
-  setOptions(state.pipelineForm, 'recruitment_pipeline_id', data.recruitment_pipelines)
-  setOptions(state.evaluationForm, 'evaluation_plan_id', data.evaluation_plans)
-  if (!Array.isArray(data.evaluation_plan_round_types) || !Array.isArray(data.recruitment_pipeline_round_types)) {
-    throw new Error('Job round types are missing')
+  pipelineOptions.value = data.recruitment_pipelines.map(option => ({ label: option.name, value: option.id }))
+  evaluationOptions.value = data.evaluation_plans.map(option => ({ label: option.name, value: option.id }))
+  if (!Array.isArray(data.evaluation_plan_round_types) || !Array.isArray(data.recruitment_pipeline_round_types)
+      || !Array.isArray(data.screening_questions_forms) || !Array.isArray(data.screening_question_types)) {
+    throw new Error('Job form options or types are missing')
   }
   evaluationPlanRoundTypes.value = data.evaluation_plan_round_types
   recruitmentPipelineRoundTypes.value = data.recruitment_pipeline_round_types
+  screeningForms.value = data.screening_questions_forms
+  screeningQuestionTypes.value = data.screening_question_types
 }).catch(error => {
   console.error('Failed to load job fields', error)
   ElMessage.error($t('jobPosition.fieldsLoadError'))
@@ -463,9 +574,7 @@ const getFormsByRes = (
   return forms.map((item: Form.FormItem) => {
     const responseFields: Record<string, keyof JobPosition.JobPositionDetail> = {
       employment_type_id: 'employment_type',
-      work_arrangement_type_id: 'work_arrangement_type',
-      recruitment_pipeline_id: 'recruitment_pipeline',
-      evaluation_plan_id: 'evaluation_plan'
+      work_arrangement_type_id: 'work_arrangement_type'
     }
     const prop = responseFields[item.prop] ?? (item.prop as keyof JobPosition.JobPositionDetail)
     if (['hr_coordinators', 'publish_channel', 'work_location', 'recruiters', 'hiring_managers'].includes(item.prop)) {
@@ -510,8 +619,14 @@ const initData = () => {
       }
       state.internalDetailsForm = getFormsByRes(state.internalDetailsForm, result, espInternalDetailsRef.value)
       state.hiringTeamForm = getFormsByRes(state.hiringTeamForm, result, espHiringTeamRef.value)
-      state.pipelineForm = getFormsByRes(state.pipelineForm, result, espPipelineRef.value)
-      state.evaluationForm = getFormsByRes(state.evaluationForm, result, espEvaluationRef.value)
+      screeningQuestions.value = (result.screening_questions ?? []).map(({ screening_question_type_id, ...question }) => ({
+        ...question, screening_question_type: screening_question_type_id
+      })).sort((a, b) => a.order - b.order)
+      recruitmentRounds.value = [...(result.recruitment_pipeline_rounds ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+      evaluationRounds.value = [...(result.evaluation_plan_rounds ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+      savedTabData.questions = JSON.stringify(questionPayload(screeningQuestions.value))
+      savedTabData.pipeline = JSON.stringify(pipelinePayload(recruitmentRounds.value))
+      savedTabData.evaluation = JSON.stringify(evaluationPayload(evaluationRounds.value))
       jobReady.value = true
     }).catch(error => {
       console.error('Failed to load job details', error)
@@ -532,29 +647,12 @@ onMounted(() => {
   if (props.isEdit) {
     initData()
   }
-  if (!props.readOnly) {
-    screeningFormsLoading.value = true
-    getScreeningFormsList().then(response => {
-      if (!response?.success || !Array.isArray(response.result)) throw new Error('Screening forms are missing')
-      screeningForms.value = response.result
-      selectedScreeningFormId.value = response.result[0]?.id ?? ''
-      screeningFormsLoaded.value = true
-    }).catch(error => {
-      console.error('Failed to load screening forms', error)
-      ElMessage.error($t('screeningForms.listLoadingError'))
-    }).finally(() => {
-      screeningFormsLoading.value = false
-    })
-  }
 })
 </script>
 <style lang="less" scoped>
 @import '@/styles/interviewer-select.less';
 
-.screening-selection { margin-top: 16px; }
-.screening-selection-fields { display: flex; flex-wrap: wrap; gap: 0 20px; }
-.screening-selection-fields :deep(.el-form-item) { flex: 0 1 320px; min-width: 0; }
-.screening-selection-fields :deep(.el-select) { width: 100%; }
+.template-select { width: 100%; margin-top: 16px; }
 
 .job-tabs {
   padding: .8em 0 0;

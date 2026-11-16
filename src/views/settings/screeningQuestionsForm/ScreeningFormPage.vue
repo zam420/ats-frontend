@@ -1,7 +1,7 @@
 <template>
   <component :is="embedded ? 'div' : EspMain" :title="embedded ? undefined : title">
     <template #right v-if="!embedded">
-      <ElButton @click="goBack">{{ $t('button.cancel') }}</ElButton>
+      <ElButton @click="goBack">{{ $t(forcedReadOnly ? 'button.back' : 'button.cancel') }}</ElButton>
       <ElButton v-if="ready && canWrite && isEdit && has(SQTC)" class="btn-light" @click="saveAs">{{ $t('interviewProcess.saveAs') }}</ElButton>
       <ElButton v-if="ready && canWrite" class="btn-primary-gradient" :loading="saving" @click="save">{{ $t('button.save') }}</ElButton>
     </template>
@@ -148,7 +148,7 @@ import { useGlobalStore } from '@/store/modules/global'
 import { ROUTER_SETTINGS_SCREENING_FORMS } from '@/router/routerName'
 
 type Question = ScreeningQuestion & { key: number }
-const props = withDefaults(defineProps<{ embedded?: boolean; formId?: string }>(), {
+const props = withDefaults(defineProps<{ embedded?: boolean; formId?: string; initialQuestions?: ScreeningQuestion[]; questionTypes?: ScreeningQuestionType[]; readOnly?: boolean }>(), {
   embedded: false,
   formId: ''
 })
@@ -159,12 +159,12 @@ const router = useRouter()
 const store = useGlobalStore()
 const has = (permission: UserPermissionEnum) => store.permissions.includes(permission)
 const isEdit = computed(() => props.embedded || route.name !== 'ROUTER_SETTINGS_SCREENING_FORMS_CREATE')
-const forcedReadOnly = computed(() => !props.embedded && (route.name === 'ROUTER_SETTINGS_SCREENING_FORMS_VIEW' || route.query.readonly === '1'))
+const forcedReadOnly = computed(() => props.readOnly || (!props.embedded && (route.name === 'ROUTER_SETTINGS_SCREENING_FORMS_VIEW' || route.query.readonly === '1')))
 const systemTemplate = ref(route.query.template === '1')
 const isTemplate = computed(() => systemTemplate.value)
 const ownerVisible = computed(() => has(SQTA) && !isTemplate.value)
 const canWrite = computed(() => {
-  if (props.embedded) return true
+  if (props.embedded) return !props.readOnly
   if (forcedReadOnly.value) return false
   if (!isEdit.value) return isTemplate.value ? has(SQTSA) : has(SQTC)
   if (isTemplate.value) return has(SQTSA)
@@ -244,7 +244,32 @@ const getPreviewQuestions = (): PreviewQuestion[] => {
     }
   })
 }
-defineExpose({ getPreviewQuestions })
+const getQuestions = () => {
+  if (!ready.value || loading.value) throw new Error('Screening form is not ready')
+  return form.questions.map((question, order) => ({
+    label: question.label, description: question.description, screening_question_type_id: question.screening_question_type,
+    order, options: question.options, default_option: question.default_option,
+    is_mandatory: question.is_mandatory, is_drop_down_multi_select: question.is_drop_down_multi_select,
+    max_chars: question.max_chars, heading_level: question.heading_level ?? null
+  }))
+}
+const validateQuestions = () => {
+  if (!ready.value || loading.value) throw new Error('Screening form is not ready')
+  if (form.questions.some(question => !question.label?.trim())) {
+    ElMessage.error($t('screeningForms.questionLabelRequired'))
+    return false
+  }
+  if (form.questions.some(question => isChoiceQuestion(question) && (!question.options?.length || question.options.some(option => !option.trim())))) {
+    ElMessage.error($t('screeningForms.optionRequired'))
+    return false
+  }
+  if (form.questions.some(question => isChoiceQuestion(question) && question.options && new Set(question.options).size !== question.options.length)) {
+    ElMessage.error($t('screeningForms.duplicateOptions'))
+    return false
+  }
+  return true
+}
+defineExpose({ getPreviewQuestions, getQuestions, validateQuestions })
 const HeadingIcon = defineComponent({
   render: () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2.5, 'stroke-linecap': 'round', 'aria-hidden': 'true' },
     [h('path', { d: 'M6 4v16M18 4v16M6 12h12' })])
@@ -390,13 +415,23 @@ const saveAs = async () => {
 }
 onMounted(async () => {
   try {
-    const [typesResult, usersResult] = await Promise.all([getScreeningQuestionTypes(), getUserList(ShareTypeEnum.INTERVIEWER)])
-    if (!typesResult?.result || !usersResult?.result) throw new Error('Question types or users are missing')
-    types.value = typesResult.result
-    users.value = usersResult.result
+    if (props.embedded) {
+      if (!Array.isArray(props.questionTypes)) throw new Error('Question types are missing')
+      types.value = props.questionTypes
+    } else {
+      const [typesResult, usersResult] = await Promise.all([
+        getScreeningQuestionTypes(), getUserList(ShareTypeEnum.INTERVIEWER)
+      ])
+      if (!typesResult?.result || !usersResult?.result) throw new Error('Question types or users are missing')
+      types.value = typesResult.result
+      users.value = usersResult.result
+    }
     form.owner_id = store.userInfo?.id ?? ''
-    if (isEdit.value) {
-      const id = props.embedded ? props.formId : route.params.id
+    if (props.embedded) {
+      form.questions = [...(props.initialQuestions ?? [])].sort((a, b) => a.order - b.order)
+        .map(question => ({ ...question, options: question.options ? [...question.options] : null, key: nextKey++ }))
+    } else if (isEdit.value) {
+      const id = route.params.id
       if (typeof id !== 'string' || !id) throw new Error('Form ID is missing')
       const result = await getScreeningForm(id)
       const detail = result?.result

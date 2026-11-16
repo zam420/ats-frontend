@@ -9,7 +9,7 @@ export const getScreeningFormsList = () =>
 export const getScreeningForm = (id: string) =>
   http.get<ScreeningFormDetail>(`/api/sqform/${encodeURIComponent(id)}`)
 export const getScreeningQuestionTypes = () =>
-  http.get<ScreeningQuestionType[]>('/api/sqform/roundtypes')
+  http.get<ScreeningQuestionType[]>('/api/sqform/controltypes')
 export const createScreeningForm = (data: ScreeningFormRequest) =>
   http.post<ResultCreate>('/api/sqform/create', data)
 export const saveAsScreeningForm = (data: ScreeningFormRequest) =>

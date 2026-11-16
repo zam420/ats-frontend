@@ -1,9 +1,9 @@
 <template>
   <component :is="roundsOnly ? 'div' : EspMain" :title="roundsOnly ? undefined : isReadOnly ? $t('interviewProcess.interviewDetail') : title">
-    <template #right v-if="!roundsOnly && accessReady && !isReadOnly">
-      <ElButton @click="goBack">{{ $t('button.cancel') }}</ElButton>
-      <ElButton v-if="isEdit" @click="saveAs" class="btn-light">{{ $t('interviewProcess.saveAs') }}</ElButton>
-      <ElButton @click="save" class="btn-primary-gradient">{{ $t('button.save') }}</ElButton>
+    <template #right v-if="!roundsOnly">
+      <ElButton @click="goBack">{{ $t(isReadOnly ? 'button.back' : 'button.cancel') }}</ElButton>
+      <ElButton v-if="accessReady && !isReadOnly && isEdit" @click="saveAs" class="btn-light">{{ $t('interviewProcess.saveAs') }}</ElButton>
+      <ElButton v-if="accessReady && !isReadOnly" @click="save" class="btn-primary-gradient">{{ $t('button.save') }}</ElButton>
     </template>
     <div :class="{ 'read-only': isReadOnly }">
     <EspForm v-if="!roundsOnly" ref="interviewRef" v-model="state.baseForm" />
@@ -60,7 +60,7 @@
       <p v-if="!hidePreviewErrors" role="alert">{{ $t('interviewProcess.previewLoadError') }}</p>
     </template>
     <el-row v-else :gutter="20" class="view-content" v-loading="roundsOnly && previewLoading">
-      <el-col v-if="!roundsOnly" :span="6">
+      <el-col v-if="!roundsOnly || !readOnly" :span="6">
         <div class="step-panel">
           <div class="title">{{ $t('interviewProcess.interviewSessions') }}</div>
           <div class="content" ref="interviewSessionRef">
@@ -74,10 +74,10 @@
           </div>
         </div>
       </el-col>
-      <el-col :span="roundsOnly ? 24 : 18">
+      <el-col :span="roundsOnly && readOnly ? 24 : 18">
         <div class="process-panel">
-          <div class="title">{{ $t(roundsOnly ? 'interviewProcess.evaluationRounds' : 'interviewProcess.addedRounds') }}</div>
-          <div v-if="!roundsOnly">{{ $t('interviewProcess.dragProcess') }}</div>
+          <div class="title">{{ $t(roundsOnly && readOnly ? 'interviewProcess.evaluationRounds' : 'interviewProcess.addedRounds') }}</div>
+          <div v-if="!roundsOnly || !readOnly">{{ $t('interviewProcess.dragProcess') }}</div>
           <div class="content">
             <div ref="processRef">
               <div
@@ -94,10 +94,10 @@
               >
                 <el-row :gutter="20">
                   <el-col :span="1" class="center">
-                    <div class="order" v-if="!roundsOnly && item.round_type !== ''"></div>
+                    <div class="order" v-if="(!roundsOnly || !readOnly) && item.round_type !== ''"></div>
                   </el-col>
                   <el-col :span="8">
-                    <el-dropdown trigger="click" :teleported="false" :disabled="roundsOnly">
+                    <el-dropdown trigger="click" :teleported="false" :disabled="roundsOnly && readOnly">
                       <div
                         class="add-select"
                         :class="{
@@ -112,15 +112,15 @@
                             </div>
                             <el-input
                               v-model="item.name"
-                              :readonly="roundsOnly"
+                              :readonly="roundsOnly && readOnly"
                               class="inline-input inline-title"
                               maxlength="30"
                               :placeholder="roundTypeOf(item.round_type)?.subLabel"
                             />
                             <el-input
-                              v-if="!roundsOnly || item.description?.trim()"
+                              v-if="!roundsOnly || !readOnly || item.description?.trim()"
                               v-model="item.description"
-                              :readonly="roundsOnly"
+                              :readonly="roundsOnly && readOnly"
                               class="inline-input"
                               maxlength="100"
                               :placeholder="$t('interviewProcess.roundDescPlaceholder')"
@@ -174,13 +174,13 @@
                     </el-select>
                     </template>
                   </el-col>
-                  <el-col :span="1" class="center" v-if="!roundsOnly && item.round_type !== ''">
+                  <el-col :span="1" class="center" v-if="(!roundsOnly || !readOnly) && item.round_type !== ''">
                     <i class="iconfont icon-delete" @click="deleteRound(index)"></i>
                   </el-col>
                 </el-row>
               </div>
             </div>
-            <div v-if="!roundsOnly" class="process-box">
+            <div v-if="!roundsOnly || !readOnly" class="process-box">
               <el-row :gutter="20">
                 <el-col :span="1" class="center"> </el-col>
                 <el-col :span="8">
@@ -247,6 +247,7 @@ interface ParamsProps {
   roundsOnly?: boolean
   hidePreviewErrors?: boolean
   roundTypes?: InterviewProcess.RoundType[]
+  initialRounds?: InterviewProcess.RoundParam[]
   isTemplate?: boolean // 创建系统模板
 }
 
@@ -294,6 +295,11 @@ const state = reactive<ReactiveParams>({
   shareMode: 'none',
   shareUserIds: []
 })
+const getRounds = () => state.processList.map((round, order) => ({
+  round_type: round.round_type, name: round.name, description: round.description,
+  interviewers: [...round.interviewers], order
+}))
+defineExpose({ getRounds })
 
 const isSystemTemplate = ref(false)
 const previewLoading = ref(false)
@@ -573,70 +579,14 @@ const loadRoundTypes = async () => {
   setRoundTypes(res?.result ?? [])
 }
 
-onMounted(async () => {
-  if (props.roundsOnly) {
-    previewLoading.value = true
-    previewUsersLoading.value = true
-    const loadPreviewUsers = async () => {
-      try {
-        const users = await getUserList(ShareTypeEnum.INTERVIEWER)
-        if (!users.success || !users.result) {
-          throw new Error(users.message || 'Interviewer list is missing')
-        }
-        state.interviewerList = users.result.map(user => ({
-          label: user.name,
-          value: user.id,
-          subLabel: user.email
-        }))
-      } catch (error) {
-        previewUsersError.value = true
-        console.error('Failed to load evaluation plan interviewers', error)
-      } finally {
-        previewUsersLoading.value = false
-      }
-    }
-    void loadPreviewUsers()
-    try {
-      await initData()
-    } catch (error) {
-      previewError.value = true
-      console.error('Failed to load evaluation plan rounds', error)
-    } finally {
-      previewLoading.value = false
-    }
-    return
-  }
-  await loadRoundTypes()
-  // 获取interviewer下拉的值
-  const result = await getUserList(ShareTypeEnum.INTERVIEWER)
-  const options: Form.FormSelect[] = []
-  result?.result?.forEach(user => {
-    options.push({
-      label: user.name,
-      value: user.id,
-      subLabel: user.email
-    })
-  })
-  state.interviewerList = [...options]
-  usersLoaded.value = true
-  // Plan owner: defaults to the signed-in user when creating
-  const ownerItem = state.baseForm.find(item => item.prop === 'owner_id')
-  if (ownerItem) {
-    ownerItem.options = [...options]
-    if (!props.isEdit) {
-      const email = (globalStore.userInfo?.email ?? globalStore.email ?? '').toLowerCase()
-      const self = result?.result?.find(user => user.email?.toLowerCase() === email)
-      if (self) {
-        ownerItem.value = self.id
-        interviewRef.value?.changeFormModel({ prop: 'owner_id', value: self.id }, true)
-      }
-    }
-  }
+let processSortable: Sortable | undefined
+let typesSortable: Sortable | undefined
+const setupDragAndDrop = () => {
   // 初始化process步骤间的拖拽事件
   const interviewSessionHtml = interviewSessionRef.value
   const listWithHandle = processRef.value
-  if (!Sortable.get(listWithHandle)) {
-    Sortable.create(listWithHandle, {
+  if (listWithHandle && !Sortable.get(listWithHandle)) {
+    processSortable = Sortable.create(listWithHandle, {
       handle: '.order', // 按住按钮进行拖拽
       ghostClass: 'blue-background-class',
       onEnd(evt: Sortable.SortableEvent) {
@@ -650,8 +600,8 @@ onMounted(async () => {
   }
 
   // 初始化session到process步骤的拖拽事件
-  if (!Sortable.get(interviewSessionHtml)) {
-    Sortable.create(interviewSessionHtml, {
+  if (interviewSessionHtml && !Sortable.get(interviewSessionHtml)) {
+    typesSortable = Sortable.create(interviewSessionHtml, {
       handle: '.step',
       group: {
         name: 'shared',
@@ -682,12 +632,75 @@ onMounted(async () => {
     })
   }
 
+}
+
+onMounted(async () => {
+  if (props.roundsOnly) {
+    previewLoading.value = true
+    previewUsersLoading.value = true
+    const loadPreviewUsers = async () => {
+      try {
+        const users = await getUserList(ShareTypeEnum.INTERVIEWER)
+        if (!users.success || !users.result) {
+          throw new Error(users.message || 'Interviewer list is missing')
+        }
+        state.interviewerList = users.result.map(user => ({
+          label: user.name,
+          value: user.id,
+          subLabel: user.email
+        }))
+      } catch (error) {
+        previewUsersError.value = true
+        console.error('Failed to load evaluation plan interviewers', error)
+      } finally {
+        previewUsersLoading.value = false
+      }
+    }
+    void loadPreviewUsers()
+    try {
+      if (props.initialRounds) state.processList = cloneDeep(props.initialRounds)
+      else await initData()
+    } catch (error) {
+      previewError.value = true
+      console.error('Failed to load evaluation plan rounds', error)
+    } finally {
+      previewLoading.value = false
+    }
+    await nextTick()
+    if (!props.readOnly && !previewError.value) setupDragAndDrop()
+    return
+  }
+  await loadRoundTypes()
+  const result = await getUserList(ShareTypeEnum.INTERVIEWER)
+  const options: Form.FormSelect[] = []
+  result?.result?.forEach(user => {
+    options.push({ label: user.name, value: user.id, subLabel: user.email })
+  })
+  state.interviewerList = [...options]
+  usersLoaded.value = true
+  const ownerItem = state.baseForm.find(item => item.prop === 'owner_id')
+  if (ownerItem) {
+    ownerItem.options = [...options]
+    if (!props.isEdit) {
+      const email = (globalStore.userInfo?.email ?? globalStore.email ?? '').toLowerCase()
+      const self = result?.result?.find(user => user.email?.toLowerCase() === email)
+      if (self) {
+        ownerItem.value = self.id
+        interviewRef.value?.changeFormModel({ prop: 'owner_id', value: self.id }, true)
+      }
+    }
+  }
+  setupDragAndDrop()
   if (props.isEdit) {
     setTimeout(() => {
       initData()
     }, 100)
     return
   }
+})
+onBeforeUnmount(() => {
+  processSortable?.destroy()
+  typesSortable?.destroy()
 })
 </script>
 <style lang="less" scoped>
