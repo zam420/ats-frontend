@@ -10,6 +10,7 @@ declare namespace JobPosition {
     project_id: number
     employment_type_id: number
     work_arrangement_type_id: number
+    experience_level_type: number
     application_questions_display_mode: ApplicationQuestionsDisplayMode
     screening_questions: Array<Omit<ScreeningQuestion, 'id' | 'screening_question_type'> & { screening_question_type_id: number }>
     recruitment_pipeline_rounds: RecruitmentPipeline.RoundParam[]
@@ -58,6 +59,7 @@ declare namespace JobPosition {
     employment_type?: number
     work_arrangement_type_id?: number
     work_arrangement_type?: number
+    experience_level_type: number
     application_questions_display_mode: ApplicationQuestionsDisplayMode
     screening_questions?: Array<Omit<ScreeningQuestion, 'screening_question_type'> & { screening_question_type_id: number }> | null
     recruitment_pipeline_rounds?: RecruitmentPipeline.RoundParam[] | null
@@ -98,6 +100,7 @@ declare namespace JobPosition {
   interface JobFieldsData {
     employment_types: FieldOption[]
     work_arrangement_types: FieldOption[]
+    experience_level_types: FieldOption[]
     recruitment_pipelines: FieldOption[]
     evaluation_plans: FieldOption[]
     screening_questions_forms: ScreeningFormListItem[]

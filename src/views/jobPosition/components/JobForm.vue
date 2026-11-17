@@ -1,12 +1,14 @@
 <template>
-  <EspMain :title="title">
+  <EspMain :title="title" v-loading="saving">
     <template #left v-if="!isEmpty(state.status as string)">
       <EspStatus :type="statusType">{{ statusText }}</EspStatus>
     </template>
     <template #right>
-      <ElButton v-if="!readOnly" :disabled="!jobReady" @click="preview">{{ $t('jobPosition.previewButton') }}</ElButton>
-      <ElButton @click="goBack">{{ $t(readOnly ? 'button.back' : 'button.cancel') }}</ElButton>
-      <ElButton v-if="!readOnly" :disabled="!jobReady || templateLoading" @click="save" class="btn-primary-gradient">{{ $t('button.save') }}</ElButton>
+      <ElButton v-if="!readOnly" :disabled="!jobReady || saving" @click="preview">{{ $t('jobPosition.previewButton') }}</ElButton>
+      <ElButton v-if="!readOnly && isEdit && state.status === 'DRAFT'" :disabled="!jobReady || templateLoading || saving" @click="confirmStatusChange('publish')">{{ $t('jobPosition.publishJob') }}</ElButton>
+      <ElButton v-if="!readOnly && isEdit && state.status === 'OPEN'" :disabled="!jobReady || templateLoading || saving" @click="confirmStatusChange('close')">{{ $t('jobPosition.closeJob') }}</ElButton>
+      <ElButton :disabled="saving" @click="goBack">{{ $t(readOnly ? 'button.back' : 'button.cancel') }}</ElButton>
+      <ElButton v-if="!readOnly" :disabled="!jobReady || templateLoading || saving" @click="save()" class="btn-primary-gradient">{{ $t('button.save') }}</ElButton>
     </template>
     <el-tabs v-model="activeTab" class="job-tabs">
       <el-tab-pane :label="$t('jobPosition.jobDescription')" name="description">
@@ -136,6 +138,8 @@ import { getObjectByForms, isEmpty } from '@/utils'
 import {
   createJobPosition,
   editJobPosition,
+  publishJobPosition,
+  closeJobPosition,
   getJobFieldsData,
   getJobPositionDetail
 } from '@/api/modules/jobPosition'
@@ -181,6 +185,7 @@ const { $t } = useLocale()
 
 const activeTab = ref('description')
 const jobReady = ref(!props.isEdit)
+const saving = ref(false)
 const screeningForms = ref<ScreeningFormListItem[]>([])
 const screeningQuestionTypes = ref<ScreeningQuestionType[] | null>(null)
 const screeningDisplayMode = ref<ScreeningDisplayMode>('description')
@@ -404,8 +409,31 @@ const preview = () => {
   }
 }
 
-const save = async () => {
-  if (props.readOnly) return
+const confirmStatusChange = async (action: 'publish' | 'close') => {
+  if (saving.value) return
+  saving.value = true
+  try {
+    try {
+      await ElMessageBox.confirm(
+        $t(action === 'publish' ? 'jobPosition.publishConfirm' : 'jobPosition.closeConfirm'),
+        $t(action === 'publish' ? 'jobPosition.publishJob' : 'jobPosition.closeJob'),
+        { type: 'warning', confirmButtonText: $t(action === 'publish' ? 'jobPosition.publishJob' : 'jobPosition.closeJob'), cancelButtonText: $t('button.cancel') }
+      )
+    } catch (error) {
+      if (error === 'cancel' || error === 'close') return
+      throw error
+    }
+    await save(action)
+  } catch (error) {
+    console.error('Failed to confirm job status change', error)
+    ElMessage.error($t('jobPosition.jobStatusError'))
+  } finally {
+    saving.value = false
+  }
+}
+
+const save = async (action?: 'publish' | 'close') => {
+  if (props.readOnly || (saving.value && !action)) return
   const basicValid = await espBasicRef.value.validateFrom(null, null, false)
   const descValid = jobDescRef.value?.validate()
   const internalDetailsValid = await espInternalDetailsRef.value.validateFrom(null, null, false)
@@ -456,14 +484,17 @@ const save = async () => {
   formData.work_arrangement_type = formData.work_arrangement_type_id
   delete formData.employment_type_id
   delete formData.work_arrangement_type_id
-  let saveFun = createJobPosition
   if (props.isEdit) {
     formData.id = props.id
-    saveFun = editJobPosition
   }
-  saveFun(formData as JobPosition.JonPositionInfo).then(res => {
+  const payload = formData as JobPosition.JonPositionInfo
+  if (!action) saving.value = true
+  try {
+    const res = action === 'publish' ? await publishJobPosition(payload)
+      : action === 'close' ? await closeJobPosition(payload)
+      : props.isEdit ? await editJobPosition(payload) : await createJobPosition(payload)
     if (res?.success) {
-      ElMessage.success({ message: $t('message.saveSuc') })
+      ElMessage.success({ message: action ? $t(action === 'publish' ? 'jobPosition.publishSuccess' : 'jobPosition.closeSuccess') : $t('message.saveSuc') })
       if (props.isEdit) {
         goBack()
       } else {
@@ -473,11 +504,13 @@ const save = async () => {
       }
       return
     }
-    ElMessage.error({ message: res?.message })
-  }).catch(error => {
+    ElMessage.error({ message: res?.message || $t(action ? 'jobPosition.jobStatusError' : 'jobPosition.jobSaveError') })
+  } catch (error) {
     console.error('Failed to save job position', error)
-    ElMessage.error($t('jobPosition.jobSaveError'))
-  })
+    ElMessage.error($t(action ? 'jobPosition.jobStatusError' : 'jobPosition.jobSaveError'))
+  } finally {
+    if (!action) saving.value = false
+  }
 }
 
 const changeForm = (item: Form.FormItem) => {
@@ -511,8 +544,12 @@ getJobFieldsData().then(res => {
   if (!res.success || !data) {
     throw new Error(res.message || 'Job fields are missing')
   }
+  if (!Array.isArray(data.experience_level_types)) {
+    throw new Error('Experience level types are missing')
+  }
   setOptions(state.baseForm, 'employment_type_id', data.employment_types)
   setOptions(state.baseForm, 'work_arrangement_type_id', data.work_arrangement_types)
+  setOptions(state.baseForm, 'experience_level_type', data.experience_level_types)
   setOptions(state.hiringTeamForm, 'recruiters', data.recruiters, true)
   setOptions(state.hiringTeamForm, 'hiring_managers', data.hiring_managers, true)
   pipelineOptions.value = data.recruitment_pipelines.map(option => ({ label: option.name, value: option.id }))

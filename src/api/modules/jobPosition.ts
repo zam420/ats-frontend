@@ -17,7 +17,7 @@ export const getJobPositionListForCv = () => {
 }
 // 获取 Job Position 表单下拉数据
 export const getJobFieldsData = () => {
-  return http.get<JobPosition.JobFieldsData>('api/job/fieldsdata')
+  return http.get<JobPosition.JobFieldsData>('api/job/filters')
 }
 
 // 创建 Job Position
@@ -36,8 +36,12 @@ export const editJobPosition = (data: JobPosition.JonPositionInfo) => {
 }
 
 // 发布 Job Position
-export const publishJobPosition = (data: { id: string | number; status: number }) => {
+export const publishJobPosition = (data: JobPosition.JonPositionInfo) => {
   return http.post<boolean>('api/job/publish', data)
+}
+
+export const closeJobPosition = (data: JobPosition.JonPositionInfo) => {
+  return http.post<boolean>('api/job/close', data)
 }
 
 // 获取 Job Position 的详情

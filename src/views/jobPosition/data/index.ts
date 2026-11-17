@@ -69,6 +69,7 @@ export const JOB_POSITION_BASIC_FORM: Form.FormItem[] = [
     prop: 'title',
     maxlength: 100,
     required: true,
+    col: 8,
     md: 8
   },
   {
@@ -77,7 +78,8 @@ export const JOB_POSITION_BASIC_FORM: Form.FormItem[] = [
     type: FormItemTypeEnum.SELECT,
     options: [],
     required: true,
-    md: 8
+    col: 4,
+    md: 4
   },
   {
     label: $t('jobPosition.workArrangement'),
@@ -85,7 +87,17 @@ export const JOB_POSITION_BASIC_FORM: Form.FormItem[] = [
     type: FormItemTypeEnum.SELECT,
     options: [],
     required: true,
-    md: 8
+    col: 4,
+    md: 4
+  },
+  {
+    label: $t('jobPosition.experienceLevel'),
+    prop: 'experience_level_type',
+    type: FormItemTypeEnum.SELECT,
+    options: [],
+    required: true,
+    col: 4,
+    md: 4
   },
   {
     label: $t('jobPosition.workLocation'),
@@ -96,7 +108,8 @@ export const JOB_POSITION_BASIC_FORM: Form.FormItem[] = [
     optionName: 'name',
     enum: WorkLocation,
     required: true,
-    md: 8
+    col: 4,
+    md: 4
   }
 ]
 // 职位描述
