@@ -183,6 +183,8 @@ auth: {
   header: {
     componentSize: '组件大小',
     language: '语言',
+    languageReloadConfirm: '更改语言将重新加载此页面，未保存的更改将丢失。是否继续？',
+    languageChangeError: '无法更改语言。',
     theme: '主题',
     fullScreen: '全屏',
     exitFullScreen: '退出全屏',

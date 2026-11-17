@@ -183,6 +183,8 @@ export default {
   header: {
     componentSize: 'Component size',
     language: 'Language',
+    languageReloadConfirm: 'Changing the language reloads this page. Unsaved changes will be lost. Continue?',
+    languageChangeError: 'Could not change the language.',
     theme: 'theme',
     fullScreen: 'Full Screen',
     exitFullScreen: 'Exit Full Screen',

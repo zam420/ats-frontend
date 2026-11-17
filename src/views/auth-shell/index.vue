@@ -2,8 +2,8 @@
   <div class="rp-login">
     <div class="rp-login__left">
       <div class="rp-login__lang">
-        <img :src="flagUsa" alt="" />
-        <span>English</span>
+        <img v-if="locale === 'en-US'" :src="flagUsa" alt="" />
+        <span>{{ locale === 'zh-CN' ? '简体中文(中国大陆)' : 'United States - English' }}</span>
         <svg viewBox="0 0 20 20" width="20" height="20" fill="none" aria-hidden="true">
           <path d="m5 7.5 5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
         </svg>
@@ -51,8 +51,10 @@
 <script setup lang="ts" name="AuthShell">
 import logoMark from '@/assets/brand/rp-mark.svg'
 import flagUsa from '@/assets/brand/flag-usa.svg'
+import { getSelectedLocale } from '@/language/locale'
 
 defineProps<{ title: string; subtitle?: string }>()
+const locale = getSelectedLocale()
 
 // Decorative candidate pipeline shown on the right-hand panel
 const candidates = [

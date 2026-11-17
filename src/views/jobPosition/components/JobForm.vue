@@ -1,5 +1,5 @@
 <template>
-  <EspMain :title="title" v-loading="saving">
+  <EspMain :title="title">
     <template #left v-if="!isEmpty(state.status as string)">
       <EspStatus :type="statusType">{{ statusText }}</EspStatus>
     </template>
@@ -150,6 +150,7 @@ import { WorkLocation, WorkLocationEnum } from '@/enums/workLocationEnum'
 import { JobStatusEnum, JobStatus } from '@/enums/jobStatusEnum'
 import { useLocale } from '@/hooks/useLocale'
 import { OPEN_DIALOG } from '@/config'
+import { showFullScreenLoading, tryHideFullScreenLoading } from '@/config/serviceLoading'
 import mittBus from '@/utils/mittBus'
 import { ROUTER_JOB_POSITION, ROUTER_JOB_POSITION_CREATE_PREVIEW, ROUTER_JOB_POSITION_EDIT_PREVIEW } from '@/router/routerName'
 import { isArray } from '@/utils/is'
@@ -424,12 +425,14 @@ const confirmStatusChange = (action: 'publish' | 'close') => {
     confirm: async () => {
       if (saving.value) return
       saving.value = true
+      showFullScreenLoading()
       try {
         await save(action)
       } catch (error) {
         console.error('Failed to change job status', error)
         ElMessage.error($t('jobPosition.jobStatusError'))
       } finally {
+        tryHideFullScreenLoading()
         saving.value = false
       }
     }

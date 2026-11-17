@@ -17,6 +17,7 @@ import { unescapeHTML } from '@/utils'
 import { ROUTER_403, ROUTER_500, ROUTER_LOGIN } from '@/router/routerName'
 import { useMenuStore } from '@/store/modules/menu'
 import { broadcastLogout } from '@/utils/authChannel'
+import { getSelectedLocale } from '@/language/locale'
 
 export interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
   noLoading?: boolean
@@ -79,6 +80,7 @@ class RequestHttp {
         // 当前请求不需要显示 loading 或者改变显示文字，在 api 服务中通过指定的第三个参数: { noLoading: true, loadingText: string } 来控制
         if (config.headers && typeof config.headers.set === 'function') {
           config.headers.set('Authorization', globalStore.accessToken)
+          config.headers.set('Accept-Language', getSelectedLocale())
         }
         if (!config.noLoading) {
           showFullScreenLoading(config.loadingText)

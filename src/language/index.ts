@@ -1,10 +1,11 @@
 import { createI18n } from 'vue-i18n'
 import zh from './modules/zh'
 import en from './modules/en'
+import { getLanguage, getSelectedLocale } from './locale'
 
 const i18n = createI18n({
   legacy: false,
-  locale: localStorage.getItem('locale') ?? 'en', // 默认语言
+  locale: getLanguage(getSelectedLocale()),
   globalInjection: true,
   messages: {
     zh,

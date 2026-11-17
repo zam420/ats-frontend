@@ -8,11 +8,36 @@
   z-index: 3058 !important;
 }
 
-.el-loading-mask.app-fullscreen-loading {
-  .el-loading-spinner .path {
-    stroke: var(--rp-lime);
-    stroke-width: 3;
+.el-loading-spinner .circular,
+.el-icon.is-loading {
+  box-sizing: border-box;
+  border: 0.1em solid #72a63f;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: loading-rotate 1s linear infinite;
+}
+
+.el-loading-spinner .circular {
+  border-width: 3px;
+}
+
+.el-loading-spinner .circular .path,
+.el-icon.is-loading > svg {
+  visibility: hidden;
+}
+
+.el-loading-fade-leave-active .el-loading-spinner {
+  visibility: hidden;
+}
+
+body.el-loading-parent--hidden {
+  .el-loading-mask:not(.app-fullscreen-loading) .el-loading-spinner,
+  .el-icon.is-loading {
+    visibility: hidden;
   }
+}
+
+.el-loading-mask.app-fullscreen-loading {
   .el-loading-spinner .el-loading-text {
     color: #fff;
     font-weight: 600;

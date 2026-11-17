@@ -33,6 +33,7 @@
             <SubMenu :menu-list="menuList" />
           </ElMenu>
         </ElScrollbar>
+        <Language :collapsed="isCollapse" />
         <div
           class="collapse-icon-wrap"
           :class="globalStore.isCollapse ? 'expand' : 'fold'"
@@ -72,12 +73,14 @@ import SubMenu from './components/Menu/SubMenu.vue'
 // import ToolBarRight from './components/Header/ToolBarRight.vue'
 import Notification from './components/Header/components/Notification.vue'
 import Avatar from './components/Header/components/Avatar.vue'
+import Language from './components/Header/components/Language.vue'
 import { useMenuStore } from '@/store/modules/menu'
 import { COLLAPSE_SM_WIDTH, COLLAPSE_LG_WIDTH } from '@/config'
 
 const route = useRoute()
 const menuStore = useMenuStore()
 const globalStore = useGlobalStore()
+globalStore.initMenu()
 const isCollapse = computed(() => globalStore.isCollapse)
 const menuList = computed(() => menuStore.menuList)
 const activeMenu = computed(

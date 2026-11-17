@@ -1,4 +1,5 @@
 ﻿import axios from 'axios'
+import { getSelectedLocale } from '@/language/locale'
 
 // The /auth endpoints return plain payloads (not the ApiResult wrapper), so they bypass the shared interceptors.
 const authHttp = axios.create({
@@ -6,6 +7,11 @@ const authHttp = axios.create({
   timeout: 60000,
   // Needed for the browser to store and send the HttpOnly refresh-token cookie
   withCredentials: true
+})
+
+authHttp.interceptors.request.use(config => {
+  config.headers.set('Accept-Language', getSelectedLocale())
+  return config
 })
 
 export interface LoginReq {
