@@ -149,6 +149,8 @@ import RecruitmentPipeline from '@/api/interface/recruitmentPipeline'
 import { WorkLocation, WorkLocationEnum } from '@/enums/workLocationEnum'
 import { JobStatusEnum, JobStatus } from '@/enums/jobStatusEnum'
 import { useLocale } from '@/hooks/useLocale'
+import { OPEN_DIALOG } from '@/config'
+import mittBus from '@/utils/mittBus'
 import { ROUTER_JOB_POSITION, ROUTER_JOB_POSITION_CREATE_PREVIEW, ROUTER_JOB_POSITION_EDIT_PREVIEW } from '@/router/routerName'
 import { isArray } from '@/utils/is'
 import { FormItemTypeEnum } from '@/enums/formItemTypeEnum'
@@ -409,27 +411,29 @@ const preview = () => {
   }
 }
 
-const confirmStatusChange = async (action: 'publish' | 'close') => {
+const confirmStatusChange = (action: 'publish' | 'close') => {
   if (saving.value) return
-  saving.value = true
-  try {
-    try {
-      await ElMessageBox.confirm(
-        $t(action === 'publish' ? 'jobPosition.publishConfirm' : 'jobPosition.closeConfirm'),
-        $t(action === 'publish' ? 'jobPosition.publishJob' : 'jobPosition.closeJob'),
-        { type: 'warning', confirmButtonText: $t(action === 'publish' ? 'jobPosition.publishJob' : 'jobPosition.closeJob'), cancelButtonText: $t('button.cancel') }
-      )
-    } catch (error) {
-      if (error === 'cancel' || error === 'close') return
-      throw error
+  mittBus.emit(OPEN_DIALOG, {
+    title: $t(action === 'publish' ? 'jobPosition.publishJob' : 'jobPosition.closeJob'),
+    content: $t(action === 'publish' ? 'jobPosition.publishConfirm' : 'jobPosition.closeConfirm'),
+    center: 'center',
+    size: 'small',
+    showCancelButton: true,
+    cancelButtonText: $t('button.cancel'),
+    confirmButtonText: $t('button.confirm'),
+    confirm: async () => {
+      if (saving.value) return
+      saving.value = true
+      try {
+        await save(action)
+      } catch (error) {
+        console.error('Failed to change job status', error)
+        ElMessage.error($t('jobPosition.jobStatusError'))
+      } finally {
+        saving.value = false
+      }
     }
-    await save(action)
-  } catch (error) {
-    console.error('Failed to confirm job status change', error)
-    ElMessage.error($t('jobPosition.jobStatusError'))
-  } finally {
-    saving.value = false
-  }
+  })
 }
 
 const save = async (action?: 'publish' | 'close') => {
@@ -489,11 +493,24 @@ const save = async (action?: 'publish' | 'close') => {
   }
   const payload = formData as JobPosition.JonPositionInfo
   if (!action) saving.value = true
+  let saved = false
   try {
-    const res = action === 'publish' ? await publishJobPosition(payload)
-      : action === 'close' ? await closeJobPosition(payload)
-      : props.isEdit ? await editJobPosition(payload) : await createJobPosition(payload)
+    if (action && !props.id) throw new Error('Job position ID is missing')
+    const res = props.isEdit ? await editJobPosition(payload) : await createJobPosition(payload)
     if (res?.success) {
+      saved = true
+      if (action && props.id) {
+        savedTabData.questions = JSON.stringify(formData.screening_questions)
+        savedTabData.pipeline = JSON.stringify(formData.recruitment_pipeline_rounds)
+        savedTabData.evaluation = JSON.stringify(formData.evaluation_plan_rounds)
+        const statusResult = action === 'publish'
+          ? await publishJobPosition(props.id)
+          : await closeJobPosition(props.id)
+        if (!statusResult?.success || statusResult.result !== true) {
+          ElMessage.error($t('jobPosition.jobStatusAfterSaveError'))
+          return
+        }
+      }
       ElMessage.success({ message: action ? $t(action === 'publish' ? 'jobPosition.publishSuccess' : 'jobPosition.closeSuccess') : $t('message.saveSuc') })
       if (props.isEdit) {
         goBack()
@@ -504,10 +521,10 @@ const save = async (action?: 'publish' | 'close') => {
       }
       return
     }
-    ElMessage.error({ message: res?.message || $t(action ? 'jobPosition.jobStatusError' : 'jobPosition.jobSaveError') })
+    ElMessage.error({ message: res?.message || $t('jobPosition.jobSaveError') })
   } catch (error) {
     console.error('Failed to save job position', error)
-    ElMessage.error($t(action ? 'jobPosition.jobStatusError' : 'jobPosition.jobSaveError'))
+    ElMessage.error($t(saved && action ? 'jobPosition.jobStatusAfterSaveError' : 'jobPosition.jobSaveError'))
   } finally {
     if (!action) saving.value = false
   }

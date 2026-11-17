@@ -40,6 +40,8 @@ import { TableColumnFixedEnum } from '@/enums/tableColumnFixedEnum'
 import { UserPermissionEnum } from '@/enums/userPermission'
 import { useGlobalStore } from '@/store/modules/global'
 import { useLocale } from '@/hooks/useLocale'
+import mittBus from '@/utils/mittBus'
+import { OPEN_DIALOG } from '@/config'
 import { planTypeMessageKey } from '@/utils/planType'
 import { ROUTER_SETTINGS_SCREENING_FORMS_CREATE, ROUTER_SETTINGS_SCREENING_FORMS_EDIT, ROUTER_SETTINGS_SCREENING_FORMS_VIEW } from '@/router/routerName'
 
@@ -82,17 +84,36 @@ const formUrl = (row: ScreeningFormListItem) =>
   `/${canEdit(row) ? ROUTER_SETTINGS_SCREENING_FORMS_EDIT : ROUTER_SETTINGS_SCREENING_FORMS_VIEW}/${encodeURIComponent(row.id)}`
 const openEdit = (row: ScreeningFormListItem) => router.push(formUrl(row))
 const create = (template: boolean) => router.push({ path: `/${ROUTER_SETTINGS_SCREENING_FORMS_CREATE}`, query: template ? { template: '1' } : {} })
-const remove = async (row: ScreeningFormListItem) => {
-  try {
-    await ElMessageBox.confirm($t('screeningForms.deleteConfirm'), $t('opt.delete'), { type: 'warning' })
-  } catch {
-    return
-  }
-  const result = await deactivateScreeningForm(row.id)
-  if (result?.success) {
-    ElMessage.success($t('message.deleteSuc'))
-    table.value?.refresh(null, true)
-  }
+const deleting = ref(false)
+const remove = (row: ScreeningFormListItem) => {
+  if (deleting.value) return
+  mittBus.emit(OPEN_DIALOG, {
+    title: $t('screeningForms.deleteTitle'),
+    content: $t('screeningForms.deleteConfirm'),
+    center: 'center',
+    size: 'small',
+    showCancelButton: true,
+    cancelButtonText: $t('button.cancel'),
+    confirmButtonText: $t('button.confirm'),
+    confirm: async () => {
+      if (deleting.value) return
+      deleting.value = true
+      try {
+        const result = await deactivateScreeningForm(row.id)
+        if (!result?.success || result.result !== true) {
+          ElMessage.error(result?.message || $t('screeningForms.deleteError'))
+          return
+        }
+        ElMessage.success($t('message.deleteSuc'))
+        table.value?.refresh(null, true)
+      } catch (error) {
+        console.error('Failed to delete screening questions form', error)
+        ElMessage.error($t('screeningForms.deleteError'))
+      } finally {
+        deleting.value = false
+      }
+    }
+  })
 }
 onMounted(async () => {
   const result = await getUserList(ShareTypeEnum.INTERVIEWER)

@@ -25,7 +25,7 @@ export const JOB_POSITION_TABLE: Table.ColumnProps[] = [
   {
     columnType: TableColumnTypeEnum.OPERATION,
     label: $t('table.operate'),
-    width: 50,
+    width: 80,
     fixed: TableColumnFixedEnum.LEFT,
     isShow: isHasPermission(UserPermissionEnum.JPE)
   },

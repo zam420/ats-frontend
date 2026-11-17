@@ -25,9 +25,8 @@ export const createJobPosition = (data: JobPosition.JonPositionInfo) => {
   return http.post<ResultCreate>('api/job/create', data)
 }
 
-// 删除 Job Position
-export const deleteJobPosition = (id: number) => {
-  return http.post<JobPosition.JobPositionDetail>('api/job/deleteJobPosition', { id })
+export const deactivateJobPosition = (id: string) => {
+  return http.post<boolean>(`api/job/deactivate/${encodeURIComponent(id)}`)
 }
 
 // 修改 Job Position
@@ -36,12 +35,12 @@ export const editJobPosition = (data: JobPosition.JonPositionInfo) => {
 }
 
 // 发布 Job Position
-export const publishJobPosition = (data: JobPosition.JonPositionInfo) => {
-  return http.post<boolean>('api/job/publish', data)
+export const publishJobPosition = (id: string) => {
+  return http.post<boolean>(`api/job/publish/${encodeURIComponent(id)}`)
 }
 
-export const closeJobPosition = (data: JobPosition.JonPositionInfo) => {
-  return http.post<boolean>('api/job/close', data)
+export const closeJobPosition = (id: string) => {
+  return http.post<boolean>(`api/job/close/${encodeURIComponent(id)}`)
 }
 
 // 获取 Job Position 的详情

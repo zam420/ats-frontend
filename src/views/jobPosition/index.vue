@@ -42,11 +42,11 @@
             <i @click="showEdit(row.id)" class="iconfont icon-edit text-primary-gradient"></i>
           </span>
         </el-tooltip>
-        <!-- <el-tooltip :content="$t('opt.delete')" placement="top">
-          <span class="operation-icon disabled">
-            <i @click="showDelete(row.id)" class="iconfont icon-delete text-primary-gradient"></i>
+        <el-tooltip v-if="canEdit(row)" :content="$t('opt.delete')" placement="top">
+          <span class="operation-icon">
+            <i @click="showDelete(row)" class="iconfont icon-delete text-primary-gradient"></i>
           </span>
-        </el-tooltip> -->
+        </el-tooltip>
       </template>
     </EspTable>
   </EspMain>
@@ -55,18 +55,20 @@
 import { JOB_POSITION_TABLE } from './data'
 import { ROUTER_JOB_POSITION_CREATE, ROUTER_JOB_POSITION_EDIT, ROUTER_JOB_POSITION_VIEW } from '@/router/routerName'
 import { useLocale } from '@/hooks/useLocale'
-import { getJobFieldsData, getJobPositionList } from '@/api/modules/jobPosition'
+import { deactivateJobPosition, getJobFieldsData, getJobPositionList } from '@/api/modules/jobPosition'
 import JobPosition from '@/api/interface/jobPosition'
 import { WorkLocation } from '@/enums/workLocationEnum'
 import { UserPermissionEnum } from '@/enums/userPermission'
 import { useGlobalStore } from '@/store/modules/global'
+import mittBus from '@/utils/mittBus'
+import { OPEN_DIALOG } from '@/config'
 
 const router = useRouter()
 const { $t } = useLocale()
 const globalStore = useGlobalStore()
 
 const espTable = ref()
-// const curId = ref<number>()
+const deleting = ref(false)
 
 const tabs = ref<Form.FormSelect[]>([
   { label: 'All', value: 'all' },
@@ -140,26 +142,36 @@ const createJob = () => {
 const showEdit = (id: string | number) => {
   router.push(`/${ROUTER_JOB_POSITION_EDIT}/${encodeURIComponent(id)}`)
 }
-// const showDelete = (id: number) => {
-//   curId.value = id
-//   mittBus.emit(OPEN_DIALOG, {
-//     title: $t('message.tips'),
-//     content: $t('message.deleteQues'),
-//     center: 'center',
-//     size: 'small',
-//     confirm: deleteInfo
-//   })
-// }
-// const deleteInfo = () => {
-//   deleteJobPosition(curId.value as number).then(res => {
-//     if (res?.success) {
-//       ElMessage.success({ message: $t('message.deleteSuc') })
-//       espTable.value && espTable.value.changeSearch(null, null, true)
-//       return
-//     }
-//     ElMessage.error({ message: res?.message })
-//   })
-// }
+const showDelete = (row: JobPosition.JobPositionListItem) => {
+  if (deleting.value) return
+  mittBus.emit(OPEN_DIALOG, {
+    title: $t('jobPosition.deleteTitle'),
+    content: $t('jobPosition.deleteConfirm'),
+    center: 'center',
+    size: 'small',
+    showCancelButton: true,
+    cancelButtonText: $t('button.cancel'),
+    confirmButtonText: $t('button.confirm'),
+    confirm: async () => {
+      if (deleting.value) return
+      deleting.value = true
+      try {
+        const res = await deactivateJobPosition(row.id)
+        if (!res?.success || res.result !== true) {
+          ElMessage.error(res?.message || $t('jobPosition.deleteError'))
+          return
+        }
+        ElMessage.success($t('message.deleteSuc'))
+        espTable.value?.refresh(undefined, true)
+      } catch (error) {
+        console.error('Failed to delete job position', error)
+        ElMessage.error($t('jobPosition.deleteError'))
+      } finally {
+        deleting.value = false
+      }
+    }
+  })
+}
 
 </script>
 <style lang="less" scoped>
