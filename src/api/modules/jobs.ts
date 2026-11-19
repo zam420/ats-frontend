@@ -8,6 +8,7 @@ export interface CandidateJobSummary {
   title: string
   company_name: string
   company_has_logo: boolean
+  company_logo_url: string | null
   published_at: string | null
   short_description: string | null
   employment_type: number
@@ -24,4 +25,5 @@ export interface CandidateJob extends Omit<CandidateJobSummary, 'short_descripti
 export const getJobs = (params: object) => http.get<ResPage<CandidateJobSummary>>('/api/jobs/all', params, { preserveHtml: true })
 export const getJobsFilters = () => http.get<JobPosition.JobSearchFields>('/api/jobs/filters')
 export const getJob = (id: string) => http.get<CandidateJob>(`/api/jobs/${encodeURIComponent(id)}`, undefined, { preserveHtml: true })
-export const getJobLogo = (id: string) => http.getFile<never>(`/api/jobs/${encodeURIComponent(id)}/logo`, undefined, { noLoading: true })
+export const resolveJobLogoUrl = (url: string) =>
+  new URL(url, new URL(import.meta.env.VITE_API_URL || '/', window.location.origin)).href

@@ -2,7 +2,7 @@
   <button type="button" class="job-card" @click="$emit('open', job.id)">
     <div class="card-header">
       <div class="logo-slot">
-        <img v-if="logoUrl" :src="logoUrl" :alt="job.company_name" />
+        <img v-if="logoUrl && !logoError" :src="logoUrl" :alt="job.company_name" @error="onLogoError" />
         <span v-else-if="logoError" class="logo-error">{{ $t('jobPosition.previewLogoError') }}</span>
       </div>
       <div>
@@ -24,35 +24,24 @@
 <script setup lang="ts">
 import moment from 'moment'
 import { DATE_FORMAT } from '@/config'
-import { getJobLogo, type CandidateJobSummary } from '@/api/modules/jobs'
+import { resolveJobLogoUrl, type CandidateJobSummary } from '@/api/modules/jobs'
 import type JobPosition from '@/api/interface/jobPosition'
 import { WorkLocation } from '@/enums/workLocationEnum'
 
 const props = defineProps<{ job: CandidateJobSummary; fields: JobPosition.JobSearchFields }>()
 defineEmits<{ (event: 'open', id: string): void }>()
-const logoUrl = ref('')
+const logoUrl = computed(() => props.job.company_logo_url ? resolveJobLogoUrl(props.job.company_logo_url) : '')
 const logoError = ref(false)
 const employmentType = computed(() => props.fields.employment_types.find(item => item.id === props.job.employment_type)?.name ?? String(props.job.employment_type))
 const workArrangement = computed(() => props.fields.work_arrangement_types.find(item => item.id === props.job.work_arrangement_type)?.name ?? String(props.job.work_arrangement_type))
 const workLocation = computed(() => props.job.work_location.map(value => WorkLocation[String(value)]?.name ?? String(value)).join(', '))
 const postedDate = computed(() => props.job.published_at && moment(props.job.published_at).isValid()
   ? moment(props.job.published_at).format(DATE_FORMAT) : '—')
-let disposed = false
-onMounted(async () => {
-  if (!props.job.company_has_logo) return
-  try {
-    const logo = await getJobLogo(props.job.id)
-    if (!(logo instanceof Blob) || !['image/png', 'image/jpeg', 'image/svg+xml'].includes(logo.type)) throw new Error('Invalid company logo')
-    if (!disposed) logoUrl.value = URL.createObjectURL(logo)
-  } catch (error) {
-    console.error('Failed to load job company logo', error)
-    if (!disposed) logoError.value = true
-  }
-})
-onBeforeUnmount(() => {
-  disposed = true
-  if (logoUrl.value) URL.revokeObjectURL(logoUrl.value)
-})
+watch(logoUrl, () => { logoError.value = false })
+const onLogoError = () => {
+  console.error('Failed to load job company logo')
+  logoError.value = true
+}
 </script>
 
 <style lang="less" scoped>

@@ -2,7 +2,6 @@
   <EspMain :title="$t('jobPosition.preview')">
     <div v-loading="loading" class="preview-content">
       <el-alert v-if="loadError" :title="$t('jobPosition.previewJobLoadError')" type="error" :closable="false" />
-      <el-alert v-if="logoError" :title="$t('jobPosition.previewLogoError')" type="error" :closable="false" />
       <JobPositionPreview v-if="preview" embedded :preview-data="preview" :company-name="companyName"
         :company-logo-url="logoUrl" :published-at="publishedAt" />
     </div>
@@ -10,7 +9,7 @@
 </template>
 
 <script setup lang="ts">
-import { getJob, getJobLogo, getJobsFilters } from '@/api/modules/jobs'
+import { getJob, getJobsFilters, resolveJobLogoUrl } from '@/api/modules/jobs'
 import { WorkLocation } from '@/enums/workLocationEnum'
 import JobPositionPreview from '@/views/jobPosition/JobPositionPreview.vue'
 import { toPreviewQuestions, type JobPreview } from '@/views/jobPosition/jobPreview'
@@ -18,7 +17,6 @@ import { toPreviewQuestions, type JobPreview } from '@/views/jobPosition/jobPrev
 const route = useRoute()
 const loading = ref(true)
 const loadError = ref(false)
-const logoError = ref(false)
 const preview = ref<JobPreview>()
 const companyName = ref('')
 const logoUrl = ref('')
@@ -58,16 +56,7 @@ onMounted(async () => {
     }
     companyName.value = job.company_name
     publishedAt.value = job.published_at
-    if (job.company_has_logo) {
-      try {
-        const logo = await getJobLogo(id)
-        if (!(logo instanceof Blob) || !['image/png', 'image/jpeg', 'image/svg+xml'].includes(logo.type)) throw new Error('Invalid company logo')
-        if (!disposed) logoUrl.value = URL.createObjectURL(logo)
-      } catch (error) {
-        console.error('Failed to load company logo', error)
-        if (!disposed) logoError.value = true
-      }
-    }
+    logoUrl.value = job.company_logo_url ? resolveJobLogoUrl(job.company_logo_url) : ''
   } catch (error) {
     console.error('Failed to load job preview', error)
     if (!disposed) loadError.value = true
@@ -77,7 +66,6 @@ onMounted(async () => {
 })
 onBeforeUnmount(() => {
   disposed = true
-  if (logoUrl.value) URL.revokeObjectURL(logoUrl.value)
 })
 </script>
 

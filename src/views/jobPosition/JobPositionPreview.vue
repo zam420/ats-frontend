@@ -6,7 +6,7 @@
       <el-alert v-if="logoError" :title="$t('jobPosition.previewLogoError')" type="error" :closable="false" />
       <header class="company-header">
         <div class="logo-slot">
-          <img v-if="logoUrl" :src="logoUrl" :alt="company?.name ?? ''" class="company-logo" />
+          <img v-if="logoUrl && !logoError" :src="logoUrl" :alt="company?.name ?? ''" class="company-logo" @error="onLogoError" />
         </div>
         <div class="company-heading">
           <div class="job-title-row">
@@ -77,6 +77,10 @@ const logoUrl = ref('')
 const loading = ref(false)
 const companyError = ref(false)
 const logoError = ref(false)
+const onLogoError = () => {
+  console.error('Failed to load company logo')
+  logoError.value = true
+}
 const loadError = ref(false)
 const activePreviewTab = ref('description')
 const description = computed(() => jobRichTextToHtml(preview.value?.description))
@@ -89,6 +93,7 @@ watch(() => [props.previewData, props.companyName, props.companyLogoUrl] as cons
   preview.value = data ?? null
   company.value = name ? { name, has_logo: !!logo } : null
   logoUrl.value = logo ?? ''
+  logoError.value = false
   activePreviewTab.value = 'description'
 }, { immediate: true })
 
