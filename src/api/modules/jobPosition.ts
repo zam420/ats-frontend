@@ -25,6 +25,10 @@ export const createJobPosition = (data: JobPosition.JonPositionInfo) => {
   return http.post<ResultCreate>('api/job/create', data)
 }
 
+export const saveAsJobPosition = (data: JobPosition.JonPositionInfo) => {
+  return http.post<ResultCreate>('api/job/saveas', data)
+}
+
 export const deactivateJobPosition = (id: string) => {
   return http.post<boolean>(`api/job/deactivate/${encodeURIComponent(id)}`)
 }

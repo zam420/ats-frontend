@@ -1,7 +1,7 @@
 <template>
-  <EspMain :title="$t('jobPosition.preview')">
-    <el-alert v-if="!preview" :title="$t('jobPosition.previewUnavailable')" type="warning" :closable="false" />
-    <article v-else class="job-preview" v-loading="loading">
+  <component :is="embedded ? 'div' : EspMain" :title="embedded ? undefined : $t('jobPosition.preview')">
+    <el-alert v-if="!preview && !loading" :title="$t(loadError ? 'jobPosition.previewJobLoadError' : 'jobPosition.previewUnavailable')" :type="loadError ? 'error' : 'warning'" :closable="false" />
+    <article v-if="preview" class="job-preview" v-loading="loading">
       <el-alert v-if="companyError" :title="$t('jobPosition.previewCompanyError')" type="error" :closable="false" />
       <el-alert v-if="logoError" :title="$t('jobPosition.previewLogoError')" type="error" :closable="false" />
       <header class="company-header">
@@ -52,13 +52,16 @@
         </el-tab-pane>
       </el-tabs>
     </article>
-  </EspMain>
+  </component>
 </template>
 
 <script setup lang="ts">
 import { getCurrentTenant, getCurrentTenantLogo, type Tenant } from '@/api/modules/tenant'
+import EspMain from '@/components/EspMain/index.vue'
+import { getJobFieldsData, getJobPositionDetail } from '@/api/modules/jobPosition'
+import { WorkLocation } from '@/enums/workLocationEnum'
 import { jobRichTextToHtml } from './jobRichText'
-import { readJobPreview } from './jobPreview'
+import { readJobPreview, toPreviewQuestions, type JobPreview } from './jobPreview'
 import ScreeningQuestionsPreview from './components/ScreeningQuestionsPreview.vue'
 import ApplicantInformationPreview from './components/ApplicantInformationPreview.vue'
 import moment from 'moment'
@@ -66,30 +69,86 @@ import { DATE_FORMAT } from '@/config'
 import '@vueup/vue-quill/dist/vue-quill.snow.css'
 import './jobRichText.less'
 
+const props = defineProps<{ embedded?: boolean; previewData?: JobPreview; companyName?: string; companyLogoUrl?: string; publishedAt?: string | null }>()
 const route = useRoute()
 const preview = ref<ReturnType<typeof readJobPreview>>(null)
-const company = ref<Tenant | null>(null)
+const company = ref<Pick<Tenant, 'name' | 'has_logo'> | null>(null)
 const logoUrl = ref('')
 const loading = ref(false)
 const companyError = ref(false)
 const logoError = ref(false)
+const loadError = ref(false)
 const activePreviewTab = ref('description')
 const description = computed(() => jobRichTextToHtml(preview.value?.description))
-const postedDate = moment().format(DATE_FORMAT)
+const postedDate = computed(() => props.embedded
+  ? (props.publishedAt && moment(props.publishedAt).isValid() ? moment(props.publishedAt).format(DATE_FORMAT) : '—')
+  : moment().format(DATE_FORMAT))
 let disposed = false
+watch(() => [props.previewData, props.companyName, props.companyLogoUrl] as const, ([data, name, logo]) => {
+  if (!props.embedded) return
+  preview.value = data ?? null
+  company.value = name ? { name, has_logo: !!logo } : null
+  logoUrl.value = logo ?? ''
+  activePreviewTab.value = 'description'
+}, { immediate: true })
 
 const scrollToApplication = () => {
   document.getElementById('your-application-heading')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 onMounted(async () => {
+  if (props.embedded) return
+  loading.value = true
   try {
-    preview.value = readJobPreview(route.query.preview)
+    if (typeof route.params.id === 'string') {
+      const [jobResponse, fieldsResponse] = await Promise.all([
+        getJobPositionDetail(route.params.id),
+        getJobFieldsData()
+      ])
+      const job = jobResponse.result
+      const fields = fieldsResponse.result
+      if (!jobResponse.success || !job || !fieldsResponse.success || !fields ||
+          !Array.isArray(fields.employment_types) || !Array.isArray(fields.work_arrangement_types) ||
+          !Array.isArray(fields.screening_question_types) || !Array.isArray(job.work_location)) {
+        throw new Error('Job preview data is missing')
+      }
+      if (job.application_questions_display_mode !== 'WITH_DESCRIPTION' && job.application_questions_display_mode !== 'SEPARATE_TABS' &&
+          job.application_questions_display_mode !== 0 && job.application_questions_display_mode !== 1) {
+        throw new Error('Invalid application questions display mode')
+      }
+      const employmentType = fields.employment_types.find(type => type.id === job.employment_type)?.name
+      const workArrangement = fields.work_arrangement_types.find(type => type.id === job.work_arrangement_type)?.name
+      if (!employmentType || !workArrangement) throw new Error('Job preview field options are missing')
+      const workLocation = job.work_location.map(location => {
+        const value = typeof location === 'number' ? location : location.value
+        const name = WorkLocation[String(value)]?.name
+        if (!name) throw new Error(`Unknown work location: ${value}`)
+        return name
+      }).join(', ')
+      const questions = (job.screening_questions ?? [])
+        .map(({ screening_question_type_id, ...question }) => ({ ...question, screening_question_type: screening_question_type_id }))
+        .sort((a, b) => a.order - b.order)
+      const savedPreview: JobPreview = {
+        title: job.title,
+        description: job.description,
+        employmentType,
+        workArrangement,
+        workLocation,
+        screeningDisplayMode: job.application_questions_display_mode === 'WITH_DESCRIPTION' || job.application_questions_display_mode === 0 ? 'description' : 'tab',
+        questions: toPreviewQuestions(questions, fields.screening_question_types)
+      }
+      if (disposed) return
+      preview.value = savedPreview
+    } else {
+      preview.value = readJobPreview(route.query.preview)
+    }
   } catch (error) {
-    console.error('Failed to read job preview', error)
+    console.error('Failed to load job preview', error)
+    if (!disposed) loadError.value = true
+  } finally {
+    if (!preview.value) loading.value = false
   }
   if (!preview.value) return
-  loading.value = true
   try {
     const response = await getCurrentTenant()
     if (!response?.result || typeof response.result.name !== 'string') {
@@ -119,7 +178,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   disposed = true
-  if (logoUrl.value) URL.revokeObjectURL(logoUrl.value)
+  if (!props.embedded && logoUrl.value) URL.revokeObjectURL(logoUrl.value)
 })
 </script>
 

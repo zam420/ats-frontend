@@ -11,7 +11,7 @@ declare namespace JobPosition {
     employment_type_id: number
     work_arrangement_type_id: number
     experience_level_type: number
-    application_questions_display_mode: ApplicationQuestionsDisplayMode
+    application_questions_display_mode: number
     screening_questions: Array<Omit<ScreeningQuestion, 'id' | 'screening_question_type'> & { screening_question_type_id: number }>
     recruitment_pipeline_rounds: RecruitmentPipeline.RoundParam[]
     evaluation_plan_rounds: InterviewProcess.RoundParam[]
@@ -44,8 +44,9 @@ declare namespace JobPosition {
     title: string
     employment_type: number
     work_arrangement_type: number
+    experience_level_type: number | null
     work_location: (number | CommonEnum.enumItem)[] | null
-    status: string
+    status: number | string
     owner_id: string | null
   }
   interface JobPositionDetail {
@@ -60,7 +61,7 @@ declare namespace JobPosition {
     work_arrangement_type_id?: number
     work_arrangement_type?: number
     experience_level_type: number
-    application_questions_display_mode: ApplicationQuestionsDisplayMode
+    application_questions_display_mode: ApplicationQuestionsDisplayMode | 0 | 1
     screening_questions?: Array<Omit<ScreeningQuestion, 'screening_question_type'> & { screening_question_type_id: number }> | null
     recruitment_pipeline_rounds?: RecruitmentPipeline.RoundParam[] | null
     evaluation_plan_rounds?: InterviewProcess.RoundParam[] | null
@@ -84,7 +85,7 @@ declare namespace JobPosition {
     resume_inbox: number
     status_name: string
     status: number
-    work_location: CommonEnum.enumItem[] | string
+    work_location: (number | CommonEnum.enumItem)[] | string
     extended_questions?: string[]
     interview_process_templates?: ProcessTemp[]
     public_interview_feedback?: boolean
@@ -97,10 +98,16 @@ declare namespace JobPosition {
     name: string
     email?: string
   }
-  interface JobFieldsData {
+  interface JobSearchFields {
     employment_types: FieldOption[]
     work_arrangement_types: FieldOption[]
     experience_level_types: FieldOption[]
+    job_status: { id: number; name: string }[]
+    job_posted_date_types: { id: number; name: string }[]
+    screening_question_types: ScreeningQuestionType[]
+  }
+  interface JobFieldsData extends JobSearchFields {
+    job_questions_display_mode: { id: number; name: string }[]
     recruitment_pipelines: FieldOption[]
     evaluation_plans: FieldOption[]
     screening_questions_forms: ScreeningFormListItem[]
@@ -108,7 +115,6 @@ declare namespace JobPosition {
     hiring_managers: FieldOption[]
     evaluation_plan_round_types: InterviewProcess.RoundType[]
     recruitment_pipeline_round_types: RecruitmentPipeline.RoundType[]
-    screening_question_types: ScreeningQuestionType[]
   }
 }
 export default JobPosition

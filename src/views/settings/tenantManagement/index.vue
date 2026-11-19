@@ -150,7 +150,7 @@ const selectLogo = async (event: Event) => {
     const extension = file.name.toLowerCase().split('.').pop()
     if (!['jpg', 'jpeg', 'png', 'svg'].includes(extension ?? '') || !file.size || file.size > 1024 * 1024) throw new Error('Invalid logo')
     const [width, height] = extension === 'svg' ? await svgDimensions(file) : await rasterDimensions(file)
-    if (![width, height].every(value => Number.isFinite(value) && value > 0 && value <= 140)) throw new Error('Invalid dimensions')
+    if (![width, height].every(value => Number.isFinite(value) && value > 0 && value <= 200)) throw new Error('Invalid dimensions')
     if (version !== logoVersion) return
     logo.value = file
     setPreview(file)

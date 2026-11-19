@@ -1,12 +1,15 @@
 import { useLocale } from '@/hooks/useLocale'
 import {
   ROUTER_JOB_POSITION,
+  ROUTER_JOBS,
+  ROUTER_JOBS_PREVIEW,
   ROUTER_JOB_POSITION_CREATE,
   ROUTER_JOB_POSITION_DETAIL,
   ROUTER_JOB_POSITION_EDIT,
   ROUTER_JOB_POSITION_VIEW,
   ROUTER_JOB_POSITION_CREATE_PREVIEW,
-  ROUTER_JOB_POSITION_EDIT_PREVIEW
+  ROUTER_JOB_POSITION_EDIT_PREVIEW,
+  ROUTER_JOB_POSITION_LIST_PREVIEW
 } from '../routerName'
 import { UserPermissionEnum } from '@/enums/userPermission'
 
@@ -14,6 +17,28 @@ const { $t } = useLocale()
 
 // Home Module
 const jobPositionRouter: Menu.MenuOptions[] = [
+  {
+    path: `/${ROUTER_JOBS}`,
+    name: ROUTER_JOBS,
+    component: () => import('@/views/jobs/index.vue'),
+    meta: {
+      icon: 'job',
+      title: $t('menu.jobs'),
+      index: -2,
+      permissionCode: UserPermissionEnum.JPSC
+    }
+  },
+  {
+    path: `/${ROUTER_JOBS_PREVIEW}/:id`,
+    name: ROUTER_JOBS_PREVIEW,
+    component: () => import('@/views/jobs/JobPreview.vue'),
+    meta: {
+      title: $t('jobPosition.preview'),
+      isHide: true,
+      activeMenu: `/${ROUTER_JOBS}`,
+      permissionCode: UserPermissionEnum.JPSC
+    }
+  },
   ...[
     { path: ROUTER_JOB_POSITION_CREATE_PREVIEW, permission: UserPermissionEnum.JPC },
     { path: ROUTER_JOB_POSITION_EDIT_PREVIEW, permission: UserPermissionEnum.JPE }
@@ -28,6 +53,17 @@ const jobPositionRouter: Menu.MenuOptions[] = [
       permissionCode: permission
     }
   })),
+  {
+    path: `/${ROUTER_JOB_POSITION_LIST_PREVIEW}/:id`,
+    name: ROUTER_JOB_POSITION_LIST_PREVIEW,
+    component: () => import('@/views/jobPosition/JobPositionPreview.vue'),
+    meta: {
+      title: $t('jobPosition.preview'),
+      isHide: true,
+      activeMenu: `/${ROUTER_JOB_POSITION}`,
+      permissionCode: UserPermissionEnum.JPS
+    }
+  },
   {
     path: `/${ROUTER_JOB_POSITION}`,
     name: ROUTER_JOB_POSITION,

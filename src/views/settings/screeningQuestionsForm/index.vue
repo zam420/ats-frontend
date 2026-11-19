@@ -63,7 +63,7 @@ const columns = reactive<Table.ColumnProps[]>([
   { columnType: TableColumnTypeEnum.OPERATION, label: $t('table.operate'), width: 80, fixed: TableColumnFixedEnum.LEFT, isShow: true },
   { prop: 'name', label: $t('screeningForms.name'), filter: false, minWidth: 30 },
   { prop: 'owner_id', label: $t('interviewProcess.owner'), filter: false, sortable: false, minWidth: 20 },
-  { prop: 'question_sequence', label: $t('screeningForms.questionSequence'), filter: false, sortable: false, minWidth: 40 },
+  // { prop: 'question_sequence', label: $t('screeningForms.questionSequence'), filter: false, sortable: false, minWidth: 40 },
   { prop: 'form_type', label: $t('interviewProcess.type'), filter: false, sortable: false, isShow: false, minWidth: 20 },
   { prop: 'description', label: $t('interviewProcess.description'), filter: false, minWidth: 50 }
 ])

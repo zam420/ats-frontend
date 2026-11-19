@@ -5,9 +5,10 @@
     </template>
     <template #right>
       <ElButton v-if="!readOnly" :disabled="!jobReady || saving" @click="preview">{{ $t('jobPosition.previewButton') }}</ElButton>
-      <ElButton v-if="!readOnly && isEdit && state.status === 'DRAFT'" :disabled="!jobReady || templateLoading || saving" @click="confirmStatusChange('publish')">{{ $t('jobPosition.publishJob') }}</ElButton>
-      <ElButton v-if="!readOnly && isEdit && state.status === 'OPEN'" :disabled="!jobReady || templateLoading || saving" @click="confirmStatusChange('close')">{{ $t('jobPosition.closeJob') }}</ElButton>
+      <ElButton v-if="!readOnly && isEdit && (state.status === 'DRAFT' || state.status === JobStatusEnum.Draft)" :disabled="!jobReady || templateLoading || saving" @click="confirmStatusChange('publish')">{{ $t('jobPosition.publishJob') }}</ElButton>
+      <ElButton v-if="!readOnly && isEdit && (state.status === 'OPEN' || state.status === JobStatusEnum.Published)" :disabled="!jobReady || templateLoading || saving" @click="confirmStatusChange('close')">{{ $t('jobPosition.closeJob') }}</ElButton>
       <ElButton :disabled="saving" @click="goBack">{{ $t(readOnly ? 'button.back' : 'button.cancel') }}</ElButton>
+      <EspButton v-if="!readOnly && isEdit" :permission="UserPermissionEnum.JPC" :is-gradient="false" :disabled="!jobReady || templateLoading || saving" @click="save('saveAs')" class="btn-light">{{ $t('interviewProcess.saveAs') }}</EspButton>
       <ElButton v-if="!readOnly" :disabled="!jobReady || templateLoading || saving" @click="save()" class="btn-primary-gradient">{{ $t('button.save') }}</ElButton>
     </template>
     <el-tabs v-model="activeTab" class="job-tabs">
@@ -68,8 +69,8 @@
               <el-col :span="6">
                 <el-form-item :label="$t('jobPosition.screeningDisplayMode')">
                   <el-select v-model="screeningDisplayMode" :disabled="readOnly">
-                    <el-option value="description" :label="$t('jobPosition.withJobDescription')" />
-                    <el-option value="tab" :label="$t('jobPosition.separateTab')" />
+                    <el-option v-for="option in displayModeOptions" :key="option.id"
+                      :value="option.id === 0 ? 'description' : 'tab'" :label="option.name" />
                   </el-select>
                 </el-form-item>
               </el-col>
@@ -137,6 +138,7 @@ import {
 import { getObjectByForms, isEmpty } from '@/utils'
 import {
   createJobPosition,
+  saveAsJobPosition,
   editJobPosition,
   publishJobPosition,
   closeJobPosition,
@@ -148,6 +150,7 @@ import InterviewProcess from '@/api/interface/evaluationPlan'
 import RecruitmentPipeline from '@/api/interface/recruitmentPipeline'
 import { WorkLocation, WorkLocationEnum } from '@/enums/workLocationEnum'
 import { JobStatusEnum, JobStatus } from '@/enums/jobStatusEnum'
+import { UserPermissionEnum } from '@/enums/userPermission'
 import { useLocale } from '@/hooks/useLocale'
 import { OPEN_DIALOG } from '@/config'
 import { showFullScreenLoading, tryHideFullScreenLoading } from '@/config/serviceLoading'
@@ -192,6 +195,7 @@ const saving = ref(false)
 const screeningForms = ref<ScreeningFormListItem[]>([])
 const screeningQuestionTypes = ref<ScreeningQuestionType[] | null>(null)
 const screeningDisplayMode = ref<ScreeningDisplayMode>('description')
+const displayModeOptions = ref<{ id: number; name: string }[]>([])
 const screeningFormRef = ref<InstanceType<typeof ScreeningFormPage>>()
 const pipelineEditorRef = ref<InstanceType<typeof RecruitmentPipelineForm>>()
 const evaluationEditorRef = ref<InstanceType<typeof EvaluationForm>>()
@@ -439,8 +443,9 @@ const confirmStatusChange = (action: 'publish' | 'close') => {
   })
 }
 
-const save = async (action?: 'publish' | 'close') => {
-  if (props.readOnly || (saving.value && !action)) return
+const save = async (action?: 'publish' | 'close' | 'saveAs') => {
+  const statusAction = action === 'publish' || action === 'close'
+  if (props.readOnly || (saving.value && !statusAction)) return
   const basicValid = await espBasicRef.value.validateFrom(null, null, false)
   const descValid = jobDescRef.value?.validate()
   const internalDetailsValid = await espInternalDetailsRef.value.validateFrom(null, null, false)
@@ -455,12 +460,17 @@ const save = async (action?: 'publish' | 'close') => {
   const detailForm = {
     description: jobDescRef.value.getContent()
   }
+  const displayMode = displayModeOptions.value.find(option => option.id === (screeningDisplayMode.value === 'description' ? 0 : 1))
+  if (!displayMode) {
+    ElMessage.error($t('jobPosition.fieldsLoadError'))
+    return
+  }
   const formData: Record<string, any> = {
     ...baseForm,
     ...detailForm,
     ...getObjectByForms(state.internalDetailsForm),
     ...getObjectByForms(state.hiringTeamForm),
-    application_questions_display_mode: screeningDisplayMode.value === 'description' ? 'WITH_DESCRIPTION' : 'SEPARATE_TABS'
+    application_questions_display_mode: displayMode.id
   }
   try {
     if (!screeningFormRef.value) throw new Error('Screening editor is not ready')
@@ -491,18 +501,38 @@ const save = async (action?: 'publish' | 'close') => {
   formData.work_arrangement_type = formData.work_arrangement_type_id
   delete formData.employment_type_id
   delete formData.work_arrangement_type_id
-  if (props.isEdit) {
+  if (props.isEdit && action !== 'saveAs') {
     formData.id = props.id
   }
   const payload = formData as JobPosition.JonPositionInfo
-  if (!action) saving.value = true
+  if (!statusAction) saving.value = true
   let saved = false
   try {
-    if (action && !props.id) throw new Error('Job position ID is missing')
-    const res = props.isEdit ? await editJobPosition(payload) : await createJobPosition(payload)
+    if (action === 'saveAs') {
+      try {
+        const { value } = await ElMessageBox.prompt($t('jobPosition.saveAsTitle'), $t('interviewProcess.saveAs'), {
+          confirmButtonText: $t('button.confirm'),
+          cancelButtonText: $t('button.cancel'),
+          inputValue: '',
+          inputPlaceholder: $t('jobPosition.jobTitle'),
+          inputValidator: (val: string) => {
+            const title = (val ?? '').trim()
+            return (title.length > 0 && title.length <= 100) || $t('jobPosition.saveAsTitleValidation')
+          }
+        })
+        payload.title = value.trim()
+      } catch (error) {
+        if (error === 'cancel' || error === 'close') return
+        throw error
+      }
+    }
+    if (statusAction && !props.id) throw new Error('Job position ID is missing')
+    const res = action === 'saveAs'
+      ? await saveAsJobPosition(payload)
+      : props.isEdit ? await editJobPosition(payload) : await createJobPosition(payload)
     if (res?.success) {
       saved = true
-      if (action && props.id) {
+      if (statusAction && props.id) {
         savedTabData.questions = JSON.stringify(formData.screening_questions)
         savedTabData.pipeline = JSON.stringify(formData.recruitment_pipeline_rounds)
         savedTabData.evaluation = JSON.stringify(formData.evaluation_plan_rounds)
@@ -514,7 +544,7 @@ const save = async (action?: 'publish' | 'close') => {
           return
         }
       }
-      ElMessage.success({ message: action ? $t(action === 'publish' ? 'jobPosition.publishSuccess' : 'jobPosition.closeSuccess') : $t('message.saveSuc') })
+      ElMessage.success({ message: statusAction ? $t(action === 'publish' ? 'jobPosition.publishSuccess' : 'jobPosition.closeSuccess') : $t('message.saveSuc') })
       if (props.isEdit) {
         goBack()
       } else {
@@ -527,9 +557,9 @@ const save = async (action?: 'publish' | 'close') => {
     ElMessage.error({ message: res?.message || $t('jobPosition.jobSaveError') })
   } catch (error) {
     console.error('Failed to save job position', error)
-    ElMessage.error($t(saved && action ? 'jobPosition.jobStatusAfterSaveError' : 'jobPosition.jobSaveError'))
+    ElMessage.error($t(saved && statusAction ? 'jobPosition.jobStatusAfterSaveError' : 'jobPosition.jobSaveError'))
   } finally {
-    if (!action) saving.value = false
+    if (!statusAction) saving.value = false
   }
 }
 
@@ -564,9 +594,12 @@ getJobFieldsData().then(res => {
   if (!res.success || !data) {
     throw new Error(res.message || 'Job fields are missing')
   }
-  if (!Array.isArray(data.experience_level_types)) {
-    throw new Error('Experience level types are missing')
+  if (!Array.isArray(data.experience_level_types) || !Array.isArray(data.job_questions_display_mode) ||
+      ![0, 1].every(id => data.job_questions_display_mode.some(option => option.id === id && !!option.name)) ||
+      data.job_questions_display_mode.some(option => option.id !== 0 && option.id !== 1)) {
+    throw new Error('Experience level or application display mode options are missing or invalid')
   }
+  displayModeOptions.value = data.job_questions_display_mode
   setOptions(state.baseForm, 'employment_type_id', data.employment_types)
   setOptions(state.baseForm, 'work_arrangement_type_id', data.work_arrangement_types)
   setOptions(state.baseForm, 'experience_level_type', data.experience_level_types)
@@ -668,10 +701,11 @@ const initData = () => {
     getJobPositionDetail(props.id).then(res => {
       if (!res?.success || !res.result) throw new Error('Job details are missing')
       const result = (res.result ?? {}) as JobPosition.JobPositionDetail
-      if (result.application_questions_display_mode !== 'WITH_DESCRIPTION' && result.application_questions_display_mode !== 'SEPARATE_TABS') {
+      if (result.application_questions_display_mode !== 'WITH_DESCRIPTION' && result.application_questions_display_mode !== 'SEPARATE_TABS' &&
+          result.application_questions_display_mode !== 0 && result.application_questions_display_mode !== 1) {
         throw new Error('Invalid application questions display mode')
       }
-      screeningDisplayMode.value = result.application_questions_display_mode === 'WITH_DESCRIPTION' ? 'description' : 'tab'
+      screeningDisplayMode.value = result.application_questions_display_mode === 'WITH_DESCRIPTION' || result.application_questions_display_mode === 0 ? 'description' : 'tab'
       state.status = result?.status ?? 0
       state.baseForm = getFormsByRes(state.baseForm, result, espBasicRef.value)
       state.jobDesc = jobRichTextToHtml(result?.description)

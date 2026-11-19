@@ -1,3 +1,5 @@
+import type { ScreeningQuestion, ScreeningQuestionType } from '@/api/interface/screeningQuestionsForm'
+
 export type ScreeningDisplayMode = 'description' | 'tab'
 
 export interface PreviewQuestion {
@@ -11,7 +13,6 @@ export interface PreviewQuestion {
   maxChars: number | null
   headingLevel: number | null
 }
-
 export interface JobPreview {
   title: string
   description: string
@@ -21,6 +22,23 @@ export interface JobPreview {
   screeningDisplayMode: ScreeningDisplayMode
   questions: PreviewQuestion[]
 }
+
+export const toPreviewQuestions = (questions: ScreeningQuestion[], types: ScreeningQuestionType[]): PreviewQuestion[] =>
+  questions.map(question => {
+    const type = types.find(item => item.id === question.screening_question_type)
+    if (!type) throw new Error(`Unknown screening question type: ${question.screening_question_type}`)
+    return {
+      code: type.code,
+      label: question.label,
+      description: question.description ?? '',
+      options: [...(question.options ?? [])],
+      defaultOption: question.default_option ?? null,
+      mandatory: !!question.is_mandatory,
+      multiSelect: !!question.is_drop_down_multi_select,
+      maxChars: question.max_chars && question.max_chars > 0 ? question.max_chars : null,
+      headingLevel: type.code === 'HN' ? question.heading_level ?? 1 : null
+    }
+  })
 
 export const previewStorageKey = (id: string) => `job-preview:${id}`
 
@@ -64,3 +82,4 @@ export const readJobPreview = (key: unknown): JobPreview | null => {
     return null
   }
 }
+

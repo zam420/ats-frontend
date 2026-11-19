@@ -16,12 +16,15 @@ export const ROUTER_DEMO2 = 'demo2'
 
 // Job Position
 export const ROUTER_JOB_POSITION = 'job'
+export const ROUTER_JOBS = 'jobs'
+export const ROUTER_JOBS_PREVIEW = 'jobs/preview'
 export const ROUTER_JOB_POSITION_CREATE = 'job/create'
 export const ROUTER_JOB_POSITION_DETAIL = 'job/detail'
 export const ROUTER_JOB_POSITION_EDIT = 'job/edit'
 export const ROUTER_JOB_POSITION_VIEW = 'job/view'
 export const ROUTER_JOB_POSITION_CREATE_PREVIEW = 'job/preview/create'
 export const ROUTER_JOB_POSITION_EDIT_PREVIEW = 'job/preview/edit'
+export const ROUTER_JOB_POSITION_LIST_PREVIEW = 'job/preview/view'
 
 //CV Management
 export const ROUTER_CV_MANAGEMENT = 'cvManagement'

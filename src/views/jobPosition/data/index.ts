@@ -7,8 +7,6 @@ import {
   getWorkLocationList
 } from '@/api/modules/common'
 import { WorkLocation } from '@/enums/workLocationEnum'
-import { UserPermissionEnum } from '@/enums/userPermission'
-import { isHasPermission } from '@/utils'
 
 const { $t } = useLocale()
 
@@ -25,9 +23,9 @@ export const JOB_POSITION_TABLE: Table.ColumnProps[] = [
   {
     columnType: TableColumnTypeEnum.OPERATION,
     label: $t('table.operate'),
-    width: 80,
+    width: 120,
     fixed: TableColumnFixedEnum.LEFT,
-    isShow: isHasPermission(UserPermissionEnum.JPE)
+    isShow: true
   },
   {
     prop: 'title',
@@ -45,6 +43,12 @@ export const JOB_POSITION_TABLE: Table.ColumnProps[] = [
   {
     prop: 'work_arrangement_type_name',
     label: $t('jobPosition.workArrangement'),
+    sortable: false,
+    filter: false
+  },
+  {
+    prop: 'experience_level_type_name',
+    label: $t('jobPosition.experienceLevel'),
     sortable: false,
     filter: false
   },

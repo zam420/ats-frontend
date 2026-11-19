@@ -88,7 +88,7 @@ export const downloadFile = (uid: number) => {
 
 // 获取用户列表, 只获取 active 用户
 export const getUserList = (type: number) => {
-  return http.get<User.UserInfo[]>('/api/user/getUserFor', { for: type })
+  return http.get<User.UserInfo[]>('/api/user/active')
 }
 
 // userManagement --> 获取用户列表

@@ -136,7 +136,7 @@ import Sortable from 'sortablejs'
 import { EditPen, Document, Select, CircleCheck, ArrowDown, More, PriceTag } from '@element-plus/icons-vue'
 import ChoiceOptions from './ChoiceOptions.vue'
 import EspMain from '@/components/EspMain/index.vue'
-import type { PreviewQuestion } from '@/views/jobPosition/jobPreview'
+import { toPreviewQuestions, type PreviewQuestion } from '@/views/jobPosition/jobPreview'
 import type User from '@/api/interface/user'
 import type { ScreeningFormRequest, ScreeningQuestion, ScreeningQuestionType } from '@/api/interface/screeningQuestionsForm'
 import { getUserList } from '@/api/modules/common'
@@ -228,21 +228,7 @@ const form = reactive({
 const typeOf = (question: Question) => types.value.find(type => type.id === question.screening_question_type)
 const getPreviewQuestions = (): PreviewQuestion[] => {
   if (!ready.value || loading.value) throw new Error('Screening form is not ready')
-  return form.questions.map(question => {
-    const type = typeOf(question)
-    if (!type) throw new Error(`Unknown screening question type: ${question.screening_question_type}`)
-    return {
-      code: type.code,
-      label: question.label,
-      description: question.description ?? '',
-      options: [...(question.options ?? [])],
-      defaultOption: question.default_option ?? null,
-      mandatory: !!question.is_mandatory,
-      multiSelect: !!question.is_drop_down_multi_select,
-      maxChars: question.max_chars && question.max_chars > 0 ? question.max_chars : null,
-      headingLevel: type.code === 'HN' ? question.heading_level ?? 1 : null
-    }
-  })
+  return toPreviewQuestions(form.questions, types.value)
 }
 const getQuestions = () => {
   if (!ready.value || loading.value) throw new Error('Screening form is not ready')
@@ -306,7 +292,7 @@ const toggleDefault = (question: Question, option: string) => {
 }
 const addQuestion = (typeId: number, index = form.questions.length) => {
   if (!canWrite.value) return
-  if (form.questions.length >= 10) {
+  if (form.questions.length >= 40) {
     ElMessage.warning($t('screeningForms.maxQuestions'))
     return
   }
@@ -328,7 +314,7 @@ const buildPayload = async (): Promise<ScreeningFormRequest | null> => {
     ElMessage.error($t('screeningForms.minQuestions'))
     return null
   }
-  if (form.questions.length > 10) {
+  if (form.questions.length > 40) {
     ElMessage.error($t('screeningForms.maxQuestions'))
     return null
   }
