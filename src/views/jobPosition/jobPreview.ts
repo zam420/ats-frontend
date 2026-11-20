@@ -3,6 +3,7 @@ import type { ScreeningQuestion, ScreeningQuestionType } from '@/api/interface/s
 export type ScreeningDisplayMode = 'description' | 'tab'
 
 export interface PreviewQuestion {
+  id?: string
   code: string
   label: string
   description: string
@@ -28,6 +29,7 @@ export const toPreviewQuestions = (questions: ScreeningQuestion[], types: Screen
     if (!type) throw new Error(`Unknown screening question type: ${question.screening_question_type}`)
     return {
       code: type.code,
+      id: question.id,
       label: question.label,
       description: question.description ?? '',
       options: [...(question.options ?? [])],

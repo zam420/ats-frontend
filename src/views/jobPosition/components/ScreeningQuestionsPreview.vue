@@ -33,13 +33,32 @@
 <script setup lang="ts">
 import type { PreviewQuestion } from '../jobPreview'
 import { jobRichTextToHtml } from '../jobRichText'
+import { useLocale } from '@/hooks/useLocale'
 import '../jobRichText.less'
 import '@vueup/vue-quill/dist/vue-quill.snow.css'
 
 const props = defineProps<{ questions: PreviewQuestion[] }>()
+const { $t } = useLocale()
 const textAnswers = ref(props.questions.map(() => ''))
 const singleAnswers = ref(props.questions.map(question => question.defaultOption ?? ''))
 const multipleAnswers = ref(props.questions.map(question => question.defaultOption ? [question.defaultOption] : []))
+const getAnswers = () => {
+  const result: { question_id: string; values: string[] }[] = []
+  for (const [index, question] of props.questions.entries()) {
+    if (!question.id) throw new Error('Screening question ID missing')
+    const values = question.code === 'LBL' ? []
+      : question.code === 'CHK' || (question.code === 'DD' && question.multiSelect) ? multipleAnswers.value[index]
+      : question.code === 'RDO' || question.code === 'DD' ? (singleAnswers.value[index] ? [singleAnswers.value[index]] : [])
+      : textAnswers.value[index].trim() ? [textAnswers.value[index].trim()] : []
+    if (question.code !== 'LBL' && question.mandatory && !values.length) {
+      ElMessage.error($t('jobPosition.applicationQuestionsRequired'))
+      return null
+    }
+    result.push({ question_id: question.id, values })
+  }
+  return result
+}
+defineExpose({ getAnswers })
 </script>
 
 <style lang="less" scoped>

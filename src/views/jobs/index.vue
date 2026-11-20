@@ -1,6 +1,7 @@
 <template>
   <EspMain class="jobs-page" :title="$t('jobPosition.searchJobs')">
     <JobSearchFilters :model-value="searchForm" :fields="fields" :show-status="false" single-row @search="search" @reset="reset" />
+    <el-alert v-if="companyId" :title="$t('jobPosition.companyJobsFilter', { company: companyName })" type="info" :closable="false" />
     <div class="jobs-results">
       <section class="jobs-list" v-loading="listLoading">
         <el-alert v-if="listError" :title="$t('jobPosition.jobsLoadError')" type="error" :closable="false" />
@@ -20,7 +21,7 @@ import { getJobs, getJobsFilters, type CandidateJobSummary } from '@/api/modules
 import type JobPosition from '@/api/interface/jobPosition'
 import JobSearchFilters from '@/views/jobPosition/components/JobSearchFilters.vue'
 import JobCard from './JobCard.vue'
-import { ROUTER_JOBS_DETAIL } from '@/router/routerName'
+import { ROUTER_JOBS, ROUTER_JOBS_DETAIL } from '@/router/routerName'
 import { useLocale } from '@/hooks/useLocale'
 
 const { $t } = useLocale()
@@ -33,6 +34,9 @@ const searchForm = reactive(emptySearch())
 const fields = ref<JobPosition.JobSearchFields>()
 const jobs = ref<CandidateJobSummary[]>([])
 const router = useRouter()
+const route = useRoute()
+const companyId = ref(typeof route.query.company === 'string' ? route.query.company : '')
+const companyName = ref(typeof route.query.companyName === 'string' ? route.query.companyName : '')
 const listLoading = ref(false)
 const listError = ref(false)
 const searched = ref(false)
@@ -60,7 +64,7 @@ const loadJobs = async () => {
   total.value = 0
   try {
     const { jobStatuses, ...filters } = appliedSearch
-    const response = await getJobs({ ...filters, pageNum: pageNum.value, pageSize })
+    const response = await getJobs({ ...filters, ...(companyId.value ? { companyId: companyId.value } : {}), pageNum: pageNum.value, pageSize })
     if (!response?.success || !response.result || !Array.isArray(response.result.data_list)) throw new Error('Job search response missing')
     if (version !== searchVersion) return
     jobs.value = response.result.data_list
@@ -84,6 +88,9 @@ const search = () => {
   void loadJobs()
 }
 const reset = () => {
+  companyId.value = ''
+  companyName.value = ''
+  if (route.query.company) void router.replace({ path: `/${ROUTER_JOBS}` })
   Object.assign(searchForm, emptySearch())
   search()
 }
@@ -99,6 +106,7 @@ onMounted(async () => {
         !Array.isArray(result.work_arrangement_types) || !Array.isArray(result.experience_level_types) ||
         !Array.isArray(result.screening_question_types) || !Array.isArray(result.job_posted_date_types)) throw new Error('Job filter options missing')
     fields.value = result
+    if (companyId.value) search()
   } catch (error) {
     console.error('Failed to load job filters', error)
     ElMessage.error($t('jobPosition.fieldsLoadError'))
@@ -111,7 +119,7 @@ onBeforeUnmount(() => {
 
 <style lang="less" scoped>
 .jobs-page.main-wrap { overflow: hidden; min-height: 0; }
-.jobs-page :deep(.header), .jobs-page > .job-search { flex-shrink: 0; }
+.jobs-page :deep(.header), .jobs-page > .job-search, .jobs-page > .el-alert { flex-shrink: 0; }
 .jobs-results { flex: 1 1 0; min-height: 0; overflow-y: auto; margin-bottom: 28px;}
 .jobs-list { width: min(100%, 960px); margin: 0 auto; min-height: 120px; }
 .jobs-list :deep(.job-card + .job-card) { margin-top: 16px; }

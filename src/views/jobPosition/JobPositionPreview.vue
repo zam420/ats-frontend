@@ -31,24 +31,24 @@
       <template v-if="preview.screeningDisplayMode === 'description'">
         <hr class="description-divider" />
         <div class="ql-editor job-rich-text preview-description" v-html="description"></div>
-        <ApplicantInformationPreview />
+        <ApplicantInformationPreview ref="applicantRef" />
         <section v-if="preview.questions.length" class="additional-questions">
           <h1>{{ $t('jobPosition.additionalQuestions') }}</h1>
-          <ScreeningQuestionsPreview v-if="preview.questions.length" class="additional-questions-content" :questions="preview.questions" />
+          <ScreeningQuestionsPreview v-if="preview.questions.length" ref="questionsRef" class="additional-questions-content" :questions="preview.questions" />
         </section>
-        <el-button type="primary" class="submit-application-button">{{ $t('jobPosition.submitApplication') }}</el-button>
+        <el-button type="primary" class="submit-application-button" :loading="submitting" @click="submit">{{ $t('jobPosition.submitApplication') }}</el-button>
       </template>
       <el-tabs v-else v-model="activePreviewTab" class="preview-tabs">
         <el-tab-pane :label="$t('jobPosition.jobDescription')" name="description">
           <div class="ql-editor job-rich-text preview-description" v-html="description"></div>
         </el-tab-pane>
         <el-tab-pane :label="$t('jobPosition.applyForThisJob')" name="questions">
-          <ApplicantInformationPreview :show-heading="false" />
+          <ApplicantInformationPreview ref="applicantRef" :show-heading="false" />
           <section v-if="preview.questions.length" class="additional-questions">
             <h1>{{ $t('jobPosition.additionalQuestions') }}</h1>
-            <ScreeningQuestionsPreview v-if="preview.questions.length" class="additional-questions-content" :questions="preview.questions" />
+            <ScreeningQuestionsPreview v-if="preview.questions.length" ref="questionsRef" class="additional-questions-content" :questions="preview.questions" />
           </section>
-          <el-button type="primary" class="submit-application-button">{{ $t('jobPosition.submitApplication') }}</el-button>
+          <el-button type="primary" class="submit-application-button" :loading="submitting" @click="submit">{{ $t('jobPosition.submitApplication') }}</el-button>
         </el-tab-pane>
       </el-tabs>
     </article>
@@ -69,8 +69,29 @@ import moment from 'moment'
 import { DATE_FORMAT } from '@/config'
 import '@vueup/vue-quill/dist/vue-quill.snow.css'
 import './jobRichText.less'
+import type { ApplicationData } from '@/api/modules/jobs'
+import { useLocale } from '@/hooks/useLocale'
 
-const props = defineProps<{ embedded?: boolean; previewData?: JobPreview; companyName?: string; companyLogoUrl?: string; publishedAt?: string | null }>()
+const props = defineProps<{ embedded?: boolean; previewData?: JobPreview; companyName?: string; companyLogoUrl?: string; publishedAt?: string | null; submitting?: boolean }>()
+const emit = defineEmits<{ (event: 'submit', data: ApplicationData, resume: File): void }>()
+const { $t } = useLocale()
+const applicantRef = ref<InstanceType<typeof ApplicantInformationPreview>>()
+const questionsRef = ref<InstanceType<typeof ScreeningQuestionsPreview>>()
+const submit = () => {
+  if (!props.embedded || props.submitting) return
+  try {
+    if (!applicantRef.value || (preview.value?.questions.length && !questionsRef.value)) throw new Error('Application form is not ready')
+    const applicant = applicantRef.value.getApplication()
+    if (!applicant) return
+    const answers = questionsRef.value?.getAnswers() ?? (preview.value?.questions.length ? null : [])
+    if (!answers) return
+    const { resume, ...data } = applicant
+    emit('submit', { ...data, answers }, resume)
+  } catch (error) {
+    console.error('Failed to prepare application', error)
+    ElMessage.error($t('jobPosition.applicationSubmitError'))
+  }
+}
 const route = useRoute()
 const preview = ref<ReturnType<typeof readJobPreview>>(null)
 const company = ref<Pick<Tenant, 'name' | 'has_logo'> | null>(null)

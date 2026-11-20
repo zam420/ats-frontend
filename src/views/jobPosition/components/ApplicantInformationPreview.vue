@@ -3,19 +3,19 @@
     <h1 v-if="showHeading" id="your-application-heading">{{ $t('jobPosition.yourApplication') }}</h1>
     <div class="application-field">
       <label for="application-first-name">{{ $t('jobPosition.firstName') }}<span class="required" aria-hidden="true"> *</span></label>
-      <el-input id="application-first-name" required aria-required="true" />
+      <el-input id="application-first-name" v-model="form.firstName" maxlength="100" required aria-required="true" />
     </div>
     <div class="application-field">
       <label for="application-last-name">{{ $t('jobPosition.lastName') }}<span class="required" aria-hidden="true"> *</span></label>
-      <el-input id="application-last-name" required aria-required="true" />
+      <el-input id="application-last-name" v-model="form.lastName" maxlength="100" required aria-required="true" />
     </div>
     <div class="application-field">
       <label for="application-preferred-name">{{ $t('jobPosition.preferredName') }}</label>
-      <el-input id="application-preferred-name" />
+      <el-input id="application-preferred-name" v-model="form.preferredName" maxlength="100" />
     </div>
     <div class="application-field">
       <label for="application-email">{{ $t('jobPosition.email') }}<span class="required" aria-hidden="true"> *</span></label>
-      <el-input id="application-email" type="email" required aria-required="true" />
+      <el-input id="application-email" v-model="form.email" maxlength="254" type="email" required aria-required="true" />
     </div>
     <div class="application-field">
       <div class="phone-fields">
@@ -29,17 +29,17 @@
         </div>
         <div class="phone-number-field">
           <label for="application-phone">{{ $t('jobPosition.phoneNumber') }}<span class="required" aria-hidden="true"> *</span></label>
-          <el-input id="application-phone" type="tel" required aria-required="true" />
+          <el-input id="application-phone" v-model="form.phoneNumber" maxlength="40" type="tel" required aria-required="true" />
         </div>
       </div>
     </div>
     <div class="application-field">
       <label for="application-current-location">{{ $t('jobPosition.currentLocation') }}<span class="required" aria-hidden="true"> *</span></label>
-      <el-input id="application-current-location" required aria-required="true" />
+      <el-input id="application-current-location" v-model="form.currentLocation" maxlength="200" required aria-required="true" />
     </div>
     <div class="application-field">
       <label>{{ $t('jobPosition.resumeCv') }}<span class="required" aria-hidden="true"> *</span></label>
-      <el-upload :auto-upload="false" :limit="1" accept=".pdf,.doc,.docx" required aria-required="true">
+      <el-upload :auto-upload="false" :limit="1" accept=".pdf,.doc,.docx" :on-change="onResumeChange" :on-remove="onResumeRemove" required aria-required="true">
         <el-button>{{ $t('jobPosition.uploadResumeCv') }}</el-button>
       </el-upload>
     </div>
@@ -47,7 +47,14 @@
 </template>
 
 <script setup lang="ts">
+import type { UploadFile } from 'element-plus'
+import { useLocale } from '@/hooks/useLocale'
 withDefaults(defineProps<{ showHeading?: boolean }>(), { showHeading: true })
+const { $t } = useLocale()
+const form = reactive({ firstName: '', lastName: '', preferredName: '', email: '', phoneNumber: '', currentLocation: '' })
+const resume = ref<File>()
+const onResumeChange = (file: UploadFile) => { resume.value = file.raw }
+const onResumeRemove = () => { resume.value = undefined }
 
 const countries = [
   { code: 'US', name: 'United States', flag: '🇺🇸', dialCode: '+1' },
@@ -82,6 +89,25 @@ const countries = [
   { code: 'BD', name: 'Bangladesh', flag: '🇧🇩', dialCode: '+880' }
 ]
 const selectedCountryCode = ref('US')
+const getApplication = () => {
+  const country = countries.find(item => item.code === selectedCountryCode.value)
+  if (!form.firstName.trim() || !form.lastName.trim() || !form.phoneNumber.trim() ||
+      !form.currentLocation.trim() || !country || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+    ElMessage.error($t('jobPosition.applicationFieldsRequired'))
+    return null
+  }
+  if (!resume.value || resume.value.size === 0 || resume.value.size > 5 * 1024 * 1024 ||
+      !/\.(pdf|doc|docx)$/i.test(resume.value.name)) {
+    ElMessage.error($t('jobPosition.applicationResumeInvalid'))
+    return null
+  }
+  return {
+    first_name: form.firstName.trim(), last_name: form.lastName.trim(), preferred_name: form.preferredName.trim(),
+    email: form.email.trim(), country_code: country.dialCode, phone_number: form.phoneNumber.trim(),
+    current_location: form.currentLocation.trim(), resume: resume.value
+  }
+}
+defineExpose({ getApplication })
 </script>
 
 <style lang="less" scoped>
