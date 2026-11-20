@@ -7,7 +7,7 @@ export const getScreeningForms = (tab: string, params: Record<string, unknown>) 
 export const getScreeningFormsList = () =>
   http.get<ScreeningFormListItem[]>('/api/sqform/list')
 export const getScreeningForm = (id: string) =>
-  http.get<ScreeningFormDetail>(`/api/sqform/${encodeURIComponent(id)}`)
+  http.get<ScreeningFormDetail>(`/api/sqform/${encodeURIComponent(id)}`, undefined, { preserveHtml: true })
 export const getScreeningQuestionTypes = () =>
   http.get<ScreeningQuestionType[]>('/api/sqform/controltypes')
 export const createScreeningForm = (data: ScreeningFormRequest) =>

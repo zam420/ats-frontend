@@ -265,7 +265,7 @@ const questionPayload = (questions: ScreeningQuestion[]) => questions.map((quest
   label: question.label, description: question.description, screening_question_type_id: question.screening_question_type,
   order, options: question.options, default_option: question.default_option,
   is_mandatory: question.is_mandatory, is_drop_down_multi_select: question.is_drop_down_multi_select,
-  max_chars: question.max_chars, heading_level: question.heading_level ?? null
+  max_chars: question.max_chars
 }))
 const pipelinePayload = (rounds: RecruitmentPipeline.RoundParam[]) =>
   rounds.map(({ round_type, name, description }, order) => ({ round_type, name, description, order }))

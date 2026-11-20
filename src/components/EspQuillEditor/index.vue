@@ -23,6 +23,7 @@
             :content="state.content"
             contentType="html"
             :options="state.options"
+            :placeholder="props.placeholder"
             :readOnly="props.readOnly"
             @update:content="validate"
             @ready="initTooltips"
@@ -76,9 +77,11 @@ interface QuillEditorProps {
   canPreview?: boolean
   parseContent?: string
   label?: string // overrides the default "Email content" label
+  placeholder?: string
   hideInsertField?: boolean // hides the toolbar button that inserts a template field
   required?: boolean
   fullToolbar?: boolean // shows every standard toolbar option except image, video and formula
+  basicToolbar?: boolean
   compact?: boolean // smaller toolbar icons and text
 }
 
@@ -116,7 +119,9 @@ const state = reactive<QuillEditorState>({
     theme: 'snow', // 主题
     modules: {
       toolbar: {
-        container: props.fullToolbar
+        container: props.basicToolbar
+          ? [['bold', 'italic', 'underline'], ['link'], ['clean']]
+          : props.fullToolbar
           ? [
               // [{ header: [1, 2, 3, 4, 5, 6, false] }, { font: [] }, { size: [] }],
               [{ header: [1, 2, 3, 4, 5, 6, false] }, { size: [] }],

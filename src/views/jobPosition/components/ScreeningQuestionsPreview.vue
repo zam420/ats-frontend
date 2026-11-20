@@ -1,13 +1,11 @@
 <template>
   <div class="screening-preview">
     <div v-for="(question, index) in questions" :key="index" class="screening-control">
-      <template v-if="question.code === 'HN'">
-        <component :is="`h${question.headingLevel ?? 1}`" class="heading" :class="`heading-${question.headingLevel ?? 1}`">{{ question.label }}</component>
-      </template>
-      <p v-else-if="question.code === 'LBL'" class="display-label">{{ question.label }}</p>
+      <div v-if="question.code === 'LBL'" class="ql-editor job-rich-text display-label" v-html="jobRichTextToHtml(question.label)"></div>
       <template v-else>
         <div :id="`screening-label-${index}`" class="question-label">
-          {{ question.label }}<span v-if="question.mandatory" class="required" aria-hidden="true"> *</span>
+          <div v-if="question.code === 'CHK' || question.code === 'RDO'" class="ql-editor job-rich-text choice-label" v-html="jobRichTextToHtml(question.label)"></div>
+          <template v-else>{{ question.label }}</template><span v-if="question.mandatory" class="required" aria-hidden="true"> *</span>
         </div>
         <el-input v-if="question.code === 'INPUT' || question.code === 'INPUTAREA'"
           v-model="textAnswers[index]" :type="question.code === 'INPUTAREA' ? 'textarea' : 'text'"
@@ -34,6 +32,9 @@
 
 <script setup lang="ts">
 import type { PreviewQuestion } from '../jobPreview'
+import { jobRichTextToHtml } from '../jobRichText'
+import '../jobRichText.less'
+import '@vueup/vue-quill/dist/vue-quill.snow.css'
 
 const props = defineProps<{ questions: PreviewQuestion[] }>()
 const textAnswers = ref(props.questions.map(() => ''))
@@ -43,12 +44,9 @@ const multipleAnswers = ref(props.questions.map(question => question.defaultOpti
 
 <style lang="less" scoped>
 .screening-control + .screening-control { margin-top: 24px; }
-.heading { font-weight: bold; overflow-wrap: anywhere; }
-.heading-1 { font-size: 24px; }
-.heading-2 { font-size: 20px; }
-.heading-3 { font-size: 16px; }
-.display-label { font-size: 14px; }
+.display-label { font-size: 13px; height: auto; overflow-y: visible; padding: 0; overflow-wrap: anywhere; }
 .question-label { font-weight: 600; margin-bottom: 8px; overflow-wrap: anywhere; }
+.choice-label { display: inline-block; height: auto; overflow: visible; padding: 0; vertical-align: baseline; }
 .required { color: var(--el-color-danger); }
 .question-description { margin-top: 6px; font-size: x-small; white-space: pre-wrap; overflow-wrap: anywhere; }
 .el-select { width: 100%; max-width: 400px; }

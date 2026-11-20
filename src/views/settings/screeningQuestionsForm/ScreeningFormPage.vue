@@ -71,16 +71,23 @@
                         <div v-if="canWrite" class="order"></div>
                       </el-col>
                       <el-col :span="canWrite ? 22 : 23" class="question-preview">
-                        <div class="question-label">
-                          <span class="question-label-field" :class="headingClass(question)">
+                        <div v-if="isRichTextLabel(question)" class="rich-label">
+                          <EspQuillEditor :ref="editor => setLabelEditor(question.key, editor)"
+                            class="label-editor" :content="jobRichTextToHtml(question.label)" :select-options="[]"
+                            :hide-label="true" :hide-insert-field="true" :full-toolbar="!isInlineChoice(question)"
+                            :basic-toolbar="isInlineChoice(question)"
+                            :placeholder="$t('screeningForms.questionLabelPlaceholder')"
+                            :required="false" :read-only="!canWrite"
+                            :update-callback="(value: string) => question.label = value" />
+                          <span v-if="!isDisplayOnly(question) && question.is_mandatory && !forcedReadOnly" class="required-marker" :title="$t('screeningForms.mandatory')" :aria-label="$t('screeningForms.mandatory')">*</span>
+                        </div>
+                        <div v-else class="question-label">
+                          <span class="question-label-field">
                             <span class="question-label-measure" aria-hidden="true">{{ question.label || $t('screeningForms.questionLabelPlaceholder') }}</span>
                             <el-input v-model="question.label" class="inline-input inline-title" maxlength="500" :placeholder="$t('screeningForms.questionLabelPlaceholder')" />
                           </span>
                           <span v-if="!isDisplayOnly(question) && question.is_mandatory && !forcedReadOnly" class="required-marker" :title="$t('screeningForms.mandatory')" :aria-label="$t('screeningForms.mandatory')">*</span>
                         </div>
-                        <el-radio-group v-if="typeOf(question)?.code === 'HN'" v-model="question.heading_level" :disabled="!canWrite" :aria-label="$t('screeningForms.headingLevel')">
-                          <el-radio v-for="level in [1, 2, 3]" :key="level" :label="level">{{ $t('screeningForms.headingOption', { level }) }}</el-radio>
-                        </el-radio-group>
                         <el-input v-if="typeOf(question)?.code === 'INPUT'" disabled :placeholder="$t('screeningForms.answerPreview')" />
                         <el-input v-else-if="typeOf(question)?.code === 'INPUTAREA'" type="textarea" disabled :placeholder="$t('screeningForms.answerPreview')" />
                         <ChoiceOptions v-else-if="isInlineChoice(question)" :options="question.options ?? []" :default-option="question.default_option"
@@ -136,6 +143,9 @@ import Sortable from 'sortablejs'
 import { EditPen, Document, Select, CircleCheck, ArrowDown, More, PriceTag } from '@element-plus/icons-vue'
 import ChoiceOptions from './ChoiceOptions.vue'
 import EspMain from '@/components/EspMain/index.vue'
+import EspQuillEditor from '@/components/EspQuillEditor/index.vue'
+import type { ComponentPublicInstance } from 'vue'
+import { jobRichTextToHtml } from '@/views/jobPosition/jobRichText'
 import { toPreviewQuestions, type PreviewQuestion } from '@/views/jobPosition/jobPreview'
 import type User from '@/api/interface/user'
 import type { ScreeningFormRequest, ScreeningQuestion, ScreeningQuestionType } from '@/api/interface/screeningQuestionsForm'
@@ -226,25 +236,62 @@ const form = reactive({
 })
 
 const typeOf = (question: Question) => types.value.find(type => type.id === question.screening_question_type)
+const isRichTextLabel = (question: Question) => ['LBL', 'CHK', 'RDO'].includes(typeOf(question)?.code ?? '')
+const labelEditors = new Map<number, InstanceType<typeof EspQuillEditor>>()
+const setLabelEditor = (key: number, editor: Element | ComponentPublicInstance | null) => {
+  if (editor) labelEditors.set(key, editor as InstanceType<typeof EspQuillEditor>)
+  else labelEditors.delete(key)
+}
+const syncLabelEditors = () => {
+  for (const question of form.questions) {
+    if (!isRichTextLabel(question)) continue
+    const editor = labelEditors.get(question.key)
+    if (!editor) throw new Error('Label editor is not ready')
+    question.label = editor.getContent()
+  }
+}
+const validQuestionLabels = () => {
+  for (const question of form.questions) {
+    const value = question.label?.trim() ?? ''
+    const text = isRichTextLabel(question)
+      ? new DOMParser().parseFromString(jobRichTextToHtml(value), 'text/html').body.textContent?.replace(/\u00a0/g, ' ').trim()
+      : value
+    if (!text) {
+      ElMessage.error($t('screeningForms.questionLabelRequired'))
+      return false
+    }
+    if (isRichTextLabel(question)) {
+      if (value.length > 1000) {
+        ElMessage.error($t('screeningForms.questionLabelLengthRT'))
+        return false
+      }
+    }
+    else if (value.length > 500) {
+      ElMessage.error($t('screeningForms.questionLabelLengthNRT'))
+      return false
+    }
+  }
+  return true
+}
 const getPreviewQuestions = (): PreviewQuestion[] => {
   if (!ready.value || loading.value) throw new Error('Screening form is not ready')
+  syncLabelEditors()
   return toPreviewQuestions(form.questions, types.value)
 }
 const getQuestions = () => {
   if (!ready.value || loading.value) throw new Error('Screening form is not ready')
+  syncLabelEditors()
   return form.questions.map((question, order) => ({
     label: question.label, description: question.description, screening_question_type_id: question.screening_question_type,
     order, options: question.options, default_option: question.default_option,
     is_mandatory: question.is_mandatory, is_drop_down_multi_select: question.is_drop_down_multi_select,
-    max_chars: question.max_chars, heading_level: question.heading_level ?? null
+    max_chars: question.max_chars
   }))
 }
 const validateQuestions = () => {
   if (!ready.value || loading.value) throw new Error('Screening form is not ready')
-  if (form.questions.some(question => !question.label?.trim())) {
-    ElMessage.error($t('screeningForms.questionLabelRequired'))
-    return false
-  }
+  syncLabelEditors()
+  if (!validQuestionLabels()) return false
   if (form.questions.some(question => isChoiceQuestion(question) && (!question.options?.length || question.options.some(option => !option.trim())))) {
     ElMessage.error($t('screeningForms.optionRequired'))
     return false
@@ -256,18 +303,12 @@ const validateQuestions = () => {
   return true
 }
 defineExpose({ getPreviewQuestions, getQuestions, validateQuestions })
-const HeadingIcon = defineComponent({
-  render: () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2.5, 'stroke-linecap': 'round', 'aria-hidden': 'true' },
-    [h('path', { d: 'M6 4v16M18 4v16M6 12h12' })])
-})
 const typeIcon = (code: string) => ({
-  INPUT: EditPen, INPUTAREA: Document, CHK: Select, RDO: CircleCheck, DD: ArrowDown, HN: HeadingIcon, LBL: PriceTag
+  INPUT: EditPen, INPUTAREA: Document, CHK: Select, RDO: CircleCheck, DD: ArrowDown, LBL: PriceTag
 }[code] ?? More)
 const isChoiceQuestion = (question: Question) => ['CHK', 'RDO', 'DD'].includes(typeOf(question)?.code ?? '')
 const isInlineChoice = (question: Question) => ['CHK', 'RDO'].includes(typeOf(question)?.code ?? '')
-const isDisplayOnly = (question: Question) => ['HN', 'LBL'].includes(typeOf(question)?.code ?? '')
-const headingClass = (question: Question) => typeOf(question)?.code === 'HN'
-  ? `heading-level-${question.heading_level ?? 1}` : ''
+const isDisplayOnly = (question: Question) => typeOf(question)?.code === 'LBL'
 const addOption = (question: Question) => {
   if (!question.options) question.options = []
   if (question.options.length >= 20) return
@@ -302,8 +343,7 @@ const addQuestion = (typeId: number, index = form.questions.length) => {
     key: nextKey++, screening_question_type: type.id,
     label: '', description: '', order: index,
     options: ['CHK', 'RDO', 'DD'].includes(type.code) ? ['Option1'] : null,
-    default_option: null, is_mandatory: false, is_drop_down_multi_select: false, max_chars: null,
-    heading_level: type.code === 'HN' ? 1 : null
+    default_option: null, is_mandatory: false, is_drop_down_multi_select: false, max_chars: null
   })
 }
 const goBack = () => router.replace(`/${ROUTER_SETTINGS_SCREENING_FORMS}`)
@@ -318,10 +358,8 @@ const buildPayload = async (): Promise<ScreeningFormRequest | null> => {
     ElMessage.error($t('screeningForms.maxQuestions'))
     return null
   }
-  if (form.questions.some(question => !question.label?.trim())) {
-    ElMessage.error($t('screeningForms.questionLabelRequired'))
-    return null
-  }
+  syncLabelEditors()
+  if (!validQuestionLabels()) return null
   if (form.questions.some(question => isChoiceQuestion(question) && question.options?.some(option => !option.trim()))) {
     ElMessage.error($t('screeningForms.optionRequired'))
     return null
@@ -351,8 +389,7 @@ const buildPayload = async (): Promise<ScreeningFormRequest | null> => {
       default_option: question.default_option,
       is_mandatory: isDisplayOnly(question) ? false : question.is_mandatory,
       is_drop_down_multi_select: question.is_drop_down_multi_select,
-      max_chars: question.max_chars,
-      heading_level: typeOf(question)?.code === 'HN' ? question.heading_level ?? 1 : null
+      max_chars: question.max_chars
     }))
   }
 }
@@ -434,13 +471,9 @@ onMounted(async () => {
       shareMode.value = detail.is_public ? 'everyone' : form.shared_with_user_ids.length ? 'users' : 'none'
       form.questions = [...detail.questions].sort((a, b) => a.order - b.order).map(question => {
         const code = types.value.find(type => type.id === question.screening_question_type)?.code
-        if (code === 'HN' && question.heading_level != null && ![1, 2, 3].includes(question.heading_level)) {
-          throw new Error('Invalid heading level in screening form')
-        }
         const options = ['CHK', 'RDO', 'DD'].includes(code ?? '') && !question.options?.length
           ? ['Option1'] : question.options
-        return { ...question, options, description: question.description ?? '',
-          heading_level: code === 'HN' ? question.heading_level ?? 1 : question.heading_level, key: nextKey++ }
+        return { ...question, options, description: question.description ?? '', key: nextKey++ }
       })
     }
     ready.value = true
@@ -503,9 +536,6 @@ onDeactivated(endDrag)
 .step-title .el-icon { vertical-align: middle; }
 .inline-input :deep(.el-input__wrapper) { padding: 0 !important; background: transparent; box-shadow: none; }
 .inline-title :deep(.el-input__inner), .question-label-measure { font-family: var(--font-family-body); font-size: var(--el-font-size-base); font-weight: bold; letter-spacing: normal; }
-.heading-level-1 .question-label-measure, .heading-level-1 .inline-title :deep(.el-input__inner) { font-size: 24px; }
-.heading-level-2 .question-label-measure, .heading-level-2 .inline-title :deep(.el-input__inner) { font-size: 20px; }
-.heading-level-3 .question-label-measure, .heading-level-3 .inline-title :deep(.el-input__inner) { font-size: 16px; }
 .question-label { display: flex; align-items: center; }
 .question-label-field { position: relative; display: inline-block; max-width: calc(100% - 12px); }
 .question-label-measure { display: block; overflow: hidden; padding-right: 4px; white-space: pre; visibility: hidden; }
@@ -513,6 +543,11 @@ onDeactivated(endDrag)
 .required-marker { color: var(--el-color-danger); margin-left: 4px; }
 .inline-description :deep(.el-input__inner) { font-size: 12px; }
 .question-preview > * { margin-bottom: 6px; }
+.rich-label { display: flex; align-items: flex-start; }
+.rich-label .label-editor { min-width: 0; flex: 1; }
+.label-editor :deep(.quill-editor-wrap.full .ql-container .ql-editor) { height: calc(5.475em + 24px); line-height: 1.825; }
+.label-editor :deep(.quill-editor-wrap:not(.full) .ql-container .ql-editor) { height: calc(5.475em + 24px); line-height: 1.825; }
+.label-editor :deep(.ql-editor.ql-blank::before) { color: var(--el-text-color-placeholder); font-style: normal; }
 .question-preview > :has(+ .inline-description) { margin-bottom: 0px; }
 .process-panel > .content { min-height: 50px; }
 .step-panel .step, .process-box .order { user-select: none; }

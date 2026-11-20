@@ -11,7 +11,6 @@ export interface PreviewQuestion {
   mandatory: boolean
   multiSelect: boolean
   maxChars: number | null
-  headingLevel: number | null
 }
 export interface JobPreview {
   title: string
@@ -35,8 +34,7 @@ export const toPreviewQuestions = (questions: ScreeningQuestion[], types: Screen
       defaultOption: question.default_option ?? null,
       mandatory: !!question.is_mandatory,
       multiSelect: !!question.is_drop_down_multi_select,
-      maxChars: question.max_chars && question.max_chars > 0 ? question.max_chars : null,
-      headingLevel: type.code === 'HN' ? question.heading_level ?? 1 : null
+      maxChars: question.max_chars && question.max_chars > 0 ? question.max_chars : null
     }
   })
 
@@ -66,7 +64,6 @@ export const readJobPreview = (key: unknown): JobPreview | null => {
         && (q.defaultOption === null || typeof q.defaultOption === 'string')
         && typeof q.mandatory === 'boolean' && typeof q.multiSelect === 'boolean'
         && (q.maxChars === null || (typeof q.maxChars === 'number' && Number.isInteger(q.maxChars) && q.maxChars > 0))
-        && (q.headingLevel === null || q.headingLevel === 1 || q.headingLevel === 2 || q.headingLevel === 3)
     })) return null
     return {
       title: data.title,
