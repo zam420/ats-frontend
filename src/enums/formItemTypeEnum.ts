@@ -4,7 +4,7 @@
  */
 export enum FormItemTypeEnum {
   TEXT = 'text', // 文本
-  INPUT = 'input', // 输入框
+  INPUT_BOX = 'input', // 输入框
   EMAIL = 'email', // 邮件框
   PASSWORD = 'password', // 密码框
   SELECT = 'select', // 下拉框

@@ -91,26 +91,26 @@
                           </span>
                           <span v-if="!isDisplayOnly(question) && question.is_mandatory && !forcedReadOnly" class="required-marker" :title="$t('screeningForms.mandatory')" :aria-label="$t('screeningForms.mandatory')">*</span>
                         </div>
-                        <el-input v-if="typeOf(question)?.code === 'INPUT'" disabled :placeholder="$t('screeningForms.answerPreview')" />
-                        <el-input v-else-if="typeOf(question)?.code === 'INPUTAREA'" type="textarea" disabled :placeholder="$t('screeningForms.answerPreview')" />
+                        <el-input v-if="typeOf(question)?.code === 'INPUT_BOX'" disabled :placeholder="$t('screeningForms.answerPreview')" />
+                        <el-input v-else-if="typeOf(question)?.code === 'INPUT_AREA'" type="textarea" disabled :placeholder="$t('screeningForms.answerPreview')" />
                         <ChoiceOptions v-else-if="isInlineChoice(question)" :options="question.options ?? []" :default-option="question.default_option"
-                          :marker="typeOf(question)?.code === 'CHK' ? 'checkbox' : 'radio'" :can-write="canWrite" :require-one="true"
+                          :marker="typeOf(question)?.code === 'CHECKBOX' ? 'checkbox' : 'radio'" :can-write="canWrite" :require-one="true"
                           @rename="(index, value) => renameOption(question, index, value)" @remove="index => removeOption(question, index)"
                           @toggle-default="option => toggleDefault(question, option)" />
-                        <el-select v-else-if="typeOf(question)?.code === 'DD'" disabled :multiple="!!question.is_drop_down_multi_select"
+                        <el-select v-else-if="typeOf(question)?.code === 'DROPDOWN'" disabled :multiple="!!question.is_drop_down_multi_select"
                           :model-value="question.is_drop_down_multi_select ? (question.default_option == null ? [] : [question.default_option]) : question.default_option"
                           :placeholder="$t('screeningForms.answerPreview')">
                           <el-option v-for="(option, optionIndex) in question.options ?? []" :key="optionIndex" :label="option" :value="option" />
                         </el-select>
                         <p v-else-if="!isDisplayOnly(question)" role="alert">{{ $t('screeningForms.unsupportedType') }}</p>
-                        <ChoiceOptions v-if="typeOf(question)?.code === 'DD'" :options="question.options ?? []" :default-option="question.default_option"
+                        <ChoiceOptions v-if="typeOf(question)?.code === 'DROPDOWN'" :options="question.options ?? []" :default-option="question.default_option"
                           :can-write="canWrite" :require-one="true" @rename="(index, value) => renameOption(question, index, value)"
                           @remove="index => removeOption(question, index)" @toggle-default="option => toggleDefault(question, option)" />
                         <el-input v-if="!isDisplayOnly(question)" v-model="question.description" class="inline-input inline-description" maxlength="500" :placeholder="$t('interviewProcess.roundDescPlaceholder')" />
                         <ElButton v-if="isChoiceQuestion(question) && canWrite" text type="primary" :disabled="(question.options?.length ?? 0) >= 20" @click="addOption(question)">{{ $t('screeningForms.addOption') }}</ElButton>
                       </el-col>
                       <el-col v-if="canWrite" :span="1" class="center question-actions">
-                        <button v-if="typeOf(question)?.code === 'DD'" type="button" class="multi-select-toggle" :class="{ 'is-on': question.is_drop_down_multi_select }"
+                        <button v-if="typeOf(question)?.code === 'DROPDOWN'" type="button" class="multi-select-toggle" :class="{ 'is-on': question.is_drop_down_multi_select }"
                           :aria-label="$t('screeningForms.multiSelect')" :title="$t('screeningForms.multiSelect')"
                           :aria-pressed="!!question.is_drop_down_multi_select" @click="question.is_drop_down_multi_select = !question.is_drop_down_multi_select">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -240,7 +240,7 @@ const form = reactive({
 })
 
 const typeOf = (question: Question) => types.value.find(type => type.id === question.screening_question_type)
-const isRichTextLabel = (question: Question) => ['LBL', 'CHK', 'RDO'].includes(typeOf(question)?.code ?? '')
+const isRichTextLabel = (question: Question) => ['LABEL', 'CHECKBOX', 'RADIO'].includes(typeOf(question)?.code ?? '')
 const labelEditors = new Map<number, InstanceType<typeof EspQuillEditor>>()
 const setLabelEditor = (key: number, editor: Element | ComponentPublicInstance | null) => {
   if (editor) labelEditors.set(key, editor as InstanceType<typeof EspQuillEditor>)
@@ -309,11 +309,11 @@ const validateQuestions = () => {
 }
 defineExpose({ getPreviewQuestions, getQuestions, validateQuestions })
 const typeIcon = (code: string) => ({
-  INPUT: EditPen, INPUTAREA: Document, CHK: Select, RDO: CircleCheck, DD: ArrowDown, LBL: PriceTag
+  INPUT_BOX: EditPen, INPUT_AREA: Document, CHECKBOX: Select, RADIO: CircleCheck, DD: ArrowDown, LABEL: PriceTag
 }[code] ?? More)
-const isChoiceQuestion = (question: Question) => ['CHK', 'RDO', 'DD'].includes(typeOf(question)?.code ?? '')
-const isInlineChoice = (question: Question) => ['CHK', 'RDO'].includes(typeOf(question)?.code ?? '')
-const isDisplayOnly = (question: Question) => typeOf(question)?.code === 'LBL'
+const isChoiceQuestion = (question: Question) => ['CHECKBOX', 'RADIO', 'DROPDOWN'].includes(typeOf(question)?.code ?? '')
+const isInlineChoice = (question: Question) => ['CHECKBOX', 'RADIO'].includes(typeOf(question)?.code ?? '')
+const isDisplayOnly = (question: Question) => typeOf(question)?.code === 'LABEL'
 const addOption = (question: Question) => {
   if (!question.options) question.options = []
   if (question.options.length >= 20) return
@@ -347,7 +347,7 @@ const addQuestion = (typeId: number, index = form.questions.length) => {
   form.questions.splice(index, 0, {
     key: nextKey++, screening_question_type: type.id,
     label: '', description: '', order: index,
-    options: ['CHK', 'RDO', 'DD'].includes(type.code) ? ['Option1'] : null,
+    options: ['CHECKBOX', 'RADIO', 'DROPDOWN'].includes(type.code) ? ['Option1'] : null,
     default_option: null, is_mandatory: false, is_drop_down_multi_select: false, max_chars: null
   })
 }
@@ -476,7 +476,7 @@ onMounted(async () => {
       shareMode.value = detail.is_public ? 'everyone' : form.shared_with_user_ids.length ? 'users' : 'none'
       form.questions = [...detail.questions].sort((a, b) => a.order - b.order).map(question => {
         const code = types.value.find(type => type.id === question.screening_question_type)?.code
-        const options = ['CHK', 'RDO', 'DD'].includes(code ?? '') && !question.options?.length
+        const options = ['CHECKBOX', 'RADIO', 'DROPDOWN'].includes(code ?? '') && !question.options?.length
           ? ['Option1'] : question.options
         return { ...question, options, description: question.description ?? '', key: nextKey++ }
       })

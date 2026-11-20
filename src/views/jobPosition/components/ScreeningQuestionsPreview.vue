@@ -1,26 +1,26 @@
 <template>
   <div class="screening-preview">
     <div v-for="(question, index) in questions" :key="index" class="screening-control">
-      <div v-if="question.code === 'LBL'" class="ql-editor job-rich-text display-label" v-html="jobRichTextToHtml(question.label)"></div>
+      <div v-if="question.code === 'LABEL'" class="ql-editor job-rich-text display-label" v-html="jobRichTextToHtml(question.label)"></div>
       <template v-else>
         <div :id="`screening-label-${index}`" class="question-label">
-          <div v-if="question.code === 'CHK' || question.code === 'RDO'" class="ql-editor job-rich-text choice-label" v-html="jobRichTextToHtml(question.label)"></div>
+          <div v-if="question.code === 'CHECKBOX' || question.code === 'RADIO'" class="ql-editor job-rich-text choice-label" v-html="jobRichTextToHtml(question.label)"></div>
           <template v-else>{{ question.label }}</template><span v-if="question.mandatory" class="required" aria-hidden="true"> *</span>
         </div>
-        <el-input v-if="question.code === 'INPUT' || question.code === 'INPUTAREA'"
-          v-model="textAnswers[index]" :type="question.code === 'INPUTAREA' ? 'textarea' : 'text'"
+        <el-input v-if="question.code === 'INPUT_BOX' || question.code === 'INPUT_AREA'"
+          v-model="textAnswers[index]" :type="question.code === 'INPUT_AREA' ? 'textarea' : 'text'"
           :maxlength="question.maxChars ?? undefined" :aria-labelledby="`screening-label-${index}`" />
-        <el-checkbox-group v-else-if="question.code === 'CHK'" v-model="multipleAnswers[index]" :aria-labelledby="`screening-label-${index}`">
+        <el-checkbox-group v-else-if="question.code === 'CHECKBOX'" v-model="multipleAnswers[index]" :aria-labelledby="`screening-label-${index}`">
           <el-checkbox v-for="(option, optionIndex) in question.options" :key="optionIndex" :label="option">{{ option }}</el-checkbox>
         </el-checkbox-group>
-        <el-radio-group v-else-if="question.code === 'RDO'" v-model="singleAnswers[index]" :aria-labelledby="`screening-label-${index}`">
+        <el-radio-group v-else-if="question.code === 'RADIO'" v-model="singleAnswers[index]" :aria-labelledby="`screening-label-${index}`">
           <el-radio v-for="(option, optionIndex) in question.options" :key="optionIndex" :label="option">{{ option }}</el-radio>
         </el-radio-group>
-        <el-select v-else-if="question.code === 'DD' && question.multiSelect" v-model="multipleAnswers[index]"
+        <el-select v-else-if="question.code === 'DROPDOWN' && question.multiSelect" v-model="multipleAnswers[index]"
           multiple :aria-labelledby="`screening-label-${index}`">
           <el-option v-for="(option, optionIndex) in question.options" :key="optionIndex" :label="option" :value="option" />
         </el-select>
-        <el-select v-else-if="question.code === 'DD'" v-model="singleAnswers[index]" :aria-labelledby="`screening-label-${index}`">
+        <el-select v-else-if="question.code === 'DROPDOWN'" v-model="singleAnswers[index]" :aria-labelledby="`screening-label-${index}`">
           <el-option v-for="(option, optionIndex) in question.options" :key="optionIndex" :label="option" :value="option" />
         </el-select>
         <p v-else role="alert">{{ $t('screeningForms.unsupportedType') }}</p>
@@ -46,11 +46,11 @@ const getAnswers = () => {
   const result: { question_id: string; values: string[] }[] = []
   for (const [index, question] of props.questions.entries()) {
     if (!question.id) throw new Error('Screening question ID missing')
-    const values = question.code === 'LBL' ? []
-      : question.code === 'CHK' || (question.code === 'DD' && question.multiSelect) ? multipleAnswers.value[index]
-      : question.code === 'RDO' || question.code === 'DD' ? (singleAnswers.value[index] ? [singleAnswers.value[index]] : [])
+    const values = question.code === 'LABEL' ? []
+      : question.code === 'CHECKBOX' || (question.code === 'DROPDOWN' && question.multiSelect) ? multipleAnswers.value[index]
+      : question.code === 'RADIO' || question.code === 'DROPDOWN' ? (singleAnswers.value[index] ? [singleAnswers.value[index]] : [])
       : textAnswers.value[index].trim() ? [textAnswers.value[index].trim()] : []
-    if (question.code !== 'LBL' && question.mandatory && !values.length) {
+    if (question.code !== 'LABEL' && question.mandatory && !values.length) {
       ElMessage.error($t('jobPosition.applicationQuestionsRequired'))
       return null
     }
