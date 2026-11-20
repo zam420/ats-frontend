@@ -72,10 +72,13 @@
                       </el-col>
                       <el-col :span="canWrite ? 22 : 23" class="question-preview">
                         <div v-if="isRichTextLabel(question)" class="rich-label">
-                          <EspQuillEditor :ref="editor => setLabelEditor(question.key, editor)"
+                          <div v-if="embedded && readOnly" class="ql-editor job-rich-text disabled-rich-label"
+                            :class="{ 'disabled-choice-label': isInlineChoice(question) }" aria-disabled="true"
+                            @click.prevent v-html="jobRichTextToHtml(question.label)"></div>
+                          <EspQuillEditor v-else :ref="editor => setLabelEditor(question.key, editor)"
                             class="label-editor" :content="jobRichTextToHtml(question.label)" :select-options="[]"
                             :hide-label="true" :hide-insert-field="true" :full-toolbar="!isInlineChoice(question)"
-                            :basic-toolbar="isInlineChoice(question)"
+                            :basic-toolbar="isInlineChoice(question)" :compact="true"
                             :placeholder="$t('screeningForms.questionLabelPlaceholder')"
                             :required="false" :read-only="!canWrite"
                             :update-callback="(value: string) => question.label = value" />
@@ -146,6 +149,7 @@ import EspMain from '@/components/EspMain/index.vue'
 import EspQuillEditor from '@/components/EspQuillEditor/index.vue'
 import type { ComponentPublicInstance } from 'vue'
 import { jobRichTextToHtml } from '@/views/jobPosition/jobRichText'
+import '@/views/jobPosition/jobRichText.less'
 import { toPreviewQuestions, type PreviewQuestion } from '@/views/jobPosition/jobPreview'
 import type User from '@/api/interface/user'
 import type { ScreeningFormRequest, ScreeningQuestion, ScreeningQuestionType } from '@/api/interface/screeningQuestionsForm'
@@ -243,6 +247,7 @@ const setLabelEditor = (key: number, editor: Element | ComponentPublicInstance |
   else labelEditors.delete(key)
 }
 const syncLabelEditors = () => {
+  if (props.embedded && props.readOnly) return
   for (const question of form.questions) {
     if (!isRichTextLabel(question)) continue
     const editor = labelEditors.get(question.key)
@@ -545,8 +550,17 @@ onDeactivated(endDrag)
 .question-preview > * { margin-bottom: 6px; }
 .rich-label { display: flex; align-items: flex-start; }
 .rich-label .label-editor { min-width: 0; flex: 1; }
+.disabled-rich-label { height: auto; overflow: visible; padding: 0; font-size: 13px; color: var(--el-disabled-text-color); overflow-wrap: anywhere; }
+.disabled-rich-label :deep(*) { color: inherit !important; }
+.disabled-choice-label { font-size: var(--el-font-size-base); font-weight: 600; }
+.label-editor :deep(.quill-editor-wrap.compact .ql-toolbar.ql-snow) { padding: 3px 4px; font-size: 12px; }
+.label-editor :deep(.quill-editor-wrap.compact .ql-toolbar.ql-snow button) { width: 20px; height: 22px; padding: 3px 1px; }
+.label-editor :deep(.quill-editor-wrap.compact .ql-toolbar.ql-snow button svg) { width: 14px; height: 16px; }
+.label-editor :deep(.quill-editor-wrap.compact .ql-toolbar.ql-snow .ql-picker) { font-size: 12px; height: 22px; }
+.label-editor :deep(.quill-editor-wrap.compact .ql-toolbar.ql-snow .ql-picker-label) { line-height: 18px; }
+.label-editor :deep(.quill-editor-wrap.compact .ql-toolbar.ql-snow .ql-picker-label svg) { width: 14px; height: 20px; }
 .label-editor :deep(.quill-editor-wrap.full .ql-container .ql-editor) { height: calc(5.475em + 24px); line-height: 1.825; }
-.label-editor :deep(.quill-editor-wrap:not(.full) .ql-container .ql-editor) { height: calc(5.475em + 24px); line-height: 1.825; }
+.label-editor :deep(.quill-editor-wrap:not(.full) .ql-container .ql-editor) { height: calc(3.65em + 24px); line-height: 1.825; }
 .label-editor :deep(.ql-editor.ql-blank::before) { color: var(--el-text-color-placeholder); font-style: normal; }
 .question-preview > :has(+ .inline-description) { margin-bottom: 0px; }
 .process-panel > .content { min-height: 50px; }

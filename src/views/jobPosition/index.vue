@@ -134,6 +134,7 @@ const statusColors: Record<string, string> = {
 }
 const canEdit = (row: JobPosition.JobPositionListItem) => {
   const userId = globalStore.userInfo?.id
+  console.log("hi zammmmmmmmmm:" + userId)
   return globalStore.permissions.includes(UserPermissionEnum.JPA) ||
     (typeof userId === 'string' && userId.length > 0 && row.owner_id === userId)
 }
