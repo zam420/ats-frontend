@@ -210,8 +210,8 @@ onBeforeUnmount(() => {
 .description-divider { border: 0; border-top: 1px solid var(--el-border-color); margin: 0 0 0px; }
 .preview-description { height: auto; overflow-y: visible; padding: 0; font-size: 14px; overflow-wrap: anywhere; margin-top:28px; }
 .preview-tabs .preview-description { margin-bottom: 28px; }
-.preview-tabs :deep(.el-tabs__header) { margin-bottom: 0px; }
-// .preview-tabs :deep(.el-tabs__content) { padding-bottom: 28px; }
+.preview-tabs :deep(.el-tabs__header) { margin-bottom: 0px;}
+.preview-tabs :deep(.el-tabs__item) { font-size:16px; font-weight: 600;}
 .additional-questions { margin-top: 28px; padding-bottom: 28px;}
 .additional-questions h1 { font-size: 24px; font-weight: 600; }
 .additional-questions-content { margin-top: 20px; }
