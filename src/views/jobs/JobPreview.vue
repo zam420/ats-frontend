@@ -1,11 +1,11 @@
 <template>
-  <EspMain :title="$t('jobPosition.preview')">
+  <div class="job-details">
     <div v-loading="loading" class="preview-content">
       <el-alert v-if="loadError" :title="$t('jobPosition.previewJobLoadError')" type="error" :closable="false" />
       <JobPositionPreview v-if="preview" embedded :preview-data="preview" :company-name="companyName"
         :company-logo-url="logoUrl" :published-at="publishedAt" />
     </div>
-  </EspMain>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -44,7 +44,7 @@ onMounted(async () => {
       const location = WorkLocation[String(value)]
       if (!location) throw new Error(`Unknown work location: ${value}`)
       return location.name
-    }).join(', ')
+    })
     const questions = (job.screening_questions ?? []).map(({ screening_question_type_id, ...question }) => ({
       ...question, screening_question_type: screening_question_type_id
     })).sort((a, b) => a.order - b.order)
@@ -70,5 +70,6 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="less" scoped>
+.job-details { padding: 2.3em 2em 0.5rem; height: 100%; overflow: auto; }
 .preview-content { min-height: 120px; }
 </style>

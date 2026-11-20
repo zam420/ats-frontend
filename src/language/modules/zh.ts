@@ -591,6 +591,7 @@ auth: {
     jobTitle: '职位名称',
     recruitmentType: '招聘类型',
     workLocation: '工作地点',
+    moreLocations: '另有 {count} 个',
     status: '状态',
     recruitmentProject: '招聘项目',
     employmentType: '工作性质',

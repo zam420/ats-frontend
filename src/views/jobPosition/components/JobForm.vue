@@ -194,7 +194,7 @@ const jobReady = ref(!props.isEdit)
 const saving = ref(false)
 const screeningForms = ref<ScreeningFormListItem[]>([])
 const screeningQuestionTypes = ref<ScreeningQuestionType[] | null>(null)
-const screeningDisplayMode = ref<ScreeningDisplayMode>('description')
+const screeningDisplayMode = ref<ScreeningDisplayMode>('tab')
 const displayModeOptions = ref<{ id: number; name: string }[]>([])
 const screeningFormRef = ref<InstanceType<typeof ScreeningFormPage>>()
 const pipelineEditorRef = ref<InstanceType<typeof RecruitmentPipelineForm>>()
@@ -350,7 +350,7 @@ const findOptionLabel = (options: Form.FormSelect[], value: string | number): st
   return undefined
 }
 
-const previewFieldLabel = (prop: string): string => {
+const previewFieldLabels = (prop: string): string[] => {
   const field = state.baseForm.find(item => item.prop === prop)
   const values: unknown[] = Array.isArray(field?.value) ? field.value : [field?.value]
   return values.flatMap(value => {
@@ -360,13 +360,13 @@ const previewFieldLabel = (prop: string): string => {
       ?? (prop === 'work_location' ? WorkLocation[String(value)]?.name : undefined)
     if (!label) throw new Error(`Unable to resolve ${prop} option: ${value}`)
     return [label]
-  }).join(', ')
+  })
 }
 
 const preview = () => {
   let employmentType: string
   let workArrangement: string
-  let workLocation: string
+  let workLocation: string[]
   let questions: PreviewQuestion[]
   try {
     if (!screeningFormRef.value) throw new Error('Screening form is not ready')
@@ -377,9 +377,9 @@ const preview = () => {
     return
   }
   try {
-    employmentType = previewFieldLabel('employment_type_id')
-    workArrangement = previewFieldLabel('work_arrangement_type_id')
-    workLocation = previewFieldLabel('work_location')
+    employmentType = previewFieldLabels('employment_type_id').join(', ')
+    workArrangement = previewFieldLabels('work_arrangement_type_id').join(', ')
+    workLocation = previewFieldLabels('work_location')
   } catch (error) {
     console.error('Failed to resolve job preview details', error)
     ElMessage.error($t('jobPosition.previewFieldsError'))

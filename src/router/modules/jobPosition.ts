@@ -2,7 +2,7 @@ import { useLocale } from '@/hooks/useLocale'
 import {
   ROUTER_JOB_POSITION,
   ROUTER_JOBS,
-  ROUTER_JOBS_PREVIEW,
+  ROUTER_JOBS_DETAIL,
   ROUTER_JOB_POSITION_CREATE,
   ROUTER_JOB_POSITION_DETAIL,
   ROUTER_JOB_POSITION_EDIT,
@@ -29,11 +29,11 @@ const jobPositionRouter: Menu.MenuOptions[] = [
     }
   },
   {
-    path: `/${ROUTER_JOBS_PREVIEW}/:id`,
-    name: ROUTER_JOBS_PREVIEW,
+    path: `/${ROUTER_JOBS}/:id`,
+    name: ROUTER_JOBS_DETAIL,
     component: () => import('@/views/jobs/JobPreview.vue'),
     meta: {
-      title: $t('jobPosition.preview'),
+      title: $t('jobPosition.jobDetail'),
       isHide: true,
       activeMenu: `/${ROUTER_JOBS}`,
       permissionCode: UserPermissionEnum.JPSC

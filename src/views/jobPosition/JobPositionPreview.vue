@@ -25,7 +25,7 @@
       <div class="job-facts">
         <div class="job-fact"><span>{{ $t('jobPosition.employmentType') }}:</span> {{ preview.employmentType || '—' }}</div>
         <div class="job-fact"><span>{{ $t('jobPosition.workArrangement') }}:</span> {{ preview.workArrangement || '—' }}</div>
-        <div class="job-fact"><span>{{ $t('jobPosition.workLocation') }}:</span> {{ preview.workLocation || '—' }}</div>
+        <div class="job-fact"><span>{{ $t('jobPosition.workLocation') }}:</span> <WorkLocationSummary :locations="preview.workLocation" /></div>
       </div>
       <p class="posted-date">{{ $t('jobPosition.previewPostedDate') }}: {{ postedDate }}</p>
       <template v-if="preview.screeningDisplayMode === 'description'">
@@ -64,6 +64,7 @@ import { jobRichTextToHtml } from './jobRichText'
 import { readJobPreview, toPreviewQuestions, type JobPreview } from './jobPreview'
 import ScreeningQuestionsPreview from './components/ScreeningQuestionsPreview.vue'
 import ApplicantInformationPreview from './components/ApplicantInformationPreview.vue'
+import WorkLocationSummary from './components/WorkLocationSummary.vue'
 import moment from 'moment'
 import { DATE_FORMAT } from '@/config'
 import '@vueup/vue-quill/dist/vue-quill.snow.css'
@@ -129,7 +130,7 @@ onMounted(async () => {
         const name = WorkLocation[String(value)]?.name
         if (!name) throw new Error(`Unknown work location: ${value}`)
         return name
-      }).join(', ')
+      })
       const questions = (job.screening_questions ?? [])
         .map(({ screening_question_type_id, ...question }) => ({ ...question, screening_question_type: screening_question_type_id }))
         .sort((a, b) => a.order - b.order)
@@ -203,9 +204,9 @@ onBeforeUnmount(() => {
 .job-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .company-name { font-size: 18px; font-weight: 600; }
 .job-title { min-width: 0; flex: 1; font-size: 28px; margin: 0 0 8px; overflow-wrap: anywhere; }
-.job-facts { display: flex; flex-wrap: wrap; gap: 8px 24px; }
-.job-fact span { font-weight: 600; }
-.posted-date { margin: 12px 0 18px; }
+.job-facts { display: flex; flex-wrap: wrap; gap: 8px 24px; font-size:13px; }
+.job-fact > span:first-child { font-weight: 600; }
+.posted-date { margin: 12px 0 18px; font-size:12px; }
 .description-divider { border: 0; border-top: 1px solid var(--el-border-color); margin: 0 0 0px; }
 .preview-description { height: auto; overflow-y: visible; padding: 0; font-size: 14px; overflow-wrap: anywhere; margin-top:28px; }
 .preview-tabs .preview-description { margin-bottom: 28px; }

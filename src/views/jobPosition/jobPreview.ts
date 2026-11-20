@@ -18,7 +18,7 @@ export interface JobPreview {
   description: string
   employmentType: string
   workArrangement: string
-  workLocation: string
+  workLocation: string[]
   screeningDisplayMode: ScreeningDisplayMode
   questions: PreviewQuestion[]
 }
@@ -73,7 +73,8 @@ export const readJobPreview = (key: unknown): JobPreview | null => {
       description: data.description,
       employmentType: 'employmentType' in data && typeof data.employmentType === 'string' ? data.employmentType : '',
       workArrangement: 'workArrangement' in data && typeof data.workArrangement === 'string' ? data.workArrangement : '',
-      workLocation: 'workLocation' in data && typeof data.workLocation === 'string' ? data.workLocation : '',
+      workLocation: 'workLocation' in data && Array.isArray(data.workLocation) && data.workLocation.every((location: unknown) => typeof location === 'string')
+        ? data.workLocation : 'workLocation' in data && typeof data.workLocation === 'string' && data.workLocation ? [data.workLocation] : [],
       screeningDisplayMode: mode,
       questions
     }

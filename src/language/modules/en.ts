@@ -591,6 +591,7 @@ export default {
     jobTitle: 'Job Title',
     recruitmentType: 'Recruitment Type',
     workLocation: 'Work Location',
+    moreLocations: '+{count} more',
     status: 'Status',
     recruitmentProject: 'Recruitment Project',
     employmentType: 'Employment Type',

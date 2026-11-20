@@ -20,7 +20,7 @@ import { getJobs, getJobsFilters, type CandidateJobSummary } from '@/api/modules
 import type JobPosition from '@/api/interface/jobPosition'
 import JobSearchFilters from '@/views/jobPosition/components/JobSearchFilters.vue'
 import JobCard from './JobCard.vue'
-import { ROUTER_JOBS_PREVIEW } from '@/router/routerName'
+import { ROUTER_JOBS_DETAIL } from '@/router/routerName'
 import { useLocale } from '@/hooks/useLocale'
 
 const { $t } = useLocale()
@@ -43,7 +43,7 @@ let searchVersion = 0
 let appliedSearch = emptySearch()
 
 const openJob = (id: string) => {
-  const href = router.resolve(`/${ROUTER_JOBS_PREVIEW}/${encodeURIComponent(id)}`).href
+  const href = router.resolve({ name: ROUTER_JOBS_DETAIL, params: { id } }).href
   const page = window.open(href, '_blank')
   if (!page) {
     ElMessage.error($t('jobPosition.previewOpenError'))
@@ -112,7 +112,7 @@ onBeforeUnmount(() => {
 <style lang="less" scoped>
 .jobs-page.main-wrap { overflow: hidden; min-height: 0; }
 .jobs-page :deep(.header), .jobs-page > .job-search { flex-shrink: 0; }
-.jobs-results { flex: 1 1 0; min-height: 0; overflow-y: auto; }
+.jobs-results { flex: 1 1 0; min-height: 0; overflow-y: auto; margin-bottom: 28px;}
 .jobs-list { width: min(100%, 960px); margin: 0 auto; min-height: 120px; }
 .jobs-list :deep(.job-card + .job-card) { margin-top: 16px; }
 .el-pagination { margin-top: 16px; }
