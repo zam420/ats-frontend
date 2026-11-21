@@ -131,9 +131,7 @@ auth: {
     cvManagement: '简历管理',
     talentPool: '人才库',
     admin: '管理员',
-    project: '项目',
     settings: '设置',
-    recruitmentProject: '招聘项目',
     userManagement: '用户管理',
     tenantManagement: '租户管理',
     interviewProcess: '评估计划',
@@ -345,9 +343,6 @@ auth: {
   },
   title: {
     jobPosition: '职位管理',
-    recruitmentProject: '招聘项目',
-    createRecruitmentProject: '创建招聘项目',
-    modifyRecruitmentProject: '修改招聘项目',
     userManagement: '用户管理',
     talentPool: '人才库',
     duplicationResumes: '简历查重',
@@ -592,6 +587,7 @@ auth: {
     yes: '是',
     no: '否',
     rejectSuccess: '已拒绝候选人。',
+    noJobs: '没有可用的职位。',
     rejectError: '无法拒绝候选人，请重试。',
     name: '姓名',
     email: '电子邮箱',
@@ -636,7 +632,6 @@ auth: {
     workLocation: '工作地点',
     moreLocations: '另有 {count} 个',
     status: '状态',
-    recruitmentProject: '招聘项目',
     employmentType: '工作性质',
     experienceLevel: '经验级别',
     jobType: '职位类型',
@@ -717,7 +712,6 @@ auth: {
     jobPortals: '招聘渠道',
     downloadTemplate: '点击下载职位模板文件',
     question: '问题 { number }',
-    projectStatus: '项目状态',
     functionalInterviewFeedback: "专业面试官反馈"
   },
   cv: {
@@ -801,7 +795,6 @@ auth: {
     q: '问题 {number}：',
     checkedAtDate: '查看时间',
     appliedPosition: '申请职位：',
-    recruitmentProject: '招聘项目',
     recruitmentType: '招聘类型',
     applicationStatus: '应聘状态',
     hrRecruiter: 'HR 专员',
@@ -882,19 +875,6 @@ auth: {
     companyName: '公司名称',
     pooledReason: '入库原因',
     pooledAt: '入库时间'
-  },
-  admin: {
-    projectName: '项目名称',
-    projectOwners: '招聘负责人',
-    interviewProcessTemplate: '评估计划',
-    createBy: '创建人',
-    createAt: '创建时间',
-    status: '状态',
-    adminProjentMsg: '确定要停用所选项目吗？',
-    adminProjentTitle: '停用项目',
-    activateProjectMsg: '确定要启用所选项目吗？',
-    activateProjectTitle: '启用项目',
-    projectStatusResult: '停用项目结果'
   },
   talentPool: {
     talentPoolDetail: '人才库详情',

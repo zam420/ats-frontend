@@ -15,11 +15,6 @@ export const RESUME_DETAIL: Form.DetailItem[] = [
     col: 24
   },
   {
-    label: $t('cv.recruitmentProject'),
-    prop: 'project_name',
-    col: 8
-  },
-  {
     label: $t('cv.applicationStatus'),
     prop: 'status',
     propText: 'status_name',

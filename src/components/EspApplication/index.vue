@@ -19,7 +19,6 @@
         </div>
       </div>
       <div class="content-first">
-        <div class="content-layout">{{ $t('cv.recruitmentProject') }} {{ item.project_name }}</div>
         <div class="content-layout">{{ $t('cv.applicationStatus') }} {{ item.status_name }}</div>
         <div class="content-layout">
           {{ $t('cv.recruitmentType') }} {{ item.recruitment_type_name }}
@@ -81,8 +80,6 @@ const dialogData = ref<DialogProps>({
       hr_recruiter_id: 4,
       hr_recruiter_name: 'gwy',
       pooled_reason: '',
-      project_id: 53,
-      project_name: 'Demo1',
       recruitment_source: 0,
       recruitment_source_name: 'liepin',
       recruitment_type: 1,
@@ -99,8 +96,6 @@ const dialogData = ref<DialogProps>({
       hr_recruiter_id: 4,
       hr_recruiter_name: 'gwy',
       pooled_reason: '',
-      project_id: 53,
-      project_name: 'Demo1',
       recruitment_source: 0,
       recruitment_source_name: 'liepin',
       recruitment_type: 1,

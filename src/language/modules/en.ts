@@ -131,9 +131,7 @@ export default {
     cvManagement: 'CV Management',
     talentPool: 'Talent Pool',
     admin: 'Admin',
-    project: 'Project',
     settings: 'Settings',
-    recruitmentProject: 'Recruitment Project',
     userManagement: 'User Management',
     tenantManagement: 'Tenant Management',
     interviewProcess: 'Evaluation Plans',
@@ -345,9 +343,6 @@ export default {
   },
   title: {
     jobPosition: 'Job Positions',
-    recruitmentProject: 'Recruitment Project',
-    createRecruitmentProject: 'Create Recruitment Project',
-    modifyRecruitmentProject: 'Modify Recruitment Project',
     userManagement: 'User Management',
     talentPool: 'Talent Pool',
     duplicationResumes: 'Duplication Resumes',
@@ -592,6 +587,7 @@ export default {
     yes: 'Yes',
     no: 'No',
     rejectSuccess: 'Candidate rejected.',
+    noJobs: 'No job positions available.',
     rejectError: 'Could not reject the candidate. Please try again.',
     name: 'Name',
     email: 'Email',
@@ -636,7 +632,6 @@ export default {
     workLocation: 'Work Location',
     moreLocations: '+{count} more',
     status: 'Status',
-    recruitmentProject: 'Recruitment Project',
     employmentType: 'Employment Type',
     experienceLevel: 'Experience Level',
     jobType: 'Job Type',
@@ -717,7 +712,6 @@ export default {
     jobPortals: 'Job Portals',
     downloadTemplate: 'Click to Download Job Position Template File',
     question: 'Question { number }',
-    projectStatus: 'Project Status',
     functionalInterviewFeedback: "Public Hiring Manager's Feedback"
   },
   cv: {
@@ -801,7 +795,6 @@ export default {
     q: 'Q{number}:',
     checkedAtDate: 'Checked at',
     appliedPosition: 'Applied Position:',
-    recruitmentProject: 'Recruitment Project',
     recruitmentType: 'Recruitment Type',
     applicationStatus: 'Application Status',
     hrRecruiter: 'HR Recruiter',
@@ -882,19 +875,6 @@ export default {
     companyName: 'Company Name',
     pooledReason: 'Pooled Reason',
     pooledAt: 'Pooled at'
-  },
-  admin: {
-    projectName: 'Project Name',
-    projectOwners: 'Recruiters',
-    interviewProcessTemplate: 'Evaluation Plan',
-    createBy: 'Create By',
-    createAt: 'Create At',
-    status: 'Status',
-    adminProjentMsg: 'Are you sure to deactivate the selected project?',
-    adminProjentTitle: 'Deactivate Project',
-    activateProjectMsg: 'Are you sure to activate the selected project?',
-    activateProjectTitle: 'Activate Project',
-    projectStatusResult: 'Deactivate Project Result'
   },
   talentPool: {
     talentPoolDetail: 'Talent Pool Detail',

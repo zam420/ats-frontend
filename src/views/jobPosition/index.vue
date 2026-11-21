@@ -31,7 +31,7 @@
         <router-link class="job-title-link" :to="jobTitleUrl(row)">{{ row.title }}</router-link>
       </template>
       <template #application_count="{ row }">
-        <router-link class="job-title-link" :to="{ name: ROUTER_CANDIDATE_PIPELINE, params: { jobId: row.id } }">
+        <router-link v-if="typeof row.id === 'string' && row.id.trim()" class="job-title-link" :to="{ name: ROUTER_CANDIDATE_PIPELINE, params: { jobId: row.id } }">
           {{ row.application_count }}
         </router-link>
       </template>
@@ -139,7 +139,6 @@ const statusColors: Record<string, string> = {
 }
 const canEdit = (row: JobPosition.JobPositionListItem) => {
   const userId = globalStore.userInfo?.id
-  console.log("hi zammmmmmmmmm:" + userId)
   return globalStore.permissions.includes(UserPermissionEnum.JPA) ||
     (typeof userId === 'string' && userId.length > 0 && row.owner_id === userId)
 }
@@ -177,6 +176,11 @@ const loadJobPositions = async (params: Record<string, unknown>) => {
 }
 
 const initTable = (tables: JobPosition.JobPositionListItem[]) => {
+  if (tables.some(item => typeof item.id !== 'string' || !item.id.trim())) {
+    console.error('Job position response contains a missing or invalid ID')
+    ElMessage.error($t('jobPosition.jobsLoadError'))
+    throw new Error('Job position response contains a missing or invalid ID')
+  }
   return tables.map(item => ({
     ...item,
     status_name: jobFields.value?.job_status.find(status => status.id === item.status)?.name ?? String(item.status),

@@ -175,8 +175,6 @@ declare namespace CV {
     hr_recruiter_id: number
     hr_recruiter_name: string
     pooled_reason: string
-    project_id: number
-    project_name: string
     recruitment_source: number
     recruitment_source_name: string
     recruitment_type: number
@@ -279,8 +277,6 @@ declare namespace CV {
     id: number | string
     recruiter_id?: number
     recruiter_name?: string
-    project_id?: number
-    project_name?: string
     job_type?: number
     job_type_name?: string
     recruitment_type?: number

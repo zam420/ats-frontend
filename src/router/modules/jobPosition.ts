@@ -77,13 +77,24 @@ const jobPositionRouter: Menu.MenuOptions[] = [
     }
   },
   {
-    path: `/${ROUTER_CANDIDATE_PIPELINE}/:jobId?`,
+    path: `/${ROUTER_CANDIDATE_PIPELINE}`,
+    name: `/${ROUTER_CANDIDATE_PIPELINE}`,
+    component: () => import('@/views/jobPosition/CandidatePipeline.vue'),
+    meta: {
+      icon: 'recruitment',
+      title: $t('candidatePipeline.title'),
+      index: 1,
+      permissionCode: UserPermissionEnum.JPS
+    }
+  },
+  {
+    path: `/${ROUTER_CANDIDATE_PIPELINE}/:jobId`,
     name: ROUTER_CANDIDATE_PIPELINE,
     component: () => import('@/views/jobPosition/CandidatePipeline.vue'),
     meta: {
       title: $t('candidatePipeline.title'),
       isHide: true,
-      activeMenu: `/${ROUTER_JOB_POSITION}`,
+      activeMenu: `/${ROUTER_CANDIDATE_PIPELINE}`,
       permissionCode: UserPermissionEnum.JPS
     }
   },

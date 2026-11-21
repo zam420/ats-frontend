@@ -1,6 +1,4 @@
 export enum UserPermissionEnum {
-  RPE = 'rpe', // recruitment project edit
-  RPS = 'rps', // recruitment project search
   JPC = 'jpc', // job position create
   JPE = 'jpe', // job position edit
   JPS = 'jps', // job position search
@@ -16,7 +14,6 @@ export enum UserPermissionEnum {
   CRM = 'crm', // candidate resume menu
   TPM = 'tpm', // talent pool menu
   JPM = 'jpm', // job position menu
-  RPM = 'rpm', // recruitment project menu
   STM = 'stm', // settings menu
   ETM = 'etm', // email template menu
   ETC = 'etc', // email template create

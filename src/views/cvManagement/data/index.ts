@@ -33,8 +33,6 @@ import { PooledReason } from '@/enums/pooledReasonEnum'
 import moment from 'moment'
 import { getInnerUserList, getUserListByRole } from '@/api/modules/user'
 import { RecruitmentType } from '@/enums/recruitmentTypeEnum'
-import { ProjectStatus, ProjectStatusEnum } from '@/enums/projectStatusEnum'
-import { getProjectList } from '@/api/modules/project'
 import { UserRoleEnum } from '@/enums/userRoleEnum'
 import { JobType } from '@/enums/jobTypeEnum'
 import { WorkLocation } from '@/enums/workLocationEnum'
@@ -250,7 +248,6 @@ export const RESUME_UPLOAD_FORM: Form.FormItem[] = [
     getOptions: getJobPositionListForCv,
     optionKey: 'id',
     optionName: 'title',
-    optionExpandName: 'project_name',
     needTooltip: true,
     required: true,
     col: 24
@@ -342,7 +339,6 @@ export const CV_JOB_INTENTION_FORM: Form.FormItem[] = [
     optionKey: 'id',
     optionName: 'title',
     expandKey: ['recruitment_type'],
-    optionExpandName: 'project_name',
     needTooltip: true,
     isCallback: true,
     required: true
@@ -1284,16 +1280,6 @@ export const JOBPOSITION_FILTER_FORM: Form.FormItem[] = [
     clearable: true
   },
   {
-    label: $t('jobPosition.recruitmentProject'),
-    prop: 'project_id',
-    type: FormItemTypeEnum.MULTIPLE_SELECT,
-    teleported: false,
-    getOptions: getProjectList,
-    optionKey: 'project_id',
-    optionName: 'project_name',
-    clearable: true
-  },
-  {
     label: $t('jobPosition.HRRecruiter'),
     prop: 'recruiter_id',
     type: FormItemTypeEnum.MULTIPLE_SELECT,
@@ -1323,14 +1309,5 @@ export const JOBPOSITION_FILTER_FORM: Form.FormItem[] = [
     optionName: 'name',
     enum: JobType,
     clearable: true
-  },
-  {
-    label: $t('jobPosition.projectStatus'),
-    prop: 'project_status',
-    type: FormItemTypeEnum.MULTIPLE_SELECT,
-    teleported: false,
-    options: enumItem2arr(ProjectStatus),
-    clearable: true,
-    value: [ProjectStatusEnum.ACTIVE]
   }
 ]

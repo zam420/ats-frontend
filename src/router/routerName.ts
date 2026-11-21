@@ -38,9 +38,6 @@ export const ROUTER_CV_MANAGEMENT_SCHEDULE_INTERVIEW = 'cvManagement/scheduleInt
 export const ROUTER_TALENT_POOL = 'talentPool'
 export const ROUTER_TALENT_POOL_DETAIL = 'talentPool/detail'
 
-// Project
-export const ROUTER_PROJECT = 'project'
-
 // Interviewer
 export const ROUTER_INTERVIEWER = 'interviewer'
 
@@ -55,9 +52,6 @@ export const ROUTER_INTERVIEWER_MY_REVIEW_DETAIL = 'interviewer/myInterview/deta
 
 // Interviewer -> Test Review
 export const ROUTER_INTERVIEWER_TEST_REVIEW = 'interviewer/testReview'
-
-//Recruitment Project
-export const ROUTER_HIRING_PROJECT = 'project'
 
 //Settings
 export const ROUTER_SETTINGS = 'settings'

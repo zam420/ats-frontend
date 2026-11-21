@@ -7,7 +7,6 @@ declare namespace JobPosition {
   interface JonPositionInfo {
     id: number
     title: string
-    project_id: number
     employment_type_id: number
     work_arrangement_type_id: number
     experience_level_type: number
@@ -78,8 +77,6 @@ declare namespace JobPosition {
     department: string
     title: string
     last_modified_at: string
-    project_id: number
-    project_name: string
     publish_channel: CommonEnum.enumItem[] | string
     published_at: string
     resume_inbox_name: string

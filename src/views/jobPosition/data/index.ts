@@ -228,11 +228,6 @@ export const JOB_POSITION_CREATED_DETAIL: Form.DetailItem[] = [
 // 工作职位详情
 export const JOB_POSITION_BASIC_DETAIL: Form.DetailItem[] = [
   {
-    label: $t('jobPosition.recruitmentProject'),
-    prop: 'project_name',
-    col: 8
-  },
-  {
     label: $t('jobPosition.employmentType'),
     prop: 'employment_type_name',
     col: 8

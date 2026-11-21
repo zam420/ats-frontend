@@ -11,7 +11,7 @@
               <template v-for="item of jobFilterForm" :key="item.prop">
                 <el-col :span="item.col ?? 24" v-if="!item.hide">
                   <el-form-item :prop="item.prop" :label="item.label" label-position="top" @click.native.prevent>
-                    <FormItem :item="item" :change="changeFormItem" />
+                    <FormItem :item="item" />
                   </el-form-item>
                 </el-col>
               </template>
@@ -27,7 +27,7 @@
                   <el-col :span="item.col ?? 24" v-if="!item.hide">
                     <div v-if="item.additionalTitle" class="block-title last">{{ item.additionalTitle }}</div>
                     <el-form-item :prop="item.prop" :label="item.label" label-position="top" @click.native.prevent>
-                      <FormItem :change="changeFormItem" :item="item" />
+                      <FormItem :item="item" />
                     </el-form-item>
                   </el-col>
                 </template>
@@ -60,16 +60,7 @@
 </template>
 
 <script setup lang="ts" name="AdvancedFilters">
-import {
-  isWorkLocationUnderChina,
-  isWorkLocationUnderCzech,
-  isWorkLocationUnderIndia,
-  isWorkLocationUnderBrazil,
-  isWorkLocationUnderJapan,
-  WorkLocationEnum
-} from '@/enums/workLocationEnum'
 import { cloneDeep } from 'lodash'
-import { ProjectStatusEnum } from '@/enums/projectStatusEnum'
 import { useLocale } from '@/hooks/useLocale'
 import { FormItemTypeEnum } from '@/enums/formItemTypeEnum';
 
@@ -107,79 +98,20 @@ const jobFilterForm = ref<Form.FormItem[]>([])
 const originalJobFilterForm =  ref<Form.FormItem[]>([])
 // 当前有做过滤的筛选项prop集合
 const filterProps = ref<string[]>([])
-// 缓存project最全的下拉数据用于后续的worklocation过滤
-const projectList = ref<Form.FormSelect[]>([])
-
-// 修改form表单联动下拉选项
-const changeFormItem = (item: Form.FormItem) => {
-  // worklocaton和project_status的筛选变化需要过滤对应的project数据
-  if (item.prop === 'work_location_ids' || item.prop === 'project_status') {
-    changeProjectList();
-    const index = jobFilterForm.value?.findIndex(info => info.prop === 'project_id')
-    jobFilterForm.value[index].value = []
-  }
-}
-
-const changeProjectList = () => {
-  const index = jobFilterForm.value?.findIndex(info => info.prop === 'project_id')
-  const workLocationIndex = jobFilterForm.value?.findIndex(info => info.prop === 'work_location_ids')
-  const workLocation = jobFilterForm.value?.[workLocationIndex]?.value ?? []
-  const projectStatusIndex = jobFilterForm.value?.findIndex(info => info.prop === 'project_status')
-  const projectStatus = jobFilterForm.value?.[projectStatusIndex]?.value ?? []
-  if (workLocation?.length === 0 && projectStatus.length === 0) {
-    jobFilterForm.value[index].options = cloneDeep(projectList.value)
-  } else {
-    let list: Form.FormSelect[] = []
-    projectList.value?.forEach(data => {
-      if (
-        (
-          (workLocation?.includes(WorkLocationEnum.CHINA) && isWorkLocationUnderChina(data.work_location)) ||
-          (workLocation?.includes(WorkLocationEnum.CZECH) && isWorkLocationUnderCzech(data.work_location)) ||
-          (workLocation?.includes(WorkLocationEnum.INDIA) && isWorkLocationUnderIndia(data.work_location)) ||
-          (workLocation?.includes(WorkLocationEnum.BRAZIL)&& isWorkLocationUnderBrazil(data.work_location)) ||
-          (workLocation?.includes(WorkLocationEnum.JAPAN) && isWorkLocationUnderJapan(data.work_location)) ||
-          workLocation?.includes(data.work_location) ||
-          workLocation.length === 0
-        ) && 
-        (
-          projectStatus.length === 0 || projectStatus?.includes(data.status_value)
-        )
-      ) {
-        list.push(data)
-      }
-    })
-    jobFilterForm.value[index].options = [...list]
-  }
-}
 // 监控传入的job filter form表单更新里面的表单内容
 watch(
   () => props.jobFilterList,
   (list: any) => {
     if (list) {
       const propList: string[] = []
-      let workLocation: number[] = []
-      let projectStatus: number[] = []
-      list?.forEach((data: Form.FormItem, index: number) => {
+      list?.forEach((data: Form.FormItem) => {
         if (data?.value && data.value?.length > 0) {
           propList.push(data.prop)
-        }
-        if (data.prop === 'project_id') {
-          projectList.value = cloneDeep(data?.options ?? [])
-        }
-        if (data.prop === 'work_location_ids') {
-          workLocation = data?.value ?? []
-        }
-        if (data.prop === 'project_status') {
-          projectStatus = data?.value ?? []
         }
       })
       filterProps.value = [...filterProps.value, ...propList]
       originalJobFilterForm.value = cloneDeep(list)
       jobFilterForm.value = cloneDeep(list)
-      // 如果已经保存了worklocaton的筛选则需要过滤对应的project数据
-      if (workLocation?.length > 0 || projectStatus?.length > 0) {
-        changeProjectList()
-      }
     }
   },
   { deep: true, immediate: true }
@@ -258,7 +190,7 @@ const clear = () => {
     })
   })
   jobFilterForm.value.forEach((data: Form.FormItem) => {
-    data.value = data.prop === 'project_status' ? [ProjectStatusEnum.ACTIVE] : null
+    data.value = null
   })
 }
 // 确认查询

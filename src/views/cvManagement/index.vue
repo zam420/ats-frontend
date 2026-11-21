@@ -62,7 +62,7 @@
                       style="pointer-events: none"
                     >
                     </el-checkbox>
-                    <el-tooltip :content="`${item.title} - ${item.project_name}`" placement="right" :hide-after="0" transition="-" :offset="getTooltipOffset(item.resume_count)">
+                    <el-tooltip :content="item.title" placement="right" :hide-after="0" transition="-" :offset="getTooltipOffset(item.resume_count)">
                       <div class="ellipsis">{{ item.label }}</div>
                     </el-tooltip>
                     <div>{{ item.resume_count }}</div>
@@ -471,7 +471,6 @@ import { PooledReasonEnum } from '@/enums/pooledReasonEnum'
 import { FormItemTypeEnum } from '@/enums/formItemTypeEnum'
 import { BtnTypeEnum, ButtonLists, ButtonSettings, ButtonSortMap } from '@/enums/btnTypeEnum'
 import { getTableButtonConfig } from '@/api/modules/common'
-import { ProjectStatusEnum } from '@/enums/projectStatusEnum'
 const { $t } = useLocale()
 
 const cvStore = useCVStore()
@@ -530,7 +529,7 @@ const selectJobPosition = ref<number[]>([])
 // job position过滤form
 const jobPositionFilterList = ref<Form.FormItem[]>([])
 // job position search param数据
-const jobPositionSearchParam = ref<any>({project_status: [ProjectStatusEnum.ACTIVE]})
+const jobPositionSearchParam = ref<any>({})
 
 // 选中的二级状态
 const subStatus = ref<number | string>()
@@ -1404,7 +1403,9 @@ onMounted(async () => {
   // 获取job position 列表数据
   await getAllPositionList()
   const userSetting = await getUserSettings(UserSettingTypeEnum.CV_MANAGEMENT_QUERY)
-  let param = userSetting?.result?.settings ?? {}
+  let param = { ...userSetting?.result?.settings }
+  delete param.project_id
+  delete param.project_status
   if (param.title) {
     searchPosition.value = param.title
   }

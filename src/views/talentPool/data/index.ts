@@ -22,7 +22,6 @@ import { TableColumnFixedEnum } from '@/enums/tableColumnFixedEnum'
 import { enumItem2arr } from '@/utils'
 import { PooledReason } from '@/enums/pooledReasonEnum'
 import { TableColumnTypeEnum } from '@/enums/tableColumnTypeEnum'
-import { ProjectStatusEnum } from '@/enums/projectStatusEnum'
 const { $t } = useLocale()
 
 export const TALENT_POOL_TABLE: Partial<Table.ColumnProps>[] = [
@@ -105,7 +104,7 @@ export const RESUME_UPLOAD_FORM: Form.FormItem[] = [
     getOptions: getJobPositionList,
     optionKey: 'id',
     optionName: 'title',
-    initOptionParams: { status: [JobStatusEnum.Draft, JobStatusEnum.Published], project_status: [ProjectStatusEnum.ACTIVE] },
+    initOptionParams: { status: [JobStatusEnum.Draft, JobStatusEnum.Published] },
     required: true,
     col: 24
   },
@@ -196,7 +195,7 @@ export const CV_JOB_INTENTION_FORM: Form.FormItem[] = [
     optionKey: 'id',
     optionName: 'title',
     expandKey: ['recruitment_type'],
-    initOptionParams: { status: [JobStatusEnum.Draft, JobStatusEnum.Published], project_status: [ProjectStatusEnum.ACTIVE] },
+    initOptionParams: { status: [JobStatusEnum.Draft, JobStatusEnum.Published] },
     isCallback: true,
     required: true
   },

@@ -3,7 +3,9 @@
     <RouterView v-slot="{ Component, route }">
       <Transition appear name="fade-transform" mode="out-in">
         <KeepAlive :include="keepAliveName">
-          <component :is="Component" :key="route.fullPath" v-if="isRouterShow"></component>
+          <component :is="Component"
+            :key="route.name === ROUTER_CANDIDATE_PIPELINE || route.name === `/${ROUTER_CANDIDATE_PIPELINE}` ? ROUTER_CANDIDATE_PIPELINE : route.fullPath"
+            v-if="isRouterShow"></component>
         </KeepAlive>
       </Transition>
     </RouterView>
@@ -14,6 +16,7 @@ import { useGlobalStore } from '@/store/modules/global'
 import { storeToRefs } from 'pinia'
 import { useKeepAliveStore } from '@/store/modules/keepAlive'
 import { COLLAPSE_MENU_WIDTH, LARGE_WIDTH } from '@/config'
+import { ROUTER_CANDIDATE_PIPELINE } from '@/router/routerName'
 
 const globalStore = useGlobalStore()
 const { isCollapse } = storeToRefs(globalStore)

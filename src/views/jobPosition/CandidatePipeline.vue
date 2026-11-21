@@ -18,6 +18,7 @@
         <el-button type="primary">{{ $t('candidatePipeline.addCandidate') }}</el-button>
       </div>
     </header>
+    <p v-if="jobsLoaded && !jobs.length && !jobId" class="empty">{{ $t('candidatePipeline.noJobs') }}</p>
     <el-tabs v-if="board" v-model="activeTab">
       <el-tab-pane name="pipeline" :label="$t('candidatePipeline.pipelineTab', { count: board.pipeline_count })">
     <div class="board">
@@ -143,6 +144,7 @@ const stageColors: Record<PipelineStageType, { background: string; header: strin
   CUSTOM: { background: '#fbfdf6', header: '#f2f8e9' }
 }
 const jobs = ref<PipelineJob[]>([])
+const jobsLoaded = ref(false)
 const board = ref<CandidatePipeline>()
 const loadRejectedCandidates = async () => {
   if (!board.value) throw new Error('Candidate pipeline is not loaded')
@@ -213,11 +215,16 @@ const loadBoard = async () => {
   }
 }
 watch(jobId, (id, previousId) => {
+  if (route.name !== ROUTER_CANDIDATE_PIPELINE && route.name !== `/${ROUTER_CANDIDATE_PIPELINE}`) return
   if (previousId && id !== previousId) {
     rejectDialogOpen.value = false
     rejectTarget.value = undefined
+    activeTab.value = 'pipeline'
   }
   void loadBoard()
+  if (!id && jobs.value.length) {
+    void router.replace({ name: ROUTER_CANDIDATE_PIPELINE, params: { jobId: jobs.value[0].id } })
+  }
 }, { immediate: true })
 onMounted(async () => {
   clockTimer = setInterval(() => { now.value = new Date() }, 60_000)
@@ -229,6 +236,7 @@ onMounted(async () => {
     if (!response.success || !Array.isArray(response.result)) throw new Error('Invalid job list')
     if (disposed) return
     jobs.value = response.result
+    jobsLoaded.value = true
     if (!jobId.value && jobs.value.length) {
       await router.replace({ name: ROUTER_CANDIDATE_PIPELINE, params: { jobId: jobs.value[0].id } })
     }
