@@ -573,6 +573,24 @@ auth: {
     screeningQuestions: '筛选问题',
     appliedTimes: '已应聘 {number} 次'
   },
+  candidatePipeline: {
+    title: '候选人流程',
+    applications: '申请人数',
+    total: '共 {count} 份申请',
+    export: '导出',
+    addCandidate: '添加候选人',
+    empty: '暂无候选人',
+    move: '移动至下一阶段',
+    reject: '拒绝',
+    actions: '候选人操作',
+    appliedToday: '今天申请',
+    appliedOneDayAgo: '1 天前申请',
+    appliedDaysAgo: '{count} 天前申请',
+    appliedOn: '申请日期：{date}',
+    confirmMove: '将 {name} 移动至 {stage}？',
+    loadError: '无法加载候选人流程。',
+    moveError: '无法移动候选人，将重新加载流程。'
+  },
   jobPosition: {
     filter: '筛选',
     searchJobs: '搜索职位',

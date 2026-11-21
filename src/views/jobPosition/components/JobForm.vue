@@ -480,6 +480,9 @@ const save = async (action?: 'publish' | 'close' | 'saveAs') => {
     }
     formData.screening_questions = currentTabData('questions')
     formData.recruitment_pipeline_rounds = currentTabData('pipeline')
+    if (action === 'saveAs') {
+      formData.recruitment_pipeline_rounds = formData.recruitment_pipeline_rounds.map(({ public_id, ...round }: RecruitmentPipeline.RoundParam) => round)
+    }
     formData.evaluation_plan_rounds = currentTabData('evaluation')
   } catch (error) {
     console.error('Failed to collect job application fields', error)

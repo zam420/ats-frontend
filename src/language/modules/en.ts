@@ -573,6 +573,24 @@ export default {
     screeningQuestions: 'Screening Questions',
     appliedTimes: 'Applied {number} Times'
   },
+  candidatePipeline: {
+    title: 'Candidate Pipeline',
+    applications: 'Applications',
+    total: '{count} total applications',
+    export: 'Export',
+    addCandidate: 'Add Candidate',
+    empty: 'No candidates',
+    move: 'Move to next stage',
+    reject: 'Reject',
+    actions: 'Candidate actions',
+    appliedToday: 'Applied today',
+    appliedOneDayAgo: 'Applied 1 day ago',
+    appliedDaysAgo: 'Applied {count} days ago',
+    appliedOn: 'Applied on {date}',
+    confirmMove: 'Move {name} to {stage}?',
+    loadError: 'Could not load the candidate pipeline.',
+    moveError: 'Could not move the candidate. The pipeline will be reloaded.'
+  },
   jobPosition: {
     filter: 'Filter',
     searchJobs: 'Search jobs',

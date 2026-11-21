@@ -264,7 +264,7 @@ const state = reactive<ReactiveParams>({
   shareUserIds: []
 })
 const getRounds = () => state.processList.map((round, order) => ({
-  round_type: round.round_type, name: round.name, description: round.description, order
+  public_id: round.public_id, round_type: round.round_type, name: round.name, description: round.description, order
 }))
 defineExpose({ getRounds })
 

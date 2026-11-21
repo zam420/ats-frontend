@@ -30,6 +30,11 @@
       <template #title="{ row }">
         <router-link class="job-title-link" :to="jobTitleUrl(row)">{{ row.title }}</router-link>
       </template>
+      <template #application_count="{ row }">
+        <router-link class="job-title-link" :to="{ name: ROUTER_CANDIDATE_PIPELINE, params: { jobId: row.id } }">
+          {{ row.application_count }}
+        </router-link>
+      </template>
       <template #status="{ row }">
         <div class="job-status">
           <span class="status-dot" :class="statusColors[row.status]"></span>
@@ -61,7 +66,7 @@
 <script setup lang="ts" name="JobPositionTable">
 import { JOB_POSITION_TABLE } from './data'
 import JobSearchFilters from './components/JobSearchFilters.vue'
-import { ROUTER_JOB_POSITION_CREATE, ROUTER_JOB_POSITION_EDIT, ROUTER_JOB_POSITION_VIEW, ROUTER_JOB_POSITION_LIST_PREVIEW } from '@/router/routerName'
+import { ROUTER_JOB_POSITION_CREATE, ROUTER_JOB_POSITION_EDIT, ROUTER_JOB_POSITION_VIEW, ROUTER_JOB_POSITION_LIST_PREVIEW, ROUTER_CANDIDATE_PIPELINE } from '@/router/routerName'
 import { View } from '@element-plus/icons-vue'
 import { useLocale } from '@/hooks/useLocale'
 import { deactivateJobPosition, getJobFieldsData, getJobPositionList } from '@/api/modules/jobPosition'

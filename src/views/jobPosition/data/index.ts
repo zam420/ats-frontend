@@ -35,6 +35,13 @@ export const JOB_POSITION_TABLE: Table.ColumnProps[] = [
     filter: false
   },
   {
+    prop: 'application_count',
+    label: $t('candidatePipeline.applications'),
+    sortable: false,
+    filter: false,
+    width: 130
+  },
+  {
     prop: 'employment_type_name',
     label: $t('jobPosition.employmentType'),
     sortable: false,

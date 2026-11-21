@@ -37,6 +37,7 @@ interface DialogProps {
   cancelButtonText?: string
   confirmButtonText?: string
   confirm?: () => void
+  cancel?: () => void
 }
 
 const { $t } = useLocale()
@@ -65,18 +66,29 @@ const acceptParams = (params: DialogProps) => {
 }
 
 const confirm = () => {
+  const callback = dialogData.value.confirm
+  dialogData.value.cancel = undefined
   closeDialog()
-  if (dialogData.value.confirm) {
-    dialogData.value.confirm()
-    return
-  }
+  callback?.()
 }
 
 const closeDialog = () => {
   dialogVisible.value = false
 }
+watch(dialogVisible, (visible, wasVisible) => {
+  if (!visible && wasVisible) {
+    const callback = dialogData.value.cancel
+    dialogData.value.cancel = undefined
+    callback?.()
+  }
+}, { flush: 'sync' })
 mittBus.on(OPEN_DIALOG, params => {
-  dialogData.value = { ...dialogData.value, ...(params as DialogProps) }
+  if (dialogVisible.value) {
+    const callback = dialogData.value.cancel
+    dialogData.value.cancel = undefined
+    callback?.()
+  }
+  dialogData.value = { ...dialogData.value, cancel: undefined, ...(params as DialogProps) }
   dialogVisible.value = true
 })
 defineExpose({

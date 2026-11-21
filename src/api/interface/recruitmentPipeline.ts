@@ -40,6 +40,7 @@ declare namespace RecruitmentPipeline {
 
   interface RoundParam {
     id?: string | number
+    public_id?: string
     round_type: number | string
     name?: string
     description?: string
