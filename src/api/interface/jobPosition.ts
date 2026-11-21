@@ -12,7 +12,7 @@ declare namespace JobPosition {
     work_arrangement_type_id: number
     experience_level_type: number
     application_questions_display_mode: number
-    screening_questions: Array<Omit<ScreeningQuestion, 'id' | 'screening_question_type'> & { screening_question_type_id: number }>
+    screening_questions: Array<Omit<ScreeningQuestion, 'id'>>
     recruitment_pipeline_rounds: RecruitmentPipeline.RoundParam[]
     evaluation_plan_rounds: InterviewProcess.RoundParam[]
     work_location: string

@@ -14,7 +14,7 @@ export default {
     questionLabelPlaceholder: 'Label (Please input)',
     dragQuestions: 'Click the + button or drag and drop question types to add questions.',
     questionLabelRequired: 'Enter a label for each question.',
-    questionLabelLengthRT: 'A rich-text question label must not exceed 1000 characters, including formatting.',
+    questionLabelLengthRT: 'A rich-text question label must not exceed 1000 characters.',
     questionLabelLengthNRT: 'A question label must not exceed 500 characters.',
     answerPreview: 'Answer preview',
     unsupportedType: 'Preview unavailable for this question type.',

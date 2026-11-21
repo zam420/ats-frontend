@@ -287,7 +287,7 @@ const getQuestions = () => {
   if (!ready.value || loading.value) throw new Error('Screening form is not ready')
   syncLabelEditors()
   return form.questions.map((question, order) => ({
-    label: question.label, description: question.description, screening_question_type_id: question.screening_question_type,
+    label: question.label, description: question.description, screening_question_type: question.screening_question_type,
     order, options: question.options, default_option: question.default_option,
     is_mandatory: question.is_mandatory, is_drop_down_multi_select: question.is_drop_down_multi_select,
     max_chars: question.max_chars
@@ -388,7 +388,7 @@ const buildPayload = async (): Promise<ScreeningFormRequest | null> => {
     questions: form.questions.map((question, index) => ({
       label: question.label.trim(),
       description: isDisplayOnly(question) ? '' : question.description,
-      screening_question_type_id: question.screening_question_type,
+      screening_question_type: question.screening_question_type,
       order: index,
       options: question.options,
       default_option: question.default_option,

@@ -14,7 +14,7 @@ export default {
     questionLabelPlaceholder: '标签（请输入）',
     dragQuestions: '点击加号或拖放问题类型以添加问题。',
     questionLabelRequired: '请输入每个问题的标签。',
-    questionLabelLengthRT: '富文本问题标签不得超过 1000 个字符，包括格式标记。',
+    questionLabelLengthRT: '富文本问题标签不得超过 1000 个字符。',
     questionLabelLengthNRT: '问题标签不得超过 500 个字符。',
     answerPreview: '回答预览',
     unsupportedType: '此问题类型暂无预览。',

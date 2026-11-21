@@ -262,7 +262,7 @@ const templateOptions = computed(() => templateKind.value === 'questions'
   : templateKind.value === 'pipeline' ? pipelineOptions.value : evaluationOptions.value)
 
 const questionPayload = (questions: ScreeningQuestion[]) => questions.map((question, order) => ({
-  label: question.label, description: question.description, screening_question_type_id: question.screening_question_type,
+  label: question.label, description: question.description, screening_question_type: question.screening_question_type,
   order, options: question.options, default_option: question.default_option,
   is_mandatory: question.is_mandatory, is_drop_down_multi_select: question.is_drop_down_multi_select,
   max_chars: question.max_chars
