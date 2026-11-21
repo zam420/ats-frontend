@@ -349,7 +349,7 @@ const advance = (id: string, fromIndex: number) => {
 .board { display: flex; gap: 8px; overflow-x: auto; align-items: flex-start; padding-bottom: 20px; }
 .stage { flex: 0 0 225px; border-radius: 8px; min-height: 600px; box-shadow: inset 0 0 0 1px #e3edf7; }
 .stage-header { margin-bottom: 10px; padding: 14px 10px; border-radius: 6px; }
-.stage h2 { font-size: 15px; margin: 0; display: flex; justify-content: space-between; align-items: center; }
+.stage h2 { font-size: 14.5px; margin: 0; display: flex; justify-content: space-between; align-items: center; }
 .count { border-radius: 12px; background: #e4e7ed; padding: 2px 8px; }
 .candidates-container { padding: 14px 10px; }
 .candidate { background: white; border-radius: 6px; padding: 12px 6px 12px 12px; margin-bottom: 10px; overflow-wrap: anywhere; box-shadow: inset 0 0 0 1px #e3edf7; }
