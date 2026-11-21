@@ -1,30 +1,26 @@
 <template>
   <main class="pipeline-page">
-    <nav class="breadcrumbs" :aria-label="$t('candidatePipeline.title')">
-      <router-link :to="`/${ROUTER_JOB_POSITION}`">{{ $t('menu.jobPosition') }}</router-link>
-      <span>/</span>
-      <el-dropdown :disabled="moving || !jobs.length" trigger="click" @command="selectJob">
-        <button class="job-switcher" type="button">{{ board?.job_title ?? '' }} <el-icon><ArrowDown /></el-icon></button>
-        <template #dropdown>
-          <el-dropdown-menu>
-            <el-dropdown-item v-for="job in jobs" :key="job.id" :command="job.id">{{ job.title }}</el-dropdown-item>
-          </el-dropdown-menu>
-        </template>
-      </el-dropdown>
-      <span>/</span>
-      <span>{{ $t('candidatePipeline.title') }}</span>
-    </nav>
     <header class="pipeline-header">
       <div>
         <h1>{{ $t('candidatePipeline.title') }}</h1>
-        <p v-if="board"><strong class="job-subtitle">{{ board.job_title }}</strong> · {{ $t('candidatePipeline.total', { count: board.total_applications }) }}</p>
+        <el-dropdown v-if="board" :disabled="moving || rejectSubmitting || !jobs.length" trigger="click" @command="selectJob">
+          <button class="job-switcher job-subtitle" type="button">{{ board.job_title }} <el-icon><ArrowDown /></el-icon></button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item v-for="job in jobs" :key="job.id" :command="job.id">{{ job.title }}</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
       </div>
       <div class="actions">
+        <el-button :disabled="moving || rejectSubmitting" @click="router.push(`/${ROUTER_JOB_POSITION}`)">{{ $t('button.back') }}</el-button>
         <el-button>{{ $t('candidatePipeline.export') }}</el-button>
         <el-button type="primary">{{ $t('candidatePipeline.addCandidate') }}</el-button>
       </div>
     </header>
-    <div v-if="board" class="board">
+    <el-tabs v-if="board" v-model="activeTab">
+      <el-tab-pane name="pipeline" :label="$t('candidatePipeline.pipelineTab', { count: board.pipeline_count })">
+    <div class="board">
       <section v-for="(stage, index) in board.stages" :key="stage.id" class="stage"
         :style="{ backgroundColor: stageColors[stage.stage_type].background }"
         @dragover="dragOver($event, index)" @drop="drop($event, index)">
@@ -37,7 +33,7 @@
             @dragstart="dragStart($event, candidate.id, index)" @dragend="dragging = null">
             <div class="candidate-heading">
               <strong>{{ displayName(candidate) }}</strong>
-              <el-dropdown trigger="hover" :disabled="moving" @command="advance(candidate.id, index)">
+              <el-dropdown trigger="hover" :disabled="moving || rejectSubmitting" @command="handleCandidateAction($event, candidate, index, stage.id)">
                 <button type="button" class="candidate-actions" :aria-label="$t('candidatePipeline.actions')" draggable="false">
                   <el-icon><MoreFilled /></el-icon>
                 </button>
@@ -46,7 +42,7 @@
                     <el-dropdown-item command="move" :disabled="index === board.stages.length - 1">
                       {{ $t('candidatePipeline.move') }}
                     </el-dropdown-item>
-                    <el-dropdown-item disabled>{{ $t('candidatePipeline.reject') }}</el-dropdown-item>
+                    <el-dropdown-item command="reject">{{ $t('candidatePipeline.reject') }}</el-dropdown-item>
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
@@ -57,23 +53,83 @@
         </div>
       </section>
     </div>
+      </el-tab-pane>
+      <el-tab-pane name="rejected" :label="$t('candidatePipeline.rejectedTab', { count: board.rejected_candidates.length })">
+        <EspTable :key="loadVersion" :columns="rejectedColumns" :request-api="loadRejectedCandidates" :is-front-pagination="true"
+          :is-set-col="false" :is-custom-header="true">
+          <template #first_name="{ row }">{{ displayName(row) }}</template>
+          <template #rejected_stage_name="{ row }">
+            <span v-if="row.rejected_stage_name" class="rejected-stage"
+              :style="{ backgroundColor: rejectedStageColor(row) }">{{ row.rejected_stage_name }}</span>
+            <span v-else>-</span>
+          </template>
+          <template #created_at="{ row }">{{ formatDate(row.created_at) }}</template>
+          <template #rejected_at="{ row }">{{ formatDate(row.rejected_at) }}</template>
+          <template #rejection_reason="{ row }">
+            <el-tooltip v-if="reasonIsLong(row.rejection_reason)" :content="row.rejection_reason" placement="top" popper-class="rejection-reason-tooltip">
+              <span tabindex="0">{{ displayReason(row.rejection_reason) }}</span>
+            </el-tooltip>
+            <span v-else>{{ displayReason(row.rejection_reason) }}</span>
+          </template>
+        </EspTable>
+      </el-tab-pane>
+      <el-tab-pane v-for="tab in emptyTabs" :key="tab.name" :name="tab.name" :label="$t(tab.label, { count: 0 })">
+        <EspTable :columns="emptyColumns" :is-front-pagination="true" :is-set-col="false" :is-custom-header="true" />
+      </el-tab-pane>
+    </el-tabs>
+    <el-dialog v-model="rejectDialogOpen" :title="$t('candidatePipeline.rejectTitle', { name: rejectTarget?.name ?? '' })"
+      width="min(500px, 90vw)" :close-on-click-modal="!rejectSubmitting" :close-on-press-escape="!rejectSubmitting"
+      :show-close="!rejectSubmitting">
+      <el-form label-position="top" @submit.prevent="submitRejection">
+        <el-form-item :label="$t('candidatePipeline.rejectionReason')">
+          <el-input v-model="rejectionReason" type="textarea" :rows="3" :maxlength="2000" show-word-limit :disabled="rejectSubmitting" />
+        </el-form-item>
+        <el-form-item :label="$t('candidatePipeline.considerOtherOpenings')">
+          <el-radio-group v-model="considerOtherOpenings" :disabled="rejectSubmitting">
+            <el-radio :label="true">{{ $t('candidatePipeline.yes') }}</el-radio>
+            <el-radio :label="false">{{ $t('candidatePipeline.no') }}</el-radio>
+          </el-radio-group>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button :disabled="rejectSubmitting" @click="rejectDialogOpen = false">{{ $t('button.cancel') }}</el-button>
+        <el-button type="primary" :loading="rejectSubmitting" @click="submitRejection">{{ $t('candidatePipeline.reject') }}</el-button>
+      </template>
+    </el-dialog>
   </main>
 </template>
 
 <script setup lang="ts">
 import { ArrowDown, Clock, Location, MoreFilled } from '@element-plus/icons-vue'
 import { escape } from 'lodash-es'
+import moment from 'moment'
 import { useLocale } from '@/hooks/useLocale'
-import { OPEN_DIALOG } from '@/config'
+import { DATE_FORMAT, OPEN_DIALOG } from '@/config'
 import mittBus from '@/utils/mittBus'
 import { ROUTER_JOB_POSITION, ROUTER_CANDIDATE_PIPELINE } from '@/router/routerName'
-import { getCandidatePipeline, getPipelineJobs, moveCandidate } from '@/api/modules/candidatePipeline'
+import { getCandidatePipeline, getPipelineJobs, moveCandidate, rejectCandidate } from '@/api/modules/candidatePipeline'
 import type { CandidatePipeline, PipelineCandidate, PipelineJob, PipelineStageType } from '@/api/modules/candidatePipeline'
 import { applicationAgeDays } from './candidateApplicationAge'
 
 const route = useRoute()
 const router = useRouter()
 const { $t } = useLocale()
+const emptyColumns = computed<Table.ColumnProps[]>(() => [
+  { prop: 'first_name', label: $t('candidatePipeline.name'), minWidth: 140, filter: false, sortable: false },
+  { prop: 'email', label: $t('candidatePipeline.email'), minWidth: 190, filter: false, sortable: false },
+  { prop: 'created_at', label: $t('candidatePipeline.appliedOnColumn'), minWidth: 115, filter: false, sortable: false }
+])
+const rejectedColumns = computed<Table.ColumnProps[]>(() => [
+  ...emptyColumns.value.slice(0, 2),
+  { prop: 'rejected_stage_name', label: $t('candidatePipeline.rejectedStage'), minWidth: 145, filter: false, sortable: false },
+  emptyColumns.value[2],
+  { prop: 'rejected_at', label: $t('candidatePipeline.rejectedOn'), minWidth: 115, filter: false, sortable: false },
+  { prop: 'rejection_reason', label: $t('candidatePipeline.reason'), minWidth: 240, filter: false, sortable: false, hideTooltip: true }
+])
+const emptyTabs = [
+  { name: 'offerCancelled', label: 'candidatePipeline.offerCancelledTab' },
+  { name: 'notJoined', label: 'candidatePipeline.notJoinedTab' }
+]
 const stageColors: Record<PipelineStageType, { background: string; header: string }> = {
   APPLIED: { background: '#f8fbfe', header: '#eff6fe' },
   SCREENING: { background: '#f4faff', header: '#e6f4fd' },
@@ -88,7 +144,17 @@ const stageColors: Record<PipelineStageType, { background: string; header: strin
 }
 const jobs = ref<PipelineJob[]>([])
 const board = ref<CandidatePipeline>()
+const loadRejectedCandidates = async () => {
+  if (!board.value) throw new Error('Candidate pipeline is not loaded')
+  return { result: board.value.rejected_candidates }
+}
+const activeTab = ref('pipeline')
 const moving = ref(false)
+const rejectDialogOpen = ref(false)
+const rejectSubmitting = ref(false)
+const rejectTarget = ref<{ id: string; name: string; stageId: string; jobId: string }>()
+const rejectionReason = ref('')
+const considerOtherOpenings = ref(true)
 const dragging = ref<{ id: string; from: number } | null>(null)
 let loadVersion = 0
 let disposed = false
@@ -99,6 +165,14 @@ const jobId = computed(() => typeof route.params.jobId === 'string' && route.par
   : typeof route.query.job === 'string' ? route.query.job : '')
 const displayName = (candidate: PipelineCandidate) =>
   `${candidate.preferred_name || candidate.first_name} ${candidate.last_name}`
+const rejectedStageColor = (candidate: PipelineCandidate) =>
+  candidate.rejected_stage_type ? stageColors[candidate.rejected_stage_type].header : undefined
+const formatDate = (date: string | null) => date ? moment(date, moment.ISO_8601, true).format(DATE_FORMAT) : '-'
+const reasonIsLong = (reason: string | null) => reason != null && Array.from(reason).length > 60
+const displayReason = (reason: string | null) => {
+  if (!reason) return '-'
+  return reasonIsLong(reason) ? `${Array.from(reason).slice(0, 57).join('')}...` : reason
+}
 const applicationAge = (createdAt: string) => {
   const days = applicationAgeDays(createdAt, now.value)
   if (days < 0) return $t('candidatePipeline.appliedOn', { date: createdAt.slice(0, 10) })
@@ -114,11 +188,21 @@ const loadBoard = async () => {
   if (!id) return
   try {
     const response = await getCandidatePipeline(id)
-    if (!response.success || !response.result || !Array.isArray(response.result.stages)) throw new Error('Invalid pipeline response')
+    if (!response.success || !response.result || !Array.isArray(response.result.stages)
+      || !Array.isArray(response.result.rejected_candidates) || !Number.isInteger(response.result.pipeline_count)
+      || response.result.pipeline_count < 0) throw new Error('Invalid pipeline response')
     for (const stage of response.result.stages) {
       if (!Object.prototype.hasOwnProperty.call(stageColors, stage.stage_type)) throw new Error('Invalid pipeline stage type')
       if (!Array.isArray(stage.candidates)) throw new Error('Invalid pipeline candidates')
       for (const candidate of stage.candidates) applicationAgeDays(candidate.created_at, now.value)
+    }
+    for (const candidate of response.result.rejected_candidates) {
+      applicationAgeDays(candidate.created_at, now.value)
+      if (candidate.rejected_at) applicationAgeDays(candidate.rejected_at, now.value)
+      if (candidate.rejected_stage_type && !Object.prototype.hasOwnProperty.call(stageColors, candidate.rejected_stage_type)) {
+        throw new Error('Invalid rejected stage type')
+      }
+      if (typeof candidate.consider_for_other_openings !== 'boolean') throw new Error('Invalid rejection preference')
     }
     if (version === loadVersion) board.value = response.result
   } catch (error) {
@@ -128,7 +212,13 @@ const loadBoard = async () => {
     }
   }
 }
-watch(jobId, loadBoard, { immediate: true })
+watch(jobId, (id, previousId) => {
+  if (previousId && id !== previousId) {
+    rejectDialogOpen.value = false
+    rejectTarget.value = undefined
+  }
+  void loadBoard()
+}, { immediate: true })
 onMounted(async () => {
   clockTimer = setInterval(() => { now.value = new Date() }, 60_000)
   try {
@@ -154,7 +244,35 @@ onBeforeUnmount(() => {
   if (clockTimer) clearInterval(clockTimer)
 })
 const selectJob = (id: string) => {
-  if (!moving.value && id !== jobId.value) router.push({ name: ROUTER_CANDIDATE_PIPELINE, params: { jobId: id } })
+  if (!moving.value && !rejectSubmitting.value && id !== jobId.value) router.push({ name: ROUTER_CANDIDATE_PIPELINE, params: { jobId: id } })
+}
+const handleCandidateAction = (command: string, candidate: PipelineCandidate, index: number, stageId: string) => {
+  if (moving.value || rejectSubmitting.value || !board.value) return
+  if (command === 'move') {
+    advance(candidate.id, index)
+  } else if (command === 'reject') {
+    rejectTarget.value = { id: candidate.id, name: displayName(candidate), stageId, jobId: board.value.job_id }
+    rejectionReason.value = ''
+    considerOtherOpenings.value = true
+    rejectDialogOpen.value = true
+  }
+}
+const submitRejection = async () => {
+  const target = rejectTarget.value
+  if (!target || rejectSubmitting.value) return
+  rejectSubmitting.value = true
+  try {
+    const result = await rejectCandidate(target.jobId, target.id, target.stageId, rejectionReason.value.trim(), considerOtherOpenings.value)
+    if (!result.success || result.result !== true) throw new Error('Rejection was not accepted')
+    rejectDialogOpen.value = false
+    ElMessage.success($t('candidatePipeline.rejectSuccess'))
+    await loadBoard()
+  } catch (error) {
+    console.error('Failed to reject candidate', error)
+    ElMessage.error($t('candidatePipeline.rejectError'))
+  } finally {
+    rejectSubmitting.value = false
+  }
 }
 const dragStart = (event: DragEvent, id: string, from: number) => {
   if (moving.value) { event.preventDefault(); return }
@@ -213,9 +331,7 @@ const advance = (id: string, fromIndex: number) => {
 </script>
 
 <style lang="less" scoped>
-.pipeline-page { height: 100%; overflow: auto; padding: 2em; }
-.breadcrumbs { display: flex; align-items: center; gap: 10px; color: var(--color-gray); margin-bottom: 24px; }
-.breadcrumbs a { color: var(--el-color-primary); }
+.pipeline-page { height: 100%; overflow: auto; padding: 2em 1.5em; }
 .job-switcher { border: 0; background: none; padding: 0; color: inherit; cursor: pointer; display: inline-flex; gap: 5px; align-items: center; font: inherit; }
 .pipeline-header { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; }
 .pipeline-header h1 { font-size: 24px; margin: 0 0 8px; }
@@ -234,6 +350,10 @@ const advance = (id: string, fromIndex: number) => {
 .candidate-actions { border: 0; padding: 0; background: none; cursor: pointer; color: var(--color-gray); font-size: 18px; }
 .candidate-actions .el-icon { transform: rotate(90deg); }
 .candidate-detail { display: flex; align-items: center; gap: 6px; color: var(--color-gray); font-size: 11.8px; margin-top: 6px; }
+.rejected-stage { display: inline-block; padding: 4px 8px; border-radius: 6px; }
 .empty { color: var(--color-gray); font-size: 13px; }
-@media (max-width: 700px) { .pipeline-header { align-items: flex-start; flex-direction: column; } .breadcrumbs { flex-wrap: wrap; } }
+@media (max-width: 700px) { .pipeline-header { align-items: flex-start; flex-direction: column; } }
+</style>
+<style lang="less">
+.rejection-reason-tooltip { max-width: 400px; white-space: pre-wrap; }
 </style>
