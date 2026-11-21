@@ -219,14 +219,21 @@ interface ParamsProps {
   isTemplate?: boolean // create a system template
 }
 
+interface RoundTypeOption {
+  value: number
+  label: string
+  subLabel?: string
+  code: string
+}
+
 interface ReactiveParams {
   baseForm: Form.FormItem[]
   processList: RecruitmentPipeline.RoundParam[]
   isDragOver: boolean
   dragIndex: number
   dropAfter: boolean
-  roundTypeList: Form.FormSelect[] // custom types only: the ones users may add
-  allRoundTypes: Form.FormSelect[]
+  roundTypeList: RoundTypeOption[] // custom types only: the ones users may add
+  allRoundTypes: RoundTypeOption[]
   userList: Form.FormSelect[]
   shareMode: 'none' | 'everyone' | 'users'
   shareUserIds: (string | number)[]
@@ -250,8 +257,8 @@ const state = reactive<ReactiveParams>({
   isDragOver: false,
   dragIndex: 0,
   dropAfter: false,
-  roundTypeList: [] as Form.FormSelect[],
-  allRoundTypes: [] as Form.FormSelect[],
+  roundTypeList: [],
+  allRoundTypes: [],
   userList: [] as Form.FormSelect[],
   shareMode: 'none',
   shareUserIds: []
@@ -480,29 +487,36 @@ const roundTypeOf = (value: unknown) => state.allRoundTypes.find(type => type.va
 
 // Only custom stages can be removed, reordered or have their type changed
 const isCustomRound = (item: RecruitmentPipeline.RoundParam) =>
-  !!(roundTypeOf(item.round_type) as any)?.isCustom
+  roundTypeOf(item.round_type)?.code === 'CUSTOM'
 
 const emit = defineEmits<{ (event: 'default-rounds', rounds: RecruitmentPipeline.RoundParam[]): void }>()
 let defaultRoundsInitialized = false
 const setRoundTypes = (roundTypes: RecruitmentPipeline.RoundType[]) => {
+  if (roundTypes.some(type => typeof type.code !== 'string' || !type.code.trim())) {
+    state.allRoundTypes = []
+    state.roundTypeList = []
+    console.error('Recruitment pipeline round type code is missing')
+    ElMessage.error($t('jobPosition.fieldsLoadError'))
+    return
+  }
   const types = roundTypes.map(type => ({
     value: type.id,
     label: type.name,
     subLabel: type.description,
-    isCustom: !!(type.is_custom ?? type.isCustom)
+    code: type.code
   }))
   state.allRoundTypes = types
-  state.roundTypeList = types.filter(type => type.isCustom)
+  state.roundTypeList = types.filter(type => type.code === 'CUSTOM')
   // New pipelines start with every core (non-custom) stage in place
   if (!props.isEdit && !props.stagesOnly) {
     state.processList = types
-      .filter(type => !type.isCustom)
-      .map(type => newRound(type.value as number))
+      .filter(type => type.code !== 'CUSTOM')
+      .map(type => newRound(type.value))
   }
   if (props.stagesOnly && !props.readOnly && props.initialRounds && !props.initialRounds.length
       && !defaultRoundsInitialized && types.length) {
     defaultRoundsInitialized = true
-    state.processList = types.filter(type => !type.isCustom).map(type => newRound(type.value as number))
+    state.processList = types.filter(type => type.code !== 'CUSTOM').map(type => newRound(type.value))
     emit('default-rounds', getRounds())
   }
 }

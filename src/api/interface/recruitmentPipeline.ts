@@ -14,10 +14,9 @@ declare namespace RecruitmentPipeline {
 
   interface RoundType {
     id: number
+    code: string
     name: string
     description?: string
-    is_custom?: boolean
-    isCustom?: boolean
   }
 
   interface PipelineRound {
