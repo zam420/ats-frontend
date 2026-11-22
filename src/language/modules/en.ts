@@ -4,7 +4,7 @@ export default {
     create: 'Create Screening Questions Form',
     edit: 'Edit Screening Questions Form',
     view: 'Screening Questions Form',
-    name: 'Form Name',
+    name: 'Name',
     questionSequence: 'Questions',
     all: 'All',
     questionTypes: 'Control Types',
