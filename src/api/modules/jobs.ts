@@ -38,7 +38,7 @@ export const submitApplication = (id: string, data: ApplicationData, resume: Fil
   const body = new FormData()
   body.append('application', new Blob([JSON.stringify(data)], { type: 'application/json' }))
   body.append('resume', resume)
-  return http.post<string>(`/api/jobs/${encodeURIComponent(id)}/applications`, body)
+  return http.post<string>(`/api/jobs/${encodeURIComponent(id)}/apply`, body)
 }
 
 export const getJobs = (params: object) => http.get<ResPage<CandidateJobSummary>>('/api/jobs/all', params, { preserveHtml: true })
