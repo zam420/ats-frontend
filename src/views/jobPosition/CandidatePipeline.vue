@@ -13,7 +13,7 @@
         </el-dropdown>
       </div>
       <div class="actions">
-        <el-button :disabled="moving || rejectSubmitting" @click="router.push(`/${ROUTER_JOB_POSITION}`)">{{ $t('button.back') }}</el-button>
+        <el-button v-if="!fromSidebar" :disabled="moving || rejectSubmitting" @click="router.push(`/${ROUTER_JOB_POSITION}`)">{{ $t('button.back') }}</el-button>
         <el-button>{{ $t('candidatePipeline.export') }}</el-button>
         <el-button type="primary">{{ $t('candidatePipeline.addCandidate') }}</el-button>
       </div>
@@ -162,6 +162,14 @@ let loadVersion = 0
 let disposed = false
 let clockTimer: ReturnType<typeof setInterval> | undefined
 const now = ref(new Date())
+const fromSidebar = ref(false)
+watch(() => route.fullPath, () => {
+  if (route.name === `/${ROUTER_CANDIDATE_PIPELINE}`) {
+    fromSidebar.value = true
+  } else if (route.name === ROUTER_CANDIDATE_PIPELINE) {
+    fromSidebar.value = window.history.state?.candidatePipelineFromSidebar === true
+  }
+}, { immediate: true, flush: 'sync' })
 const jobId = computed(() => typeof route.params.jobId === 'string' && route.params.jobId
   ? route.params.jobId
   : typeof route.query.job === 'string' ? route.query.job : '')
@@ -223,14 +231,14 @@ watch(jobId, (id, previousId) => {
   }
   void loadBoard()
   if (!id && jobs.value.length) {
-    void router.replace({ name: ROUTER_CANDIDATE_PIPELINE, params: { jobId: jobs.value[0].id } })
+    void router.replace({ name: ROUTER_CANDIDATE_PIPELINE, params: { jobId: jobs.value[0].id }, state: { candidatePipelineFromSidebar: fromSidebar.value } })
   }
 }, { immediate: true })
 onMounted(async () => {
   clockTimer = setInterval(() => { now.value = new Date() }, 60_000)
   try {
     if (!route.params.jobId && jobId.value) {
-      await router.replace({ name: ROUTER_CANDIDATE_PIPELINE, params: { jobId: jobId.value } })
+      await router.replace({ name: ROUTER_CANDIDATE_PIPELINE, params: { jobId: jobId.value }, state: { candidatePipelineFromSidebar: fromSidebar.value } })
     }
     const response = await getPipelineJobs()
     if (!response.success || !Array.isArray(response.result)) throw new Error('Invalid job list')
@@ -238,7 +246,7 @@ onMounted(async () => {
     jobs.value = response.result
     jobsLoaded.value = true
     if (!jobId.value && jobs.value.length) {
-      await router.replace({ name: ROUTER_CANDIDATE_PIPELINE, params: { jobId: jobs.value[0].id } })
+      await router.replace({ name: ROUTER_CANDIDATE_PIPELINE, params: { jobId: jobs.value[0].id }, state: { candidatePipelineFromSidebar: fromSidebar.value } })
     }
   } catch (error) {
     if (disposed) return
@@ -252,7 +260,7 @@ onBeforeUnmount(() => {
   if (clockTimer) clearInterval(clockTimer)
 })
 const selectJob = (id: string) => {
-  if (!moving.value && !rejectSubmitting.value && id !== jobId.value) router.push({ name: ROUTER_CANDIDATE_PIPELINE, params: { jobId: id } })
+  if (!moving.value && !rejectSubmitting.value && id !== jobId.value) router.push({ name: ROUTER_CANDIDATE_PIPELINE, params: { jobId: id }, state: { candidatePipelineFromSidebar: fromSidebar.value } })
 }
 const handleCandidateAction = (command: string, candidate: PipelineCandidate, index: number, stageId: string) => {
   if (moving.value || rejectSubmitting.value || !board.value) return
