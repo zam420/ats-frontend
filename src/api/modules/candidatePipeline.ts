@@ -9,11 +9,13 @@ export interface PipelineCandidate {
   email: string
   current_location: string
   created_at: string
-  rejection_reason: string | null
+  closed: boolean
+  application_close_type: 0 | 1 | 2 | null
+  closed_reason: string | null
   consider_for_other_openings: boolean | null
-  rejected_at: string | null
-  rejected_stage_name: string | null
-  rejected_stage_type: PipelineStageType | null
+  closed_at: string | null
+  closed_at_stage_name: string | null
+  closed_at_stage_type: PipelineStageType | null
 }
 export interface PipelineStage {
   id: string

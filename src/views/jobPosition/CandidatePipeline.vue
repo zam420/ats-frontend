@@ -59,18 +59,18 @@
         <EspTable :key="loadVersion" :columns="rejectedColumns" :request-api="loadRejectedCandidates" :is-front-pagination="true"
           :is-set-col="false" :is-custom-header="true">
           <template #first_name="{ row }">{{ displayName(row) }}</template>
-          <template #rejected_stage_name="{ row }">
-            <span v-if="row.rejected_stage_name" class="rejected-stage"
-              :style="{ backgroundColor: rejectedStageColor(row) }">{{ row.rejected_stage_name }}</span>
+          <template #closed_at_stage_name="{ row }">
+            <span v-if="row.closed_at_stage_name" class="rejected-stage"
+              :style="{ backgroundColor: rejectedStageColor(row) }">{{ row.closed_at_stage_name }}</span>
             <span v-else>-</span>
           </template>
           <template #created_at="{ row }">{{ formatDate(row.created_at) }}</template>
-          <template #rejected_at="{ row }">{{ formatDate(row.rejected_at) }}</template>
-          <template #rejection_reason="{ row }">
-            <el-tooltip v-if="reasonIsLong(row.rejection_reason)" :content="row.rejection_reason" placement="top" popper-class="rejection-reason-tooltip">
-              <span tabindex="0">{{ displayReason(row.rejection_reason) }}</span>
+          <template #closed_at="{ row }">{{ formatDate(row.closed_at) }}</template>
+          <template #closed_reason="{ row }">
+            <el-tooltip v-if="reasonIsLong(row.closed_reason)" :content="row.closed_reason" placement="top" popper-class="rejection-reason-tooltip">
+              <span tabindex="0">{{ displayReason(row.closed_reason) }}</span>
             </el-tooltip>
-            <span v-else>{{ displayReason(row.rejection_reason) }}</span>
+            <span v-else>{{ displayReason(row.closed_reason) }}</span>
           </template>
         </EspTable>
       </el-tab-pane>
@@ -122,10 +122,10 @@ const emptyColumns = computed<Table.ColumnProps[]>(() => [
 ])
 const rejectedColumns = computed<Table.ColumnProps[]>(() => [
   ...emptyColumns.value.slice(0, 2),
-  { prop: 'rejected_stage_name', label: $t('candidatePipeline.rejectedStage'), minWidth: 145, filter: false, sortable: false },
+  { prop: 'closed_at_stage_name', label: $t('candidatePipeline.rejectedStage'), minWidth: 145, filter: false, sortable: false },
   emptyColumns.value[2],
-  { prop: 'rejected_at', label: $t('candidatePipeline.rejectedOn'), minWidth: 115, filter: false, sortable: false },
-  { prop: 'rejection_reason', label: $t('candidatePipeline.reason'), minWidth: 240, filter: false, sortable: false, hideTooltip: true }
+  { prop: 'closed_at', label: $t('candidatePipeline.rejectedOn'), minWidth: 115, filter: false, sortable: false },
+  { prop: 'closed_reason', label: $t('candidatePipeline.reason'), minWidth: 240, filter: false, sortable: false, hideTooltip: true }
 ])
 const emptyTabs = [
   { name: 'offerCancelled', label: 'candidatePipeline.offerCancelledTab' },
@@ -176,7 +176,7 @@ const jobId = computed(() => typeof route.params.jobId === 'string' && route.par
 const displayName = (candidate: PipelineCandidate) =>
   `${candidate.preferred_name || candidate.first_name} ${candidate.last_name}`
 const rejectedStageColor = (candidate: PipelineCandidate) =>
-  candidate.rejected_stage_type ? stageColors[candidate.rejected_stage_type].header : undefined
+  candidate.closed_at_stage_type ? stageColors[candidate.closed_at_stage_type].header : undefined
 const formatDate = (date: string | null) => date ? moment(date, moment.ISO_8601, true).format(DATE_FORMAT) : '-'
 const reasonIsLong = (reason: string | null) => reason != null && Array.from(reason).length > 60
 const displayReason = (reason: string | null) => {
@@ -208,8 +208,8 @@ const loadBoard = async () => {
     }
     for (const candidate of response.result.rejected_candidates) {
       applicationAgeDays(candidate.created_at, now.value)
-      if (candidate.rejected_at) applicationAgeDays(candidate.rejected_at, now.value)
-      if (candidate.rejected_stage_type && !Object.prototype.hasOwnProperty.call(stageColors, candidate.rejected_stage_type)) {
+      if (candidate.closed_at) applicationAgeDays(candidate.closed_at, now.value)
+      if (candidate.closed_at_stage_type && !Object.prototype.hasOwnProperty.call(stageColors, candidate.closed_at_stage_type)) {
         throw new Error('Invalid rejected stage type')
       }
       if (typeof candidate.consider_for_other_openings !== 'boolean') throw new Error('Invalid rejection preference')
