@@ -28,9 +28,8 @@ export const createRecruitmentPipeline = (data: RecruitmentPipeline.SaveParam) =
   return http.post<ResultCreate>('/api/recruitmentpipeline/create', data)
 }
 
-// 获取所有 round 类型
-export const getRecruitmentPipelineRoundTypes = () => {
-  return http.get<RecruitmentPipeline.RoundType[]>('/api/recruitmentpipeline/roundtypes')
+export const getRecruitmentPipelineFilters = () => {
+  return http.get<RecruitmentPipeline.Filters>('/api/recruitmentpipeline/filters')
 }
 
 // 创建系统模板

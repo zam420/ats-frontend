@@ -21,9 +21,10 @@ export const RECRUITMENT_PIPELINE_TABLE: Table.ColumnProps[] = [
     minWidth: 30
   },
   {
-    prop: 'owner_id',
+    prop: 'owner_name',
     label: $t('interviewProcess.owner'),
     filter: false,
+    sortable: false,
     minWidth: 20
   },
   {

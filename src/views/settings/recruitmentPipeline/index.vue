@@ -25,9 +25,6 @@
       <template #name="{ row }">
         <router-link class="plan-name-link" :to="planUrl(row)">{{ row.name }}</router-link>
       </template>
-      <template #owner_id="{ row }">
-        {{ userNames[row.owner_id] ?? '' }}
-      </template>
       <template #plan_type="{ row }">
         {{ $t(planTypeMessageKey(row)) }}
       </template>
@@ -71,8 +68,6 @@ import {
   getTemplateRecruitmentPipelineList,
   deleteRecruitmentPipeline
 } from '@/api/modules/recruitmentPipeline'
-import { getUserList } from '@/api/modules/common'
-import { ShareTypeEnum } from '@/enums/shareTypeEnum'
 import { planTypeMessageKey } from '@/utils/planType'
 
 const TAB_OWNED = 'owned'
@@ -125,22 +120,8 @@ const requestList = (params: Record<string, any>) => {
   return getOwnedRecruitmentPipelineList(query)
 }
 
-// owner public id -> name, and the signed-in user's public id (matched by email)
-const userNames = ref<Record<string, string>>({})
-const currentUserId = ref<string>('')
-const loadUsers = async () => {
-  const res = await getUserList(ShareTypeEnum.INTERVIEWER)
-  const map: Record<string, string> = {}
-  const email = (globalStore.userInfo?.email ?? globalStore.email ?? '').toLowerCase()
-  res?.result?.forEach((u: any) => {
-    map[String(u.id)] = u.name
-    if (email && u.email?.toLowerCase() === email) currentUserId.value = String(u.id)
-  })
-  userNames.value = map
-}
-
 const planUrl = (row: RecruitmentPipeline.ListInfo) => {
-  const userId = globalStore.userInfo?.id || currentUserId.value
+  const userId = globalStore.userInfo?.id
   const route = (userId && row.owner_id === userId) || hasRpta()
     ? ROUTER_SETTINGS_RECRUITMENT_PIPELINE_EDIT
     : ROUTER_SETTINGS_RECRUITMENT_PIPELINE_VIEW
@@ -156,14 +137,13 @@ const canOperate = (row: RecruitmentPipeline.ListInfo) => {
     case TAB_TEMPLATES:
       return hasRptsa()
     case TAB_ALL:
-      if (!hasRpta() && row.owner_id !== currentUserId.value) return false
+      if (!hasRpta() && (!globalStore.userInfo?.id || row.owner_id !== globalStore.userInfo.id)) return false
       return true
     default:
       return true
   }
 }
 onMounted(() => {
-  loadUsers()
   if (hasRptc() || hasRpta() || hasRptsa()) {
     state.pipelineData[0].isShow = true
   }

@@ -948,6 +948,7 @@ auth: {
     receivers: '收件人'
   },
   interviewProcess: {
+    loadError: '无法加载评估计划。',
     interviewersLoadError: '无法加载评估计划的面试官。',
     previewLoadError: '无法加载评估计划轮次。',
     interviewName: '名称',
@@ -1009,6 +1010,7 @@ auth: {
     step: '步骤'
   },
   recruitmentPipeline: {
+    loadError: '无法加载招聘流程。',
     previewLoadError: '无法加载招聘流程阶段。',
     createPipeline: '创建招聘流程',
     editPipeline: '编辑招聘流程',

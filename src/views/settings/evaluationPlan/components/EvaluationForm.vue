@@ -226,7 +226,7 @@ import { useLocale } from '@/hooks/useLocale'
 import { ROUTER_SETTINGS_EVALUATION_PLAN } from '@/router/routerName'
 import {
   getInterviewProcessDetail,
-  getInterviewRoundTypes,
+  getEvaluationPlanFilters,
   createInterviewProcess,
   createInterviewProcessTemplate,
   saveAsInterviewProcess,
@@ -263,6 +263,7 @@ interface ReactiveParams {
   shareUserIds: (string | number)[]
 }
 const router = useRouter()
+const route = useRoute()
 const { $t } = useLocale()
 
 const interviewRef = ref()
@@ -312,7 +313,7 @@ const planOwnerId = ref<string | number | null>(null)
 // In edit mode the buttons stay hidden until the plan and user list have loaded, so they don't flash on read-only pages
 const detailLoaded = ref(false)
 const usersLoaded = ref(false)
-const accessReady = computed(() => !props.isEdit || (detailLoaded.value && usersLoaded.value))
+const accessReady = computed(() => usersLoaded.value && (!props.isEdit || detailLoaded.value))
 const selfUserId = computed(() => {
   const email = (globalStore.userInfo?.email ?? globalStore.email ?? '').toLowerCase()
   return state.interviewerList.find(u => (u.subLabel ?? '').toLowerCase() === email)?.value
@@ -453,11 +454,18 @@ const showFullTagText = (e: MouseEvent) => {
 
 const initData = async () => {
   if (props.id) {
-    const res = await getInterviewProcessDetail(props.id)
-    if (!res.success || !res.result) {
-      throw new Error(res.message || 'Evaluation plan detail is missing')
+    const preloaded = !props.roundsOnly ? route.meta.evaluationPlanDetails : undefined
+    if (preloaded) delete route.meta.evaluationPlanDetails
+    let result: InterviewProcess.DetailInfo
+    if (preloaded?.id === props.id) {
+      result = preloaded.detail
+    } else {
+      const res = await getInterviewProcessDetail(props.id)
+      if (!res.success || !res.result) {
+        throw new Error(res.message || 'Evaluation plan detail is missing')
+      }
+      result = res.result
     }
-    const result = res.result
     isSystemTemplate.value = !!result.is_system_template
     planOwnerId.value = result.owner_id ?? null
     detailLoaded.value = true
@@ -574,11 +582,6 @@ watch(() => props.roundTypes, types => {
   if (props.roundsOnly) setRoundTypes(types ?? [])
 }, { immediate: true })
 
-const loadRoundTypes = async () => {
-  const res = await getInterviewRoundTypes()
-  setRoundTypes(res?.result ?? [])
-}
-
 let processSortable: Sortable | undefined
 let typesSortable: Sortable | undefined
 const setupDragAndDrop = () => {
@@ -670,32 +673,39 @@ onMounted(async () => {
     if (!props.readOnly && !previewError.value) setupDragAndDrop()
     return
   }
-  await loadRoundTypes()
-  const result = await getUserList(ShareTypeEnum.INTERVIEWER)
-  const options: Form.FormSelect[] = []
-  result?.result?.forEach(user => {
-    options.push({ label: user.name, value: user.id, subLabel: user.email })
-  })
-  state.interviewerList = [...options]
-  usersLoaded.value = true
-  const ownerItem = state.baseForm.find(item => item.prop === 'owner_id')
-  if (ownerItem) {
-    ownerItem.options = [...options]
-    if (!props.isEdit) {
-      const email = (globalStore.userInfo?.email ?? globalStore.email ?? '').toLowerCase()
-      const self = result?.result?.find(user => user.email?.toLowerCase() === email)
-      if (self) {
-        ownerItem.value = self.id
-        interviewRef.value?.changeFormModel({ prop: 'owner_id', value: self.id }, true)
+  try {
+    const result = await getEvaluationPlanFilters()
+    const filters = result?.result
+    if (!result?.success || !Array.isArray(filters?.control_types) || !Array.isArray(filters?.users)) {
+      throw new Error('Evaluation plan round types or users are missing')
+    }
+    setRoundTypes(filters.control_types)
+    const options: Form.FormSelect[] = filters.users.map(user => ({
+      label: user.name, value: user.id, subLabel: user.email
+    }))
+    state.interviewerList = [...options]
+    usersLoaded.value = true
+    const ownerItem = state.baseForm.find(item => item.prop === 'owner_id')
+    if (ownerItem) {
+      ownerItem.options = [...options]
+      if (!props.isEdit) {
+        const email = (globalStore.userInfo?.email ?? globalStore.email ?? '').toLowerCase()
+        const self = filters.users.find(user => user.email?.toLowerCase() === email)
+        if (self) {
+          ownerItem.value = self.id
+          interviewRef.value?.changeFormModel({ prop: 'owner_id', value: self.id }, true)
+        }
       }
     }
-  }
-  setupDragAndDrop()
-  if (props.isEdit) {
-    setTimeout(() => {
-      initData()
-    }, 100)
-    return
+    setupDragAndDrop()
+    if (props.isEdit) {
+      await nextTick()
+      if (!props.id) throw new Error('Evaluation plan ID is missing')
+      await initData()
+    }
+  } catch (error) {
+    console.error('Failed to load evaluation plan', error)
+    ElMessage.error($t('interviewProcess.loadError'))
   }
 })
 onBeforeUnmount(() => {

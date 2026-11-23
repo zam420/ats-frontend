@@ -31,9 +31,8 @@ export const createInterviewProcess = (data: InterviewProcess.SaveParam) => {
   return http.post<ResultCreate>('/api/evaluationplan/create', data)
 }
 
-// 获取所有面试环节类型
-export const getInterviewRoundTypes = () => {
-  return http.get<InterviewProcess.RoundType[]>('/api/evaluationplan/roundtypes')
+export const getEvaluationPlanFilters = () => {
+  return http.get<InterviewProcess.Filters>('/api/evaluationplan/filters')
 }
 
 // 创建系统模板

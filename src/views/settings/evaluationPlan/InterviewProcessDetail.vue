@@ -24,8 +24,8 @@
               <div class="step-tag">{{ `${$t('interviewProcess.step')} ${index + 1}` }}</div>
               <div class="left" v-if="index % 3 !== 0"></div>
               <div class="content">
-                <div class="title">{{ InterviewSession?.[item.round_type]?.name }}</div>
-                <div>{{ InterviewSession?.[item.round_type]?.subLabel }}</div>
+                <div class="title">{{ roundTypeOf(item.round_type)?.name }}</div>
+                <div>{{ roundTypeOf(item.round_type)?.description }}</div>
                 <div class="subTitle">{{ $t('emailTemplate.interviewer') }}:</div>
                 <el-tooltip class="box-item" effect="dark" placement="top-start">
                   <template #content>
@@ -73,13 +73,11 @@ import mittBus from '@/utils/mittBus'
 import { OPEN_DIALOG } from '@/config'
 import {
   getInterviewProcessDetail,
+  getEvaluationPlanFilters,
   shareInterviewProcess,
   changeRowStatusToInactive
 } from '@/api/modules/evaluationPlan'
 import InterviewProcess from '@/api/interface/evaluationPlan'
-import { InterviewSession } from '@/enums/interviewSessionEnum'
-import { ShareTypeEnum } from '@/enums/shareTypeEnum'
-import { getUserList } from '@/api/modules/common'
 const globalStore = useGlobalStore()
 const { $t } = useLocale()
 const route = useRoute()
@@ -95,6 +93,9 @@ const share_to_ids = ref<number[]>([])
 const infoForm = ref<Form.FormItem[]>(cloneDeep(INTERVIEW_PROCESS_DETAIL))
 const espDialogFormRef = ref()
 const userMap = ref<Record<string, { id: string | number; name: string; email: string }>>({})
+const users = ref<InterviewProcess.Filters['users']>([])
+const roundTypes = ref<InterviewProcess.RoundType[]>([])
+const roundTypeOf = (id: unknown) => roundTypes.value.find(type => type.id === Number(id))
 
 // Backend returns interviewer ids; resolve them to name/email via the user list
 const interviewerUsers = (list: InterviewProcess.InterviewRound['interviewers'] = []) =>
@@ -103,14 +104,6 @@ const interviewerUsers = (list: InterviewProcess.InterviewRound['interviewers'] 
     return userMap.value[String(u)] ?? { id: u, name: String(u), email: '' }
   })
 
-const loadUsers = async () => {
-  const res = await getUserList(ShareTypeEnum.INTERVIEWER)
-  const map: typeof userMap.value = {}
-  res?.result?.forEach(user => {
-    map[String(user.id)] = user
-  })
-  userMap.value = map
-}
 const initData = () => {
   if (route.params?.id) {
     getInterviewProcessDetail(route.params?.id as string).then(res => {
@@ -139,10 +132,8 @@ const showEdit = () => {
 
 // 分享模版
 const shareTemplate = () => {
-  getUserList(ShareTypeEnum.INTERVIEW_PROCESS).then(res => {
-    const result = res?.result ?? []
     const options: Form.FormSelect[] = []
-    result.forEach(user => {
+    users.value.forEach(user => {
       options.push({
         label: user.name,
         value: user.id,
@@ -171,7 +162,6 @@ const shareTemplate = () => {
               espDialogFormRef.value.closeDialog()
               ElMessage.success({ message: $t('message.shareSuc') })
             }
-          })
         }
       })
   })
@@ -220,9 +210,21 @@ const messageConfirm = () => {
       console.log('res?.message: ', res)
     })
 }
-onMounted(() => {
-  loadUsers()
-  initData()
+onMounted(async () => {
+  try {
+    const result = await getEvaluationPlanFilters()
+    const filters = result?.result
+    if (!result?.success || !Array.isArray(filters?.control_types) || !Array.isArray(filters?.users)) {
+      throw new Error('Evaluation plan round types or users are missing')
+    }
+    users.value = filters.users
+    roundTypes.value = filters.control_types
+    userMap.value = Object.fromEntries(filters.users.map(user => [user.id, user]))
+    initData()
+  } catch (error) {
+    console.error('Failed to load evaluation plan filters', error)
+    ElMessage.error($t('interviewProcess.loadError'))
+  }
 })
 </script>
 <style lang="less" scoped>

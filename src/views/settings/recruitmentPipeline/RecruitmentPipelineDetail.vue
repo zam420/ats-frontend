@@ -52,7 +52,7 @@ import { RECRUITMENT_PIPELINE_DETAIL } from './data'
 import { useGlobalStore } from '@/store/modules/global'
 import {
   getRecruitmentPipelineDetail,
-  getRecruitmentPipelineRoundTypes
+  getRecruitmentPipelineFilters
 } from '@/api/modules/recruitmentPipeline'
 import RecruitmentPipeline from '@/api/interface/recruitmentPipeline'
 
@@ -96,8 +96,17 @@ const showEdit = () => {
   })
 }
 onMounted(async () => {
-  roundTypes.value = (await getRecruitmentPipelineRoundTypes())?.result ?? []
-  initData()
+  try {
+    const res = await getRecruitmentPipelineFilters()
+    if (!res?.success || !Array.isArray(res.result?.control_types) || !Array.isArray(res.result?.users)) {
+      throw new Error('Recruitment pipeline stage types or users are missing')
+    }
+    roundTypes.value = res.result.control_types
+    initData()
+  } catch (error) {
+    console.error('Failed to load recruitment pipeline filters', error)
+    ElMessage.error($t('recruitmentPipeline.loadError'))
+  }
 })
 </script>
 <style lang="less" scoped>

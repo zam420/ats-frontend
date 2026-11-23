@@ -194,7 +194,7 @@ import { useLocale } from '@/hooks/useLocale'
 import { ROUTER_SETTINGS_RECRUITMENT_PIPELINE } from '@/router/routerName'
 import {
   getRecruitmentPipelineDetail,
-  getRecruitmentPipelineRoundTypes,
+  getRecruitmentPipelineFilters,
   createRecruitmentPipeline,
   createRecruitmentPipelineTemplate,
   saveAsRecruitmentPipeline,
@@ -203,8 +203,6 @@ import {
 } from '@/api/modules/recruitmentPipeline'
 import RecruitmentPipeline from '@/api/interface/recruitmentPipeline'
 import Sortable from 'sortablejs'
-import { getUserList } from '@/api/modules/common'
-import { ShareTypeEnum } from '@/enums/shareTypeEnum'
 import { useGlobalStore } from '@/store/modules/global'
 import { UserPermissionEnum } from '@/enums/userPermission'
 interface ParamsProps {
@@ -239,6 +237,7 @@ interface ReactiveParams {
   shareUserIds: (string | number)[]
 }
 const router = useRouter()
+const route = useRoute()
 const { $t } = useLocale()
 
 const formRef = ref()
@@ -277,7 +276,7 @@ const planOwnerId = ref<string | number | null>(null)
 // In edit mode the buttons stay hidden until the plan and user list have loaded, so they don't flash on read-only pages
 const detailLoaded = ref(false)
 const usersLoaded = ref(false)
-const accessReady = computed(() => !props.isEdit || (detailLoaded.value && usersLoaded.value))
+const accessReady = computed(() => usersLoaded.value && (!props.isEdit || detailLoaded.value))
 const globalStore = useGlobalStore()
 const selfUserId = computed(() => {
   const email = (globalStore.userInfo?.email ?? globalStore.email ?? '').toLowerCase()
@@ -405,11 +404,18 @@ const goBack = () => {
 
 const initData = async () => {
   if (props.id) {
-    const res = await getRecruitmentPipelineDetail(props.id)
-    if (!res.success || !res.result) {
-      throw new Error(res.message || 'Recruitment pipeline detail is missing')
+    const preloaded = !props.stagesOnly ? route.meta.recruitmentPipelineDetails : undefined
+    if (preloaded) delete route.meta.recruitmentPipelineDetails
+    let result: RecruitmentPipeline.DetailInfo
+    if (preloaded?.id === props.id) {
+      result = preloaded.detail
+    } else {
+      const res = await getRecruitmentPipelineDetail(props.id)
+      if (!res.success || !res.result) {
+        throw new Error(res.message || 'Recruitment pipeline detail is missing')
+      }
+      result = res.result
     }
-    const result = res.result
     isSystemTemplate.value = !!result.is_system_template
     planOwnerId.value = result.owner_id ?? null
     detailLoaded.value = true
@@ -519,16 +525,12 @@ const setRoundTypes = (roundTypes: RecruitmentPipeline.RoundType[]) => {
     state.processList = types.filter(type => type.code !== 'CUSTOM').map(type => newRound(type.value))
     emit('default-rounds', getRounds())
   }
+  return true
 }
 
 watch(() => props.roundTypes, types => {
   if (props.stagesOnly) setRoundTypes(types ?? [])
 }, { immediate: true })
-
-const loadRoundTypes = async () => {
-  const res = await getRecruitmentPipelineRoundTypes()
-  setRoundTypes(res?.result ?? [])
-}
 
 let processSortable: Sortable | undefined
 let typesSortable: Sortable | undefined
@@ -602,19 +604,27 @@ onMounted(async () => {
     if (!props.readOnly && !previewError.value) setupDragAndDrop()
     return
   }
-  await loadRoundTypes()
-  const userRes = await getUserList(ShareTypeEnum.INTERVIEWER)
-  state.userList = (userRes?.result ?? []).map(user => ({
-    label: user.name,
-    value: user.id,
-    subLabel: user.email
-  }))
-  usersLoaded.value = true
-  setupDragAndDrop()
-  if (props.isEdit) {
-    setTimeout(() => {
-      initData()
-    }, 100)
+  try {
+    const res = await getRecruitmentPipelineFilters()
+    if (!res?.success || !Array.isArray(res.result?.control_types) || !Array.isArray(res.result?.users)) {
+      throw new Error('Recruitment pipeline stage types or users are missing')
+    }
+    if (!setRoundTypes(res.result.control_types)) return
+    state.userList = res.result.users.map(user => ({
+      label: user.name,
+      value: user.id,
+      subLabel: user.email
+    }))
+    usersLoaded.value = true
+    setupDragAndDrop()
+    if (props.isEdit) {
+      await nextTick()
+      if (!props.id) throw new Error('Recruitment pipeline ID is missing')
+      await initData()
+    }
+  } catch (error) {
+    console.error('Failed to load recruitment pipeline', error)
+    ElMessage.error($t('recruitmentPipeline.loadError'))
   }
 })
 onBeforeUnmount(() => {

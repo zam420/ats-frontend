@@ -948,6 +948,7 @@ export default {
     receivers: 'Receiver(s)'
   },
   interviewProcess: {
+    loadError: 'Unable to load the evaluation plan.',
     interviewersLoadError: 'Unable to load interviewers for the evaluation plan.',
     previewLoadError: 'Unable to load evaluation plan rounds.',
     interviewName: 'Name',
@@ -1009,6 +1010,7 @@ export default {
     step: 'Step'
   },
   recruitmentPipeline: {
+    loadError: 'Unable to load the recruitment pipeline.',
     previewLoadError: 'Unable to load recruitment pipeline stages.',
     createPipeline: 'Create Recruitment Pipeline',
     editPipeline: 'Edit Recruitment Pipeline',

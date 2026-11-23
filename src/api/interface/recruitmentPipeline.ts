@@ -3,6 +3,7 @@ declare namespace RecruitmentPipeline {
     id: string
     name: string
     owner_id?: string
+    owner_name?: string | null
     description?: string
     is_system_template?: boolean
     is_public?: boolean
@@ -17,6 +18,11 @@ declare namespace RecruitmentPipeline {
     code: string
     name: string
     description?: string
+  }
+
+  interface Filters {
+    control_types: RoundType[]
+    users: { id: string; name: string; email: string }[]
   }
 
   interface PipelineRound {
