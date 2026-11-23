@@ -63,7 +63,7 @@ declare namespace JobPosition {
     work_arrangement_type?: number
     experience_level_type: number
     application_questions_display_mode: ApplicationQuestionsDisplayMode | 0 | 1
-    screening_questions?: Array<Omit<ScreeningQuestion, 'screening_question_type'> & { screening_question_type_id: number }> | null
+    screening_questions?: ScreeningQuestion[] | null
     recruitment_pipeline_rounds?: RecruitmentPipeline.RoundParam[] | null
     evaluation_plan_rounds?: InterviewProcess.RoundParam[] | null
     recruiters?: string[]

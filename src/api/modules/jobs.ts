@@ -20,7 +20,7 @@ export interface CandidateJob extends Omit<CandidateJobSummary, 'short_descripti
   company_id: string
   description: string
   application_questions_display_mode: number | 'WITH_DESCRIPTION' | 'SEPARATE_TABS'
-  screening_questions: Array<Omit<ScreeningQuestion, 'id' | 'screening_question_type'> & { id: number; public_id: string; screening_question_type_id: number }> | null
+  screening_questions: Array<ScreeningQuestion & { id: string }> | null
 }
 
 export interface ApplicationData {

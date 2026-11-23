@@ -718,9 +718,7 @@ const initData = () => {
       }
       state.internalDetailsForm = getFormsByRes(state.internalDetailsForm, result, espInternalDetailsRef.value)
       state.hiringTeamForm = getFormsByRes(state.hiringTeamForm, result, espHiringTeamRef.value)
-      screeningQuestions.value = (result.screening_questions ?? []).map(({ screening_question_type_id, ...question }) => ({
-        ...question, screening_question_type: screening_question_type_id
-      })).sort((a, b) => a.order - b.order)
+      screeningQuestions.value = [...(result.screening_questions ?? [])].sort((a, b) => a.order - b.order)
       recruitmentRounds.value = [...(result.recruitment_pipeline_rounds ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       evaluationRounds.value = [...(result.evaluation_plan_rounds ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       savedTabData.questions = JSON.stringify(questionPayload(screeningQuestions.value))

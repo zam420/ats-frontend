@@ -152,9 +152,7 @@ onMounted(async () => {
         if (!name) throw new Error(`Unknown work location: ${value}`)
         return name
       })
-      const questions = (job.screening_questions ?? [])
-        .map(({ screening_question_type_id, ...question }) => ({ ...question, screening_question_type: screening_question_type_id }))
-        .sort((a, b) => a.order - b.order)
+      const questions = [...(job.screening_questions ?? [])].sort((a, b) => a.order - b.order)
       const savedPreview: JobPreview = {
         title: job.title,
         description: job.description,
