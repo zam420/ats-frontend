@@ -5,6 +5,11 @@ export interface ScreeningQuestionType {
   description?: string
 }
 
+export interface ScreeningFormFilters {
+  control_types: ScreeningQuestionType[]
+  users: { id: string; name: string; email: string }[]
+}
+
 export interface ScreeningQuestion {
   id?: string
   label: string
@@ -23,6 +28,7 @@ export interface ScreeningFormListItem {
   name: string
   description?: string
   owner_id?: string | null
+  owner_name?: string | null
   is_public: boolean
   is_shared_within_tenant?: boolean | null
   is_system_template: boolean

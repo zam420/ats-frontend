@@ -628,6 +628,7 @@ auth: {
     otherInformation: '其他信息',
     screeningQuestions: '筛选问题',
     jobTitle: '职位名称',
+    owner: '负责人',
     recruitmentType: '招聘类型',
     workLocation: '工作地点',
     moreLocations: '另有 {count} 个',

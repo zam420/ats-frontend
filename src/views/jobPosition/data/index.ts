@@ -31,46 +31,58 @@ export const JOB_POSITION_TABLE: Table.ColumnProps[] = [
     prop: 'title',
     label: $t('jobPosition.jobTitle'),
     link: ROUTER_JOB_POSITION_DETAIL,
-    width: 300,
+    width: 280,
+    sortable: false,
     filter: false
   },
   {
     prop: 'application_count',
     label: $t('candidatePipeline.applications'),
+    width: 100,
     sortable: false,
     filter: false,
-    width: 130
   },
   {
     prop: 'employment_type_name',
     label: $t('jobPosition.employmentType'),
+    width: 100,
     sortable: false,
     filter: false
   },
   {
     prop: 'work_arrangement_type_name',
     label: $t('jobPosition.workArrangement'),
+    width: 110,
     sortable: false,
     filter: false
   },
   {
     prop: 'experience_level_type_name',
     label: $t('jobPosition.experienceLevel'),
+    width: 110,
     sortable: false,
     filter: false
   },
   {
     prop: 'work_location',
     label: $t('jobPosition.workLocation'),
+    width: '110px',
     sortable: false,
     filter: false
   },
   {
     prop: 'status',
     label: $t('jobPosition.status'),
-    width: '100px',
+    width: '60px',
+    filter: false,
+    sortable: false,
+  },
+  {
+    prop: 'owner_name',
+    label: $t('jobPosition.owner'),
+    sortable: false,
     filter: false
-  }
+  },
 ]
 
 // 工作职位表单

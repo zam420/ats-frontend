@@ -628,6 +628,7 @@ export default {
     otherInformation: 'Other Information',
     screeningQuestions: 'Screening Questions',
     jobTitle: 'Job Title',
+    owner: 'Owner',
     recruitmentType: 'Recruitment Type',
     workLocation: 'Work Location',
     moreLocations: '+{count} more',

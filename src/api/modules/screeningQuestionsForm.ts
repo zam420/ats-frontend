@@ -1,6 +1,6 @@
 import http from '@/api'
 import type { ResPage, ResultCreate } from '@/api/interface'
-import type { ScreeningFormDetail, ScreeningFormListItem, ScreeningFormRequest, ScreeningQuestionType } from '@/api/interface/screeningQuestionsForm'
+import type { ScreeningFormDetail, ScreeningFormFilters, ScreeningFormListItem, ScreeningFormRequest } from '@/api/interface/screeningQuestionsForm'
 
 export const getScreeningForms = (tab: string, params: Record<string, unknown>) =>
   http.get<ResPage<ScreeningFormListItem>>(`/api/sqform/${tab}`, params)
@@ -8,8 +8,8 @@ export const getScreeningFormsList = () =>
   http.get<ScreeningFormListItem[]>('/api/sqform/list')
 export const getScreeningForm = (id: string) =>
   http.get<ScreeningFormDetail>(`/api/sqform/${encodeURIComponent(id)}`, undefined, { preserveHtml: true })
-export const getScreeningQuestionTypes = () =>
-  http.get<ScreeningQuestionType[]>('/api/sqform/controltypes')
+export const getScreeningFormFilters = () =>
+  http.get<ScreeningFormFilters>('/api/sqform/filters')
 export const createScreeningForm = (data: ScreeningFormRequest) =>
   http.post<ResultCreate>('/api/sqform/create', data)
 export const saveAsScreeningForm = (data: ScreeningFormRequest) =>

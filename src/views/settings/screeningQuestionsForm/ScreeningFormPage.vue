@@ -151,12 +151,9 @@ import type { ComponentPublicInstance } from 'vue'
 import { jobRichTextToHtml } from '@/views/jobPosition/jobRichText'
 import '@/views/jobPosition/jobRichText.less'
 import { toPreviewQuestions, type PreviewQuestion } from '@/views/jobPosition/jobPreview'
-import type User from '@/api/interface/user'
-import type { ScreeningFormRequest, ScreeningQuestion, ScreeningQuestionType } from '@/api/interface/screeningQuestionsForm'
-import { getUserList } from '@/api/modules/common'
-import { getScreeningForm, getScreeningQuestionTypes, createScreeningForm, createScreeningFormTemplate, updateScreeningForm, updateScreeningFormTemplate, saveAsScreeningForm } from '@/api/modules/screeningQuestionsForm'
+import type { ScreeningFormFilters, ScreeningFormRequest, ScreeningQuestion, ScreeningQuestionType } from '@/api/interface/screeningQuestionsForm'
+import { getScreeningForm, getScreeningFormFilters, createScreeningForm, createScreeningFormTemplate, updateScreeningForm, updateScreeningFormTemplate, saveAsScreeningForm } from '@/api/modules/screeningQuestionsForm'
 import { UserPermissionEnum } from '@/enums/userPermission'
-import { ShareTypeEnum } from '@/enums/shareTypeEnum'
 import { useLocale } from '@/hooks/useLocale'
 import { useGlobalStore } from '@/store/modules/global'
 import { ROUTER_SETTINGS_SCREENING_FORMS } from '@/router/routerName'
@@ -226,7 +223,7 @@ const loading = ref(true)
 const ready = ref(false)
 const saving = ref(false)
 const types = ref<ScreeningQuestionType[]>([])
-const users = ref<User.UserInfo[]>([])
+const users = ref<ScreeningFormFilters['users']>([])
 const originalOwner = ref<string | null>(null)
 const shareMode = ref<'none' | 'everyone' | 'users'>('none')
 const shareableUsers = computed(() => users.value.filter(user => user.id !== form.owner_id))
@@ -447,12 +444,13 @@ onMounted(async () => {
       if (!Array.isArray(props.questionTypes)) throw new Error('Question types are missing')
       types.value = props.questionTypes
     } else {
-      const [typesResult, usersResult] = await Promise.all([
-        getScreeningQuestionTypes(), getUserList(ShareTypeEnum.INTERVIEWER)
-      ])
-      if (!typesResult?.result || !usersResult?.result) throw new Error('Question types or users are missing')
-      types.value = typesResult.result
-      users.value = usersResult.result
+      const filtersResult = await getScreeningFormFilters()
+      const filters = filtersResult?.result
+      if (!filtersResult?.success || !Array.isArray(filters?.control_types) || !Array.isArray(filters?.users)) {
+        throw new Error('Question types or users are missing')
+      }
+      types.value = filters.control_types
+      users.value = filters.users
     }
     form.owner_id = store.userInfo?.id ?? ''
     if (props.embedded) {
@@ -461,8 +459,9 @@ onMounted(async () => {
     } else if (isEdit.value) {
       const id = route.params.id
       if (typeof id !== 'string' || !id) throw new Error('Form ID is missing')
-      const result = await getScreeningForm(id)
-      const detail = result?.result
+      const preloaded = route.meta.screeningFormDetails
+      delete route.meta.screeningFormDetails
+      const detail = preloaded?.id === id ? preloaded.detail : (await getScreeningForm(id))?.result
       if (!detail || !Array.isArray(detail.questions)) throw new Error('Form details are missing')
       if (detail.questions.some(question => !Object.prototype.hasOwnProperty.call(question, 'default_option'))) {
         throw new Error('Question default options are missing from the response')

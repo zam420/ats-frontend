@@ -12,7 +12,6 @@
       <template #name="{ row }">
         <router-link class="form-link" :to="formUrl(row)">{{ row.name }}</router-link>
       </template>
-      <template #owner_id="{ row }">{{ userNames[row.owner_id] ?? '' }}</template>
       <template #form_type="{ row }">
         {{ $t(planTypeMessageKey(row)) }}
       </template>
@@ -33,8 +32,6 @@
 <script setup lang="ts">
 import { getScreeningForms, deactivateScreeningForm } from '@/api/modules/screeningQuestionsForm'
 import type { ScreeningFormListItem } from '@/api/interface/screeningQuestionsForm'
-import { getUserList } from '@/api/modules/common'
-import { ShareTypeEnum } from '@/enums/shareTypeEnum'
 import { TableColumnTypeEnum } from '@/enums/tableColumnTypeEnum'
 import { TableColumnFixedEnum } from '@/enums/tableColumnFixedEnum'
 import { UserPermissionEnum } from '@/enums/userPermission'
@@ -50,7 +47,6 @@ const { $t } = useLocale()
 const store = useGlobalStore()
 const router = useRouter()
 const table = ref()
-const userNames = ref<Record<string, string>>({})
 const currentTab = ref('owned')
 const has = (permission: UserPermissionEnum) => store.permissions.includes(permission)
 const tabs = [
@@ -62,7 +58,7 @@ const tabs = [
 const columns = reactive<Table.ColumnProps[]>([
   { columnType: TableColumnTypeEnum.OPERATION, label: $t('table.operate'), width: 80, fixed: TableColumnFixedEnum.LEFT, isShow: true },
   { prop: 'name', label: $t('screeningForms.name'), filter: false, minWidth: 30 },
-  { prop: 'owner_id', label: $t('interviewProcess.owner'), filter: false, sortable: false, minWidth: 20 },
+  { prop: 'owner_name', label: $t('interviewProcess.owner'), filter: false, sortable: false, minWidth: 20 },
   // { prop: 'question_sequence', label: $t('screeningForms.questionSequence'), filter: false, sortable: false, minWidth: 40 },
   { prop: 'form_type', label: $t('interviewProcess.type'), filter: false, sortable: false, isShow: false, minWidth: 20 },
   { prop: 'description', label: $t('interviewProcess.description'), filter: false, minWidth: 50 }
@@ -74,7 +70,7 @@ const onTabChange = (tab: string) => {
 }
 const requestList = (params: Record<string, any>) => {
   const { tab, page_num, page_size, order_by, order } = params
-  return getScreeningForms(tab || 'owned', { pageNum: page_num, pageSize: page_size, orderBy: order_by, isAsc: order == null ? undefined : order === 1 })
+  return getScreeningForms(tab || 'all', { pageNum: page_num, pageSize: page_size, orderBy: order_by, isAsc: order == null ? undefined : order === 1 })
 }
 const canEdit = (row: ScreeningFormListItem) => {
   if (row.is_system_template) return has(SQTSA)
@@ -115,10 +111,6 @@ const remove = (row: ScreeningFormListItem) => {
     }
   })
 }
-onMounted(async () => {
-  const result = await getUserList(ShareTypeEnum.INTERVIEWER)
-  userNames.value = Object.fromEntries((result?.result ?? []).map(user => [user.id, user.name]))
-})
 </script>
 <style lang="less" scoped>
 .form-link { color: var(--el-color-primary); &:hover { text-decoration: underline; } }

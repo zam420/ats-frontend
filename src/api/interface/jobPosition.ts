@@ -47,6 +47,7 @@ declare namespace JobPosition {
     work_location: (number | CommonEnum.enumItem)[] | null
     status: number | string
     owner_id: string | null
+    owner_name: string | null
     application_count: number
   }
   interface JobPositionDetail {

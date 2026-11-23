@@ -6,6 +6,13 @@ import { UserPermissionEnum } from '@/enums/userPermission'
 import { useGlobalStore } from '@/store/modules/global'
 import { ROUTER_404 } from './routerName'
 import type { RouteLocationNormalized } from 'vue-router'
+import type { ScreeningFormDetail } from '@/api/interface/screeningQuestionsForm'
+
+declare module 'vue-router' {
+  interface RouteMeta {
+    screeningFormDetails?: { id: string; detail: ScreeningFormDetail }
+  }
+}
 
 const editRoutes = new Map([
   ['ROUTER_SETTINGS_EVALUATION_PLAN_EDIT', {
@@ -43,5 +50,11 @@ export async function checkEditAccess(to: RouteLocationNormalized) {
   const isScreeningSystemAdmin = to.name === 'ROUTER_SETTINGS_SCREENING_FORMS_EDIT'
     && 'is_system_template' in response.result && response.result.is_system_template
     && globalStore.permissions.includes(UserPermissionEnum.SQTSA)
-  return isOwner || isScreeningSystemAdmin || globalStore.permissions.includes(permission) ? true : `/${ROUTER_404}`
+  if (!isOwner && !isScreeningSystemAdmin && !globalStore.permissions.includes(permission)) {
+    return `/${ROUTER_404}`
+  }
+  if (to.name === 'ROUTER_SETTINGS_SCREENING_FORMS_EDIT' && 'questions' in response.result) {
+    to.meta.screeningFormDetails = { id, detail: response.result }
+  }
+  return true
 }
