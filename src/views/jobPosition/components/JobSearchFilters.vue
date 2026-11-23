@@ -31,7 +31,7 @@
           <el-option v-for="option in fields?.job_status ?? []" :key="option.id" :label="option.name" :value="option.id" />
         </el-select>
       </el-form-item>
-      <el-form-item :label="$t('jobPosition.datePosted')">
+      <el-form-item :label="$t(dateApplied ? 'jobPosition.dateApplied' : 'jobPosition.datePosted')">
         <el-select v-model="modelValue.jobPostedDateType" :teleported="!withinPopover" clearable>
           <el-option v-for="option in fields?.job_posted_date_types ?? []" :key="option.id" :label="option.name" :value="option.id" />
         </el-select>
@@ -58,7 +58,7 @@ interface JobSearch {
   jobPostedDateType: number | undefined
 }
 
-defineProps<{ modelValue: JobSearch; fields?: JobPosition.JobSearchFields; showStatus: boolean; singleRow?: boolean; withinPopover?: boolean }>()
+defineProps<{ modelValue: JobSearch; fields?: JobPosition.JobSearchFields; showStatus: boolean; singleRow?: boolean; withinPopover?: boolean; dateApplied?: boolean }>()
 defineEmits<{ (event: 'search'): void; (event: 'reset'): void }>()
 const locationOptions = Object.values(WorkLocation)
 </script>

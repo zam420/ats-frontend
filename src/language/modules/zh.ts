@@ -126,6 +126,7 @@ auth: {
   },
   menu: {
     jobs: '职位',
+    applications: '职位申请',
     home: '首页',
     jobPosition: '职位',
     cvManagement: '简历管理',
@@ -696,6 +697,10 @@ auth: {
     uploadResumeCv: '上传简历',
     previewPostedDate: '发布日期',
     datePosted: '发布日期',
+    dateApplied: '申请日期',
+    applicationDate: '申请日期',
+    noApplications: '未找到申请。',
+    applicationJobUnavailable: '此职位已不可用。',
     configurationTabSubtitle: '配置此职位的内部信息和招聘团队。',
     pipelineTabSubtitle: '选择此职位的招聘流程。',
     evaluationTabSubtitle: '选择此职位的评估计划。',

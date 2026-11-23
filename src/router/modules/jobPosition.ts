@@ -3,6 +3,7 @@ import {
   ROUTER_JOB_POSITION,
   ROUTER_CANDIDATE_PIPELINE,
   ROUTER_JOBS,
+  ROUTER_APPLICATIONS,
   ROUTER_JOBS_DETAIL,
   ROUTER_JOB_POSITION_CREATE,
   ROUTER_JOB_POSITION_DETAIL,
@@ -26,6 +27,17 @@ const jobPositionRouter: Menu.MenuOptions[] = [
       icon: 'job',
       title: $t('menu.jobs'),
       index: -2,
+      permissionCode: UserPermissionEnum.JPSC
+    }
+  },
+  {
+    path: `/${ROUTER_APPLICATIONS}`,
+    name: ROUTER_APPLICATIONS,
+    component: () => import('@/views/jobs/index.vue'),
+    meta: {
+      icon: 'job',
+      title: $t('menu.applications'),
+      index: -1,
       permissionCode: UserPermissionEnum.JPSC
     }
   },

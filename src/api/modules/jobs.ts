@@ -23,6 +23,12 @@ export interface CandidateJob extends Omit<CandidateJobSummary, 'short_descripti
   screening_questions: Array<ScreeningQuestion & { id: string }> | null
 }
 
+export interface CandidateApplication extends CandidateJobSummary {
+  application_id: string
+  applied_at: string
+  can_view_job: boolean
+}
+
 export interface ApplicationData {
   first_name: string
   last_name: string
@@ -38,10 +44,11 @@ export const submitApplication = (id: string, data: ApplicationData, resume: Fil
   const body = new FormData()
   body.append('application', new Blob([JSON.stringify(data)], { type: 'application/json' }))
   body.append('resume', resume)
-  return http.post<string>(`/api/jobs/${encodeURIComponent(id)}/apply`, body)
+  return http.post<string>(`/api/applications/submit/${encodeURIComponent(id)}`, body)
 }
 
 export const getJobs = (params: object) => http.get<ResPage<CandidateJobSummary>>('/api/jobs/all', params, { preserveHtml: true })
+export const getApplications = (params: object) => http.get<ResPage<CandidateApplication>>('/api/applications/all', params, { preserveHtml: true })
 export const getJobsFilters = () => http.get<JobPosition.JobSearchFields>('/api/jobs/filters')
 export const getJob = (id: string) => http.get<CandidateJob>(`/api/jobs/${encodeURIComponent(id)}`, undefined, { preserveHtml: true })
 export const resolveJobLogoUrl = (url: string) =>

@@ -1,13 +1,15 @@
 <template>
-  <EspMain class="jobs-page" :title="$t('jobPosition.searchJobs')">
-    <JobSearchFilters :model-value="searchForm" :fields="fields" :show-status="false" single-row @search="search" @reset="reset" />
+  <EspMain class="jobs-page" :title="$t(isApplications ? 'menu.applications' : 'jobPosition.searchJobs')">
+    <JobSearchFilters :model-value="searchForm" :fields="fields" :show-status="false" :date-applied="isApplications" single-row @search="search" @reset="reset" />
     <el-alert v-if="companyId" :title="$t('jobPosition.companyJobsFilter', { company: companyName })" type="info" :closable="false" />
     <div class="jobs-results">
       <section class="jobs-list" v-loading="listLoading">
         <el-alert v-if="listError" :title="$t('jobPosition.jobsLoadError')" type="error" :closable="false" />
-        <el-empty v-else-if="!listLoading && searched && !jobs.length" :description="$t('jobPosition.noJobs')" />
+        <el-empty v-else-if="!listLoading && searched && !jobs.length" :description="$t(isApplications ? 'jobPosition.noApplications' : 'jobPosition.noJobs')" />
         <template v-if="fields">
-          <JobCard v-for="job in jobs" :key="job.id" :job="job" :fields="fields" @open="openJob" />
+          <JobCard v-for="job in jobs" :key="'application_id' in job ? job.application_id : job.id" :job="job" :fields="fields"
+            :applied-at="'applied_at' in job ? job.applied_at : undefined"
+            :unavailable="'can_view_job' in job && !job.can_view_job" @open="openJob" />
         </template>
         <el-pagination v-if="total > pageSize" layout="prev, pager, next" :total="total"
           :page-size="pageSize" :current-page="pageNum" @current-change="changePage" />
@@ -17,11 +19,11 @@
 </template>
 
 <script setup lang="ts">
-import { getJobs, getJobsFilters, type CandidateJobSummary } from '@/api/modules/jobs'
+import { getJobs, getApplications, getJobsFilters, type CandidateJobSummary, type CandidateApplication } from '@/api/modules/jobs'
 import type JobPosition from '@/api/interface/jobPosition'
 import JobSearchFilters from '@/views/jobPosition/components/JobSearchFilters.vue'
 import JobCard from './JobCard.vue'
-import { ROUTER_JOBS, ROUTER_JOBS_DETAIL } from '@/router/routerName'
+import { ROUTER_APPLICATIONS, ROUTER_JOBS, ROUTER_JOBS_DETAIL } from '@/router/routerName'
 import { useLocale } from '@/hooks/useLocale'
 
 const { $t } = useLocale()
@@ -32,9 +34,10 @@ const emptySearch = () => ({
 })
 const searchForm = reactive(emptySearch())
 const fields = ref<JobPosition.JobSearchFields>()
-const jobs = ref<CandidateJobSummary[]>([])
+const jobs = ref<(CandidateJobSummary | CandidateApplication)[]>([])
 const router = useRouter()
 const route = useRoute()
+const isApplications = computed(() => route.name === ROUTER_APPLICATIONS)
 const companyId = ref(typeof route.query.company === 'string' ? route.query.company : '')
 const companyName = ref(typeof route.query.companyName === 'string' ? route.query.companyName : '')
 const listLoading = ref(false)
@@ -63,8 +66,11 @@ const loadJobs = async () => {
   jobs.value = []
   total.value = 0
   try {
-    const { jobStatuses, ...filters } = appliedSearch
-    const response = await getJobs({ ...filters, ...(companyId.value ? { companyId: companyId.value } : {}), pageNum: pageNum.value, pageSize })
+    const { jobStatuses, jobPostedDateType, ...filters } = appliedSearch
+    const params = { ...filters, ...(companyId.value ? { companyId: companyId.value } : {}), pageNum: pageNum.value, pageSize }
+    const response = isApplications.value
+      ? await getApplications({ ...params, jobAppliedDateType: jobPostedDateType })
+      : await getJobs({ ...params, jobPostedDateType })
     if (!response?.success || !response.result || !Array.isArray(response.result.data_list)) throw new Error('Job search response missing')
     if (version !== searchVersion) return
     jobs.value = response.result.data_list
@@ -106,7 +112,7 @@ onMounted(async () => {
         !Array.isArray(result.work_arrangement_types) || !Array.isArray(result.experience_level_types) ||
         !Array.isArray(result.screening_question_types) || !Array.isArray(result.job_posted_date_types)) throw new Error('Job filter options missing')
     fields.value = result
-    if (companyId.value) search()
+    if (companyId.value || isApplications.value) search()
   } catch (error) {
     console.error('Failed to load job filters', error)
     ElMessage.error($t('jobPosition.fieldsLoadError'))

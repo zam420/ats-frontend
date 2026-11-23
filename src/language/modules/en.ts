@@ -126,6 +126,7 @@ export default {
   },
   menu: {
     jobs: 'Jobs',
+    applications: 'Applications',
     home: 'Home',
     jobPosition: 'Job Positions',
     cvManagement: 'CV Management',
@@ -696,6 +697,10 @@ export default {
     uploadResumeCv: 'Upload Resume/CV',
     previewPostedDate: 'Posted date',
     datePosted: 'Date Posted',
+    dateApplied: 'Date Applied',
+    applicationDate: 'Application date',
+    noApplications: 'No applications found.',
+    applicationJobUnavailable: 'This job is no longer available.',
     configurationTabSubtitle: 'Configure the internal details, hiring team and other settings for this position.',
     pipelineTabSubtitle: 'Select the recruitment pipeline for this position.',
     evaluationTabSubtitle: 'Select the evaluation plan for this position.',

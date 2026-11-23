@@ -162,9 +162,9 @@ const shareTemplate = () => {
               espDialogFormRef.value.closeDialog()
               ElMessage.success({ message: $t('message.shareSuc') })
             }
+          })
         }
       })
-  })
 }
 
 // 更改状态

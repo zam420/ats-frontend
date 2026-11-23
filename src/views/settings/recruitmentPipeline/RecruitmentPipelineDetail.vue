@@ -50,6 +50,7 @@ import { ProjectStatus, ProjectStatusEnum } from '@/enums/projectStatusEnum'
 import { cloneDeep } from 'lodash-es'
 import { RECRUITMENT_PIPELINE_DETAIL } from './data'
 import { useGlobalStore } from '@/store/modules/global'
+import { useLocale } from '@/hooks/useLocale'
 import {
   getRecruitmentPipelineDetail,
   getRecruitmentPipelineFilters
@@ -57,6 +58,7 @@ import {
 import RecruitmentPipeline from '@/api/interface/recruitmentPipeline'
 
 const globalStore = useGlobalStore()
+const { $t } = useLocale()
 const route = useRoute()
 const router = useRouter()
 const state = reactive<RecruitmentPipeline.DetailInfo>({
