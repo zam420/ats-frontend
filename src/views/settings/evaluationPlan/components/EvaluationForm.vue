@@ -298,7 +298,7 @@ const state = reactive<ReactiveParams>({
 })
 const getRounds = () => state.processList.map((round, order) => ({
   round_type: round.round_type, name: round.name, description: round.description,
-  interviewers: [...round.interviewers], order, ...(props.roundsOnly && round.source_id ? { source_id: round.source_id } : {})
+  interviewers: [...round.interviewers], order, ...(props.roundsOnly && round.public_id ? { public_id: round.public_id } : {})
 }))
 defineExpose({ getRounds })
 

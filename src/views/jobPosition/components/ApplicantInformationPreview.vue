@@ -39,19 +39,32 @@
     </div>
     <div class="application-field">
       <label>{{ $t('jobPosition.resumeCv') }}<span class="required" aria-hidden="true"> *</span></label>
-      <el-upload :auto-upload="false" :limit="1" accept=".pdf,.doc,.docx" :on-change="onResumeChange" :on-remove="onResumeRemove" required aria-required="true">
-        <el-button>{{ $t('jobPosition.uploadResumeCv') }}</el-button>
+      <el-upload ref="resumeUpload" :auto-upload="false" :limit="1" :disabled="!!resume" accept=".pdf,.doc,.docx" :on-change="onResumeChange" :on-remove="onResumeRemove" required aria-required="true">
+        <el-button :disabled="!!resume">{{ $t('jobPosition.uploadResumeCv') }}</el-button>
+        <template #tip>
+          <div class="el-upload__tip">{{ $t('jobPosition.resumeUploadHint') }}</div>
+        </template>
+        <template #file="{ file }">
+          <div class="resume-file">
+            <span class="resume-file-name" :title="file.name">{{ file.name }}</span>
+            <button type="button" class="remove-resume" :aria-label="$t('button.delete') + ' ' + $t('jobPosition.resumeCv')" @click="resumeUpload?.handleRemove(file)">
+              <el-icon><Close /></el-icon>
+            </button>
+          </div>
+        </template>
       </el-upload>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import type { UploadFile } from 'element-plus'
+import type { UploadFile, UploadInstance } from 'element-plus'
+import { Close } from '@element-plus/icons-vue'
 import { useLocale } from '@/hooks/useLocale'
 withDefaults(defineProps<{ showHeading?: boolean }>(), { showHeading: true })
 const { $t } = useLocale()
 const form = reactive({ firstName: '', lastName: '', preferredName: '', email: '', phoneNumber: '', currentLocation: '' })
+const resumeUpload = ref<UploadInstance>()
 const resume = ref<File>()
 const onResumeChange = (file: UploadFile) => { resume.value = file.raw }
 const onResumeRemove = () => { resume.value = undefined }
@@ -121,4 +134,7 @@ defineExpose({ getApplication })
 .phone-number-field { min-width: 0; flex: 1; }
 .country-field > label, .phone-number-field > label { display: block; font-weight: 600; margin-bottom: 8px; }
 .country-option { white-space: nowrap; }
+.resume-file { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; }
+.resume-file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+.remove-resume { display: inline-flex; align-items: center; padding: 0; border: 0; background: none; color: var(--el-text-color-regular); cursor: pointer; }
 </style>

@@ -663,8 +663,6 @@ auth: {
     moveError: '无法移动候选人，将重新加载流程。'
   },
   jobPosition: {
-    evaluationImpactTitle: '评估计划变更',
-    evaluationImpactWarning: '部分更改无法应用于 {count} 位评估已进行中或已完成的候选人。仍要保存吗？',
     filter: '筛选',
     searchJobs: '搜索职位',
     applicationFieldsRequired: '请填写所有必填字段并输入有效的电子邮箱。',
@@ -754,6 +752,7 @@ auth: {
     currentLocation: '当前所在地',
     resumeCv: '简历',
     uploadResumeCv: '上传简历',
+    resumeUploadHint: '支持的格式：pdf、doc、docx。最大大小：5 MB',
     previewPostedDate: '发布日期',
     datePosted: '发布日期',
     dateApplied: '申请日期',
@@ -762,7 +761,7 @@ auth: {
     applicationJobUnavailable: '此职位已不可用。',
     configurationTabSubtitle: '配置此职位的内部信息和招聘团队。',
     pipelineTabSubtitle: '选择此职位的招聘流程。',
-    evaluationTabSubtitle: '选择此职位的评估计划。',
+    evaluationTabSubtitle: '选择此职位的评估计划。更改仅适用于新申请者。',
     feedbackTabSubtitle: '评估反馈将在此配置。',
     jobRequirements: '职位要求',
     mandatoryRequirements: '硬性要求',

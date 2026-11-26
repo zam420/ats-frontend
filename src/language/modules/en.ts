@@ -663,8 +663,6 @@ export default {
     moveError: 'Could not move the candidate. The pipeline will be reloaded.'
   },
   jobPosition: {
-    evaluationImpactTitle: 'Evaluation plan changes',
-    evaluationImpactWarning: 'Some changes cannot be applied to {count} candidate(s) whose evaluations are already in progress or complete. Continue saving?',
     filter: 'Filter',
     searchJobs: 'Search jobs',
     applicationFieldsRequired: 'Complete all required fields and enter a valid email address.',
@@ -754,6 +752,7 @@ export default {
     currentLocation: 'Current Location',
     resumeCv: 'Resume/CV',
     uploadResumeCv: 'Upload Resume/CV',
+    resumeUploadHint: 'Accepted types: pdf, doc, docx. Max size: 5 MB',
     previewPostedDate: 'Posted date',
     datePosted: 'Date Posted',
     dateApplied: 'Date Applied',
@@ -762,7 +761,7 @@ export default {
     applicationJobUnavailable: 'This job is no longer available.',
     configurationTabSubtitle: 'Configure the internal details, hiring team and other settings for this position.',
     pipelineTabSubtitle: 'Select the recruitment pipeline for this position.',
-    evaluationTabSubtitle: 'Select the evaluation plan for this position.',
+    evaluationTabSubtitle: 'Select the evaluation plan for this position. Changes apply only to new applicants.',
     feedbackTabSubtitle: 'Evaluation feedback will be configured here.',
     jobRequirements: 'Job Requirements',
     mandatoryRequirements: 'Mandatory Requirements',

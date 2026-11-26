@@ -17,9 +17,9 @@
           <div><dt>{{ $t('candidatePipeline.phone') }}</dt><dd>{{ application.country_code }} {{ application.phone_number }}</dd></div>
           <div><dt>{{ $t('candidatePipeline.location') }}</dt><dd>{{ application.current_location }}</dd></div>
           <div><dt>{{ $t('candidatePipeline.appliedOnColumn') }}</dt><dd>{{ formatDate(application.created_at) }}</dd></div>
-          <div><dt>{{ $t('candidatePipeline.resume') }}</dt><dd><el-button link type="primary" :loading="downloading" @click="download">{{ application.resume_name }}</el-button></dd></div>
+          <div><dt>{{ $t('candidatePipeline.resume') }}</dt><dd><el-link href="#" type="primary" :disabled="downloading" :aria-busy="downloading" @click.prevent="download">{{ application.resume_name }}</el-link></dd></div>
         </dl>
-        <h2>{{ $t('candidatePipeline.screeningAnswers') }}</h2>
+        <h2 class="answersTitle">{{ $t('candidatePipeline.screeningAnswers') }}</h2>
         <p v-if="!application.answers.length">{{ $t('candidatePipeline.noAnswers') }}</p>
         <dl v-else class="answers">
           <div v-for="(answer, index) in application.answers" :key="index">
@@ -106,7 +106,10 @@ h1 { margin: 0; font-size: 24px; }
 header p { color: var(--color-gray); }
 h2 { font-size: 16px; }
 .details { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; }
-dt { color: var(--color-gray); margin-bottom: 5px; }
+dt { color: var(--color-gray); margin-bottom: 5px; font-weight: 500;}
 dd { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
-.answers > div { margin: 16px 0; padding: 14px; border: 1px solid #e3edf7; border-radius: 6px; }
+// .answers > div { margin: 16px 0; padding: 14px; border: 1px solid #e3edf7; border-radius: 6px; }
+.answers { margin-top: 16px}
+.answers > div { padding: 16px 14px; }
+.answersTitle { margin-top: 16px;  }
 </style>

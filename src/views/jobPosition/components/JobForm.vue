@@ -143,7 +143,6 @@ import {
   publishJobPosition,
   closeJobPosition,
   getJobFieldsData,
-  getEvaluationPlanImpact,
   getJobPositionDetail
 } from '@/api/modules/jobPosition'
 import JobPosition from '@/api/interface/jobPosition'
@@ -274,8 +273,8 @@ const pipelinePayload = (rounds: RecruitmentPipeline.RoundParam[], omitExistingI
     id: omitExistingIds ? null : public_id ?? id ?? null, round_type, name, description, order
   }))
 const evaluationPayload = (rounds: InterviewProcess.RoundParam[], omitExistingIds = false) =>
-  rounds.map(({ round_type, name, description, interviewers, source_id }, order) => ({
-    id: omitExistingIds ? null : source_id ?? null,
+  rounds.map(({ round_type, name, description, interviewers, public_id }, order) => ({
+    id: omitExistingIds ? null : public_id ?? null,
     round_type, name, description, interviewers: interviewers ?? [], order
   }))
 function currentTabData(kind: 'questions'): ScreeningQuestion[]
@@ -536,29 +535,7 @@ const save = async (action?: 'publish' | 'close' | 'saveAs') => {
       }
     }
     if (statusAction && !props.id) throw new Error('Job position ID is missing')
-    if (props.isEdit && action !== 'saveAs') {
-      if (!props.id) throw new Error('Job position ID is missing')
-      const impact = await getEvaluationPlanImpact(props.id, payload.evaluation_plan_rounds)
-      if (!impact.success || !impact.result || typeof impact.result.token !== 'string'
-        || !Number.isInteger(impact.result.ignored_candidates) || impact.result.ignored_candidates < 0) {
-        throw new Error('Invalid evaluation plan impact response')
-      }
-      if (impact.result.ignored_candidates > 0) {
-        try {
-          await ElMessageBox.confirm($t('jobPosition.evaluationImpactWarning', { count: impact.result.ignored_candidates }),
-            $t('jobPosition.evaluationImpactTitle'), {
-              confirmButtonText: $t('button.confirm'),
-              cancelButtonText: $t('button.cancel'),
-              type: 'warning'
-            })
-        } catch (error) {
-          if (error === 'cancel' || error === 'close') return
-          throw error
-        }
-        payload.confirm_ignored_evaluation_changes = true
-      }
-      payload.evaluation_impact_token = impact.result.token
-    }
+    if (props.isEdit && action !== 'saveAs' && !props.id) throw new Error('Job position ID is missing')
     const res = action === 'saveAs'
       ? await saveAsJobPosition(payload)
       : props.isEdit ? await editJobPosition(payload) : await createJobPosition(payload)
@@ -759,7 +736,7 @@ const initData = () => {
         .map(round => ({ ...round, public_id: typeof round.id === 'string' ? round.id : undefined }))
       evaluationRounds.value = [...(result.evaluation_plan_rounds ?? [])]
         .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-        .map(round => ({ ...round, source_id: typeof round.id === 'string' ? round.id : undefined }))
+        .map(round => ({ ...round, public_id: typeof round.id === 'string' ? round.id : undefined }))
       savedTabData.questions = JSON.stringify(questionPayload(screeningQuestions.value))
       savedTabData.pipeline = JSON.stringify(pipelinePayload(recruitmentRounds.value))
       savedTabData.evaluation = JSON.stringify(evaluationPayload(evaluationRounds.value))
