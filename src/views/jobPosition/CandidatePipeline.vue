@@ -453,7 +453,7 @@ const advance = (id: string, fromIndex: number) => {
 </style>
 <style lang="less">
 .dropdown-search { display: flex; width: auto; min-width: 160px; box-sizing: border-box; margin: 6px 10px; }
-.el-dropdown-menu__item.is-current-option { color: var(--el-color-primary); background: var(--el-dropdown-menuItem-hover-fill); cursor: default; }
+.el-dropdown-menu__item.is-current-option { font-weight:600; color: var(--el-color-primary); background: var(--el-dropdown-menuItem-hover-fill); cursor: default; }
 .candidate-card-tooltip.el-fade-in-linear-enter-active,
 .candidate-card-tooltip.el-fade-in-linear-leave-active { transition-duration: 0.03s; }
 .rejection-reason-tooltip { max-width: 400px; white-space: pre-wrap; }
