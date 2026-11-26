@@ -2,12 +2,13 @@
   <main class="candidate-page">
     <header class="pipeline-header">
       <div>
-        <el-dropdown v-if="application && applicants.length" trigger="hover" max-height="320" @command="selectCandidate" @visible-change="menuOpen = $event">
+        <el-dropdown v-if="application && applicants.length" trigger="hover" max-height="320" @command="selectCandidate"         @visible-change="onMenu">
             <button class="candidate-switcher" type="button">
               <h1>{{ candidateName(application) }}</h1> <el-icon><ArrowUp v-if="menuOpen" /><ArrowDown v-else /></el-icon></button>
           <template #dropdown>
+                    <el-input v-model="search" class="dropdown-search" size="small" clearable :placeholder="$t('button.search')" @keydown.stop />
             <el-dropdown-menu>
-              <el-dropdown-item v-for="applicant in applicants" :key="applicant.id" :command="applicant.id" :class="{ 'is-current-option': applicant.id === candidateId }">
+                      <el-dropdown-item v-for="applicant in filteredApplicants" :key="applicant.id" :command="applicant.id" :class="{ 'is-current-option': applicant.id === candidateId }">
                 {{ candidateName(applicant) }}<template v-if="applicant.closeLabel"> ({{ applicant.closeLabel }})</template>
               </el-dropdown-item>
             </el-dropdown-menu>
@@ -66,6 +67,15 @@ const activeTab = ref('overview')
 const application = ref<CandidateApplication>()
 const downloading = ref(false)
 const menuOpen = ref(false)
+const search = ref('')
+const onMenu = (open: boolean) => {
+  menuOpen.value = open
+  if (open) search.value = ''
+}
+const filteredApplicants = computed(() => {
+  const keyword = search.value.trim().toLowerCase()
+  return keyword ? applicants.value.filter(item => `${candidateName(item)} ${item.closeLabel}`.toLowerCase().includes(keyword)) : applicants.value
+})
 const jobId = computed(() => typeof route.params.jobId === 'string' ? route.params.jobId : '')
 const candidateId = computed(() => typeof route.params.candidateId === 'string' ? route.params.candidateId : '')
 interface Applicant { id: string; first_name: string; last_name: string; preferred_name: string | null; closeLabel: string }
@@ -167,4 +177,7 @@ dd { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
 .answers { margin-top: 16px}
 .answers > div { padding: 16px 14px; }
 .answersTitle { margin-top: 16px;  }
+</style>
+<style lang="less">
+.dropdown-search { display: flex; width: auto; min-width: 160px; box-sizing: border-box; margin: 6px 10px; }
 </style>

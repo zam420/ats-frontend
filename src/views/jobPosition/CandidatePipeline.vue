@@ -3,11 +3,11 @@
     <header class="pipeline-header">
       <div>
         <h1>{{ $t('candidatePipeline.title') }}</h1>
-        <el-dropdown v-if="board" :disabled="moving || rejectSubmitting || !jobs.length"         trigger="hover" @command="selectJob" @visible-change="jobMenuOpen = $event">
-                  <button class="job-switcher job-subtitle" type="button">{{ board.job_title }} <el-icon><ArrowUp v-if="jobMenuOpen" /><ArrowDown v-else /></el-icon></button>
+        <el-dropdown v-if="board" :disabled="moving || rejectSubmitting || !jobs.length"         trigger="hover" @command="selectJob"         @visible-change="onJobMenu">                  <button class="job-switcher job-subtitle" type="button">{{ board.job_title }} <el-icon><ArrowUp v-if="jobMenuOpen" /><ArrowDown v-else /></el-icon></button>
           <template #dropdown>
+            <el-input v-model="jobSearch" class="dropdown-search" size="small" clearable :placeholder="$t('button.search')" @keydown.stop />
             <el-dropdown-menu>
-              <el-dropdown-item v-for="job in jobs" :key="job.id" :command="job.id" :class="{ 'is-current-option': job.id === jobId }">{{ job.title }}</el-dropdown-item>
+              <el-dropdown-item v-for="job in filteredJobs" :key="job.id" :command="job.id" :class="{ 'is-current-option': job.id === jobId }">{{ job.title }}</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -193,6 +193,15 @@ const loadRejectedCandidates = async () => {
 const activeTab = ref('pipeline')
 const moving = ref(false)
 const jobMenuOpen = ref(false)
+const jobSearch = ref('')
+const filteredJobs = computed(() => {
+  const keyword = jobSearch.value.trim().toLowerCase()
+  return keyword ? jobs.value.filter(job => job.title.toLowerCase().includes(keyword)) : jobs.value
+})
+const onJobMenu = (open: boolean) => {
+  jobMenuOpen.value = open
+  if (open) jobSearch.value = ''
+}
 const rejectDialogOpen = ref(false)
 const rejectSubmitting = ref(false)
 const rejectTarget = ref<{ id: string; name: string; stageId: string; jobId: string }>()
@@ -443,6 +452,7 @@ const advance = (id: string, fromIndex: number) => {
 @media (max-width: 700px) { .pipeline-header { align-items: flex-start; flex-direction: column; } }
 </style>
 <style lang="less">
+.dropdown-search { display: flex; width: auto; min-width: 160px; box-sizing: border-box; margin: 6px 10px; }
 .el-dropdown-menu__item.is-current-option { color: var(--el-color-primary); background: var(--el-dropdown-menuItem-hover-fill); cursor: default; }
 .candidate-card-tooltip.el-fade-in-linear-enter-active,
 .candidate-card-tooltip.el-fade-in-linear-leave-active { transition-duration: 0.03s; }
