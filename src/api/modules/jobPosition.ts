@@ -38,6 +38,11 @@ export const editJobPosition = (data: JobPosition.JonPositionInfo) => {
   return http.post<ResultCreate>('api/job/update', data)
 }
 
+export const getEvaluationPlanImpact = (id: string | number, rounds: JobPosition.JonPositionInfo['evaluation_plan_rounds']) =>
+  http.post<{ token: string; candidates: number; ignored_candidates: number }>('api/job/evaluation-impact', {
+    id, evaluation_plan_rounds: rounds
+  })
+
 // 发布 Job Position
 export const publishJobPosition = (id: string) => {
   return http.post<boolean>(`api/job/publish/${encodeURIComponent(id)}`)

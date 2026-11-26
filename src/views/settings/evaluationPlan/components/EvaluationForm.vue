@@ -298,7 +298,7 @@ const state = reactive<ReactiveParams>({
 })
 const getRounds = () => state.processList.map((round, order) => ({
   round_type: round.round_type, name: round.name, description: round.description,
-  interviewers: [...round.interviewers], order
+  interviewers: [...round.interviewers], order, ...(props.roundsOnly && round.source_id ? { source_id: round.source_id } : {})
 }))
 defineExpose({ getRounds })
 
@@ -380,6 +380,7 @@ const buildPayload = async (): Promise<InterviewProcess.SaveParam | null> => {
     formData.owner_id = ownerValue
   }
   formData.rounds = processList.map((data, index) => ({
+    id: data.public_id,
     round_type: data.round_type,
     interviewers: data.interviewers,
     name: data.name,
@@ -430,6 +431,7 @@ const saveAs = async () => {
     })
     formData.name = value.trim()
     delete formData.id
+    formData.rounds?.forEach(round => { delete round.id })
     submit(saveAsInterviewProcess, formData)
   } catch {
     // dialog cancelled
@@ -499,6 +501,7 @@ const initData = async () => {
       })
       processList.push({
         id: data.id,
+        public_id: String(data.id),
         round_type: Number(data.round_type),
         interviewers: interviewers ?? [],
         name: data.name,

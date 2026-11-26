@@ -16,6 +16,16 @@ export interface PipelineCandidate {
   closed_at: string | null
   closed_at_stage_name: string | null
   closed_at_stage_type: PipelineStageType | null
+  evaluation: {
+    current_round_name: string | null
+    current_status: 0 | 1 | 2 | 3 | 4
+    completed_rounds: number
+    total_rounds: number
+    passed: number
+    failed: number
+    cancelled: number
+    decision: 0 | 1 | null
+  } | null
 }
 export interface PipelineStage {
   id: string
@@ -34,6 +44,63 @@ export interface CandidatePipeline {
   stages: PipelineStage[]
   rejected_candidates: PipelineCandidate[]
 }
+export interface CandidateApplication {
+  id: string
+  job_title: string
+  first_name: string
+  last_name: string
+  preferred_name: string | null
+  email: string
+  country_code: string
+  phone_number: string
+  current_location: string
+  resume_name: string
+  created_at: string
+  answers: { question: string; values: string[] }[]
+}
+export interface CandidateEvaluations {
+  initialized: boolean
+  decision: 0 | 1 | null
+  can_manage: boolean
+  can_decide: boolean
+  interviewers: { id: string; name: string; email: string }[]
+  rounds: {
+    id: string
+    order: number
+    name: string
+    description: string | null
+    round_type: 0 | 1 | 2 | 3
+    interviewers: string[] | null
+    status: 0 | 1 | 2 | 3 | 4
+    result: 0 | 1 | 2 | null
+    scheduled_at: string | null
+  }[]
+}
+
+const candidateUrl = (jobId: string, candidateId: string) =>
+  `api/pipeline/${encodeURIComponent(jobId)}/candidates/${encodeURIComponent(candidateId)}`
+export const getCandidateApplication = (jobId: string, candidateId: string) =>
+  http.get<CandidateApplication>(candidateUrl(jobId, candidateId), undefined, { preserveHtml: true })
+export const getCandidateResume = (jobId: string, candidateId: string) =>
+  http.getFile(`${candidateUrl(jobId, candidateId)}/resume`)
+export const getCandidateEvaluations = (jobId: string, candidateId: string) =>
+  http.get<CandidateEvaluations>(`${candidateUrl(jobId, candidateId)}/evaluations`)
+const evaluationsUrl = (jobId: string, candidateId: string) => `${candidateUrl(jobId, candidateId)}/evaluations`
+const roundUrl = (jobId: string, candidateId: string, roundId: string) =>
+  `${evaluationsUrl(jobId, candidateId)}/rounds/${encodeURIComponent(roundId)}`
+export const scheduleEvaluation = (jobId: string, candidateId: string, roundId: string, scheduledAt: string, interviewers: string[]) =>
+  http.post<boolean>(`${roundUrl(jobId, candidateId, roundId)}/schedule`, { scheduled_at: scheduledAt, interviewers })
+export const changeEvaluationInterviewers = (jobId: string, candidateId: string, roundId: string, interviewers: string[]) =>
+  http.post<boolean>(`${roundUrl(jobId, candidateId, roundId)}/interviewers`, { interviewers })
+export const changeEvaluationStatus = (jobId: string, candidateId: string, roundId: string, status: 0 | 2 | 3) =>
+  http.post<boolean>(`${roundUrl(jobId, candidateId, roundId)}/status`, { status })
+export const recordEvaluationResult = (jobId: string, candidateId: string, roundId: string, result: 0 | 1 | 2) =>
+  http.post<boolean>(`${roundUrl(jobId, candidateId, roundId)}/result`, { result })
+export const addEvaluationRound = (jobId: string, candidateId: string, data: {
+  name: string; description: string | null; round_type: 0 | 1 | 2 | 3; interviewers: string[]
+}) => http.post<boolean>(`${evaluationsUrl(jobId, candidateId)}/rounds`, data)
+export const decideEvaluations = (jobId: string, candidateId: string, decision: 0 | 1) =>
+  http.post<boolean>(`${evaluationsUrl(jobId, candidateId)}/decision`, { decision })
 
 export const getPipelineJobs = () => http.get<PipelineJob[]>('api/pipeline/jobs')
 export const getCandidatePipeline = (jobId: string) =>

@@ -17,6 +17,7 @@ export const ROUTER_DEMO2 = 'demo2'
 // Job Position
 export const ROUTER_JOB_POSITION = 'job'
 export const ROUTER_CANDIDATE_PIPELINE = 'job/pipeline'
+export const ROUTER_CANDIDATE_DETAIL = 'candidatePipelineDetail'
 export const ROUTER_JOBS = 'jobs'
 export const ROUTER_APPLICATIONS = 'applications'
 export const ROUTER_JOBS_DETAIL = 'jobs/detail'

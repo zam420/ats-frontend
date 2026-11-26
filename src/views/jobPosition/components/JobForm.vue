@@ -143,6 +143,7 @@ import {
   publishJobPosition,
   closeJobPosition,
   getJobFieldsData,
+  getEvaluationPlanImpact,
   getJobPositionDetail
 } from '@/api/modules/jobPosition'
 import JobPosition from '@/api/interface/jobPosition'
@@ -187,6 +188,7 @@ const props = withDefaults(defineProps<ParamsProps>(), {
 })
 
 const router = useRouter()
+const route = useRoute()
 const { $t } = useLocale()
 
 const activeTab = ref('description')
@@ -267,13 +269,20 @@ const questionPayload = (questions: ScreeningQuestion[]) => questions.map((quest
   is_mandatory: question.is_mandatory, is_drop_down_multi_select: question.is_drop_down_multi_select,
   max_chars: question.max_chars
 }))
-const pipelinePayload = (rounds: RecruitmentPipeline.RoundParam[]) =>
-  rounds.map(({ round_type, name, description }, order) => ({ round_type, name, description, order }))
-const evaluationPayload = (rounds: InterviewProcess.RoundParam[]) =>
-  rounds.map(({ round_type, name, description, interviewers }, order) => ({
+const pipelinePayload = (rounds: RecruitmentPipeline.RoundParam[], omitExistingIds = false) =>
+  rounds.map(({ id, public_id, round_type, name, description }, order) => ({
+    id: omitExistingIds ? null : public_id ?? id ?? null, round_type, name, description, order
+  }))
+const evaluationPayload = (rounds: InterviewProcess.RoundParam[], omitExistingIds = false) =>
+  rounds.map(({ round_type, name, description, interviewers, source_id }, order) => ({
+    id: omitExistingIds ? null : source_id ?? null,
     round_type, name, description, interviewers: interviewers ?? [], order
   }))
-const currentTabData = (kind: 'questions' | 'pipeline' | 'evaluation') => {
+function currentTabData(kind: 'questions'): ScreeningQuestion[]
+function currentTabData(kind: 'pipeline'): RecruitmentPipeline.RoundParam[]
+function currentTabData(kind: 'evaluation'): InterviewProcess.RoundParam[]
+function currentTabData(kind: 'questions' | 'pipeline' | 'evaluation'): ScreeningQuestion[] | RecruitmentPipeline.RoundParam[] | InterviewProcess.RoundParam[]
+function currentTabData(kind: 'questions' | 'pipeline' | 'evaluation'): ScreeningQuestion[] | RecruitmentPipeline.RoundParam[] | InterviewProcess.RoundParam[] {
   if (kind === 'questions') {
     if (!screeningFormRef.value) throw new Error('Screening editor is not ready')
     return screeningFormRef.value.getQuestions()
@@ -478,12 +487,9 @@ const save = async (action?: 'publish' | 'close' | 'saveAs') => {
       activeTab.value = 'questions'
       return
     }
-    formData.screening_questions = currentTabData('questions')
-    formData.recruitment_pipeline_rounds = currentTabData('pipeline')
-    if (action === 'saveAs') {
-      formData.recruitment_pipeline_rounds = formData.recruitment_pipeline_rounds.map(({ public_id, ...round }: RecruitmentPipeline.RoundParam) => round)
-    }
-    formData.evaluation_plan_rounds = currentTabData('evaluation')
+    formData.screening_questions = questionPayload(currentTabData('questions'))
+    formData.recruitment_pipeline_rounds = pipelinePayload(currentTabData('pipeline'), action === 'saveAs')
+    formData.evaluation_plan_rounds = evaluationPayload(currentTabData('evaluation'), action === 'saveAs')
   } catch (error) {
     console.error('Failed to collect job application fields', error)
     ElMessage.error($t('jobPosition.previewScreeningError'))
@@ -530,6 +536,29 @@ const save = async (action?: 'publish' | 'close' | 'saveAs') => {
       }
     }
     if (statusAction && !props.id) throw new Error('Job position ID is missing')
+    if (props.isEdit && action !== 'saveAs') {
+      if (!props.id) throw new Error('Job position ID is missing')
+      const impact = await getEvaluationPlanImpact(props.id, payload.evaluation_plan_rounds)
+      if (!impact.success || !impact.result || typeof impact.result.token !== 'string'
+        || !Number.isInteger(impact.result.ignored_candidates) || impact.result.ignored_candidates < 0) {
+        throw new Error('Invalid evaluation plan impact response')
+      }
+      if (impact.result.ignored_candidates > 0) {
+        try {
+          await ElMessageBox.confirm($t('jobPosition.evaluationImpactWarning', { count: impact.result.ignored_candidates }),
+            $t('jobPosition.evaluationImpactTitle'), {
+              confirmButtonText: $t('button.confirm'),
+              cancelButtonText: $t('button.cancel'),
+              type: 'warning'
+            })
+        } catch (error) {
+          if (error === 'cancel' || error === 'close') return
+          throw error
+        }
+        payload.confirm_ignored_evaluation_changes = true
+      }
+      payload.evaluation_impact_token = impact.result.token
+    }
     const res = action === 'saveAs'
       ? await saveAsJobPosition(payload)
       : props.isEdit ? await editJobPosition(payload) : await createJobPosition(payload)
@@ -699,11 +728,17 @@ const getFormsByRes = (
     return item
   })
 }
+const loadJobPositionDetails = async (id: string | number): Promise<JobPosition.JobPositionDetail> => {
+  const preloaded = route.meta.jobPositionDetails
+  if (preloaded) delete route.meta.jobPositionDetails
+  if (preloaded?.id === String(id)) return preloaded.detail
+  const response = await getJobPositionDetail(id)
+  if (!response?.success || !response.result) throw new Error('Job details are missing')
+  return response.result
+}
 const initData = () => {
   if (props.id) {
-    getJobPositionDetail(props.id).then(res => {
-      if (!res?.success || !res.result) throw new Error('Job details are missing')
-      const result = (res.result ?? {}) as JobPosition.JobPositionDetail
+    loadJobPositionDetails(props.id).then(result => {
       if (result.application_questions_display_mode !== 'WITH_DESCRIPTION' && result.application_questions_display_mode !== 'SEPARATE_TABS' &&
           result.application_questions_display_mode !== 0 && result.application_questions_display_mode !== 1) {
         throw new Error('Invalid application questions display mode')
@@ -719,8 +754,12 @@ const initData = () => {
       state.internalDetailsForm = getFormsByRes(state.internalDetailsForm, result, espInternalDetailsRef.value)
       state.hiringTeamForm = getFormsByRes(state.hiringTeamForm, result, espHiringTeamRef.value)
       screeningQuestions.value = [...(result.screening_questions ?? [])].sort((a, b) => a.order - b.order)
-      recruitmentRounds.value = [...(result.recruitment_pipeline_rounds ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-      evaluationRounds.value = [...(result.evaluation_plan_rounds ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+      recruitmentRounds.value = [...(result.recruitment_pipeline_rounds ?? [])]
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+        .map(round => ({ ...round, public_id: typeof round.id === 'string' ? round.id : undefined }))
+      evaluationRounds.value = [...(result.evaluation_plan_rounds ?? [])]
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+        .map(round => ({ ...round, source_id: typeof round.id === 'string' ? round.id : undefined }))
       savedTabData.questions = JSON.stringify(questionPayload(screeningQuestions.value))
       savedTabData.pipeline = JSON.stringify(pipelinePayload(recruitmentRounds.value))
       savedTabData.evaluation = JSON.stringify(evaluationPayload(evaluationRounds.value))

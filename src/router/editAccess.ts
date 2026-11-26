@@ -9,12 +9,14 @@ import type { RouteLocationNormalized } from 'vue-router'
 import type { ScreeningFormDetail } from '@/api/interface/screeningQuestionsForm'
 import type RecruitmentPipeline from '@/api/interface/recruitmentPipeline'
 import type InterviewProcess from '@/api/interface/evaluationPlan'
+import type JobPosition from '@/api/interface/jobPosition'
 
 declare module 'vue-router' {
   interface RouteMeta {
     screeningFormDetails?: { id: string; detail: ScreeningFormDetail }
     recruitmentPipelineDetails?: { id: string; detail: RecruitmentPipeline.DetailInfo }
     evaluationPlanDetails?: { id: string; detail: InterviewProcess.DetailInfo }
+    jobPositionDetails?: { id: string; detail: JobPosition.JobPositionDetail }
   }
 }
 
@@ -48,9 +50,12 @@ export async function checkEditAccess(to: RouteLocationNormalized) {
     ? await getRecruitmentPipelineDetail(id) : undefined
   const evaluationResponse = to.name === 'ROUTER_SETTINGS_EVALUATION_PLAN_EDIT'
     ? await getInterviewProcessDetail(id) : undefined
+  const jobPositionResponse = to.name === 'ROUTER_JOB_POSITION_EDIT'
+    ? await getJobPositionDetail(id) : undefined
   const response = to.name === 'ROUTER_SETTINGS_RECRUITMENT_PIPELINE_EDIT'
     ? pipelineResponse
-    : to.name === 'ROUTER_SETTINGS_EVALUATION_PLAN_EDIT' ? evaluationResponse : await load(id)
+    : to.name === 'ROUTER_SETTINGS_EVALUATION_PLAN_EDIT' ? evaluationResponse
+      : to.name === 'ROUTER_JOB_POSITION_EDIT' ? jobPositionResponse : await load(id)
   if (!response?.result) throw new Error(`Missing details for ${String(to.name)}: ${id}`)
 
   const globalStore = useGlobalStore()
@@ -65,6 +70,9 @@ export async function checkEditAccess(to: RouteLocationNormalized) {
   }
   if (to.name === 'ROUTER_SETTINGS_SCREENING_FORMS_EDIT' && 'questions' in response.result) {
     to.meta.screeningFormDetails = { id, detail: response.result }
+  }
+  if (jobPositionResponse?.result) {
+    to.meta.jobPositionDetails = { id, detail: jobPositionResponse.result }
   }
   if (pipelineResponse?.result) {
     to.meta.recruitmentPipelineDetails = { id, detail: pipelineResponse.result }

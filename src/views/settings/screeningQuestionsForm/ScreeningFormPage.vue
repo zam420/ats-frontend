@@ -383,6 +383,7 @@ const buildPayload = async (): Promise<ScreeningFormRequest | null> => {
       shared_with_user_ids: shareMode.value === 'users' ? form.shared_with_user_ids : null
     } : {}),
     questions: form.questions.map((question, index) => ({
+      id: question.id,
       label: question.label.trim(),
       description: isDisplayOnly(question) ? '' : question.description,
       screening_question_type: question.screening_question_type,
@@ -436,6 +437,7 @@ const saveAs = async () => {
   payload.owner_id = store.userInfo?.id
   payload.is_public = false
   payload.shared_with_user_ids = null
+  payload.questions.forEach(question => { delete question.id })
   await submit(payload, true)
 }
 onMounted(async () => {

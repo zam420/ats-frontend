@@ -30,11 +30,12 @@
         <div class="candidates-container">
           <p v-if="!stage.candidates.length" class="empty">{{ $t('candidatePipeline.empty') }}</p>
           <article v-for="candidate in stage.candidates" :key="candidate.id" class="candidate"
+            role="link" tabindex="0" @click="openCandidate(candidate.id)" @keydown.enter.prevent="openCandidate(candidate.id)"
             :draggable="!moving && index < board.stages.length - 1"
             @dragstart="dragStart($event, candidate.id, index)" @dragend="dragging = null">
             <div class="candidate-heading">
               <strong>{{ displayName(candidate) }}</strong>
-              <el-dropdown trigger="hover" :disabled="moving || rejectSubmitting" @command="handleCandidateAction($event, candidate, index, stage.id)">
+              <el-dropdown trigger="hover" :disabled="moving || rejectSubmitting" @click.stop @keydown.stop @command="handleCandidateAction($event, candidate, index, stage.id)">
                 <button type="button" class="candidate-actions" :aria-label="$t('candidatePipeline.actions')" draggable="false">
                   <el-icon><MoreFilled /></el-icon>
                 </button>
@@ -50,6 +51,20 @@
             </div>
             <div class="candidate-detail"><el-icon><Clock /></el-icon><span>{{ applicationAge(candidate.created_at) }}</span></div>
             <div class="candidate-detail"><el-icon><Location /></el-icon><span>{{ candidate.current_location }}</span></div>
+            <template v-if="stage.stage_type === 'EVALUATING' && candidate.evaluation">
+              <div v-if="candidate.evaluation.current_round_name" class="evaluation-detail">
+                {{ $t('candidatePipeline.currentRound') }}: {{ candidate.evaluation.current_round_name }}
+              </div>
+              <div class="evaluation-detail">
+                {{ $t('candidatePipeline.roundProgress', { completed: candidate.evaluation.completed_rounds, total: candidate.evaluation.total_rounds }) }}
+                · {{ evaluationStatus(candidate.evaluation.current_status) }}
+              </div>
+              <div class="evaluation-detail">{{ $t('candidatePipeline.roundResults') }}: {{ evaluationResults(candidate.evaluation) }}</div>
+              <div v-if="candidate.evaluation.decision !== null" class="evaluation-detail">
+                {{ $t('candidatePipeline.overallResult') }}: {{ $t(candidate.evaluation.decision === 0 ? 'candidatePipeline.passed' : 'candidatePipeline.failed') }}
+              </div>
+            </template>
+            <div v-else-if="stage.stage_type === 'EVALUATING'" class="evaluation-detail">{{ $t('candidatePipeline.noEvaluations') }}</div>
           </article>
         </div>
       </section>
@@ -107,7 +122,7 @@ import moment from 'moment'
 import { useLocale } from '@/hooks/useLocale'
 import { DATE_FORMAT, OPEN_DIALOG } from '@/config'
 import mittBus from '@/utils/mittBus'
-import { ROUTER_JOB_POSITION, ROUTER_CANDIDATE_PIPELINE } from '@/router/routerName'
+import { ROUTER_JOB_POSITION, ROUTER_CANDIDATE_PIPELINE, ROUTER_CANDIDATE_DETAIL } from '@/router/routerName'
 import { getCandidatePipeline, getPipelineJobs, moveCandidate, rejectCandidate } from '@/api/modules/candidatePipeline'
 import type { CandidatePipeline, PipelineCandidate, PipelineJob, PipelineStageType } from '@/api/modules/candidatePipeline'
 import { applicationAgeDays } from './candidateApplicationAge'
@@ -175,6 +190,16 @@ const jobId = computed(() => typeof route.params.jobId === 'string' && route.par
   : typeof route.query.job === 'string' ? route.query.job : '')
 const displayName = (candidate: PipelineCandidate) =>
   `${candidate.preferred_name || candidate.first_name} ${candidate.last_name}`
+const evaluationStatus = (status: number) =>
+  $t(`candidatePipeline.${['pending', 'scheduled', 'inProgress', 'awaitingFeedback', 'completed'][status]}`)
+const evaluationResults = (evaluation: NonNullable<PipelineCandidate['evaluation']>) => {
+  const results = [
+    evaluation.passed ? $t('candidatePipeline.passedCount', { count: evaluation.passed }) : '',
+    evaluation.failed ? $t('candidatePipeline.failedCount', { count: evaluation.failed }) : '',
+    evaluation.cancelled ? $t('candidatePipeline.cancelledCount', { count: evaluation.cancelled }) : ''
+  ].filter(Boolean)
+  return results.length ? results.join(', ') : $t('candidatePipeline.pending')
+}
 const rejectedStageColor = (candidate: PipelineCandidate) =>
   candidate.closed_at_stage_type ? stageColors[candidate.closed_at_stage_type].header : undefined
 const formatDate = (date: string | null) => date ? moment(date, moment.ISO_8601, true).format(DATE_FORMAT) : '-'
@@ -205,6 +230,15 @@ const loadBoard = async () => {
       if (!Object.prototype.hasOwnProperty.call(stageColors, stage.stage_type)) throw new Error('Invalid pipeline stage type')
       if (!Array.isArray(stage.candidates)) throw new Error('Invalid pipeline candidates')
       for (const candidate of stage.candidates) applicationAgeDays(candidate.created_at, now.value)
+      for (const candidate of stage.candidates) {
+        const evaluation = candidate.evaluation
+        if (evaluation && (!Number.isInteger(evaluation.current_status) || evaluation.current_status < 0 || evaluation.current_status > 4
+          || [evaluation.completed_rounds, evaluation.total_rounds, evaluation.passed, evaluation.failed, evaluation.cancelled]
+            .some(value => !Number.isInteger(value) || value < 0)
+          || (evaluation.decision !== null && evaluation.decision !== 0 && evaluation.decision !== 1))) {
+          throw new Error('Invalid candidate evaluation summary')
+        }
+      }
     }
     for (const candidate of response.result.rejected_candidates) {
       applicationAgeDays(candidate.created_at, now.value)
@@ -261,6 +295,11 @@ onBeforeUnmount(() => {
 })
 const selectJob = (id: string) => {
   if (!moving.value && !rejectSubmitting.value && id !== jobId.value) router.push({ name: ROUTER_CANDIDATE_PIPELINE, params: { jobId: id }, state: { candidatePipelineFromSidebar: fromSidebar.value } })
+}
+const openCandidate = (candidateId: string) => {
+  if (!board.value || moving.value || rejectSubmitting.value || dragging.value) return
+  void router.push({ name: ROUTER_CANDIDATE_DETAIL, params: { jobId: board.value.job_id, candidateId },
+    state: { candidatePipelineFromSidebar: fromSidebar.value } })
 }
 const handleCandidateAction = (command: string, candidate: PipelineCandidate, index: number, stageId: string) => {
   if (moving.value || rejectSubmitting.value || !board.value) return
@@ -334,6 +373,7 @@ const advance = (id: string, fromIndex: number) => {
       try {
         const result = await moveCandidate(current.job_id, id, from.id, to.id)
         if (!result.success || result.result !== true) throw new Error('Move was not accepted')
+        await loadBoard()
       } catch (error) {
         console.error('Failed to move candidate', error)
         ElMessage.error($t('candidatePipeline.moveError'))
@@ -366,6 +406,7 @@ const advance = (id: string, fromIndex: number) => {
 .candidate-actions { border: 0; padding: 0; background: none; cursor: pointer; color: var(--color-gray); font-size: 18px; }
 .candidate-actions .el-icon { transform: rotate(90deg); }
 .candidate-detail { display: flex; align-items: center; gap: 6px; color: var(--color-gray); font-size: 11.8px; margin-top: 6px; }
+.evaluation-detail { font-size: 11.8px; margin-top: 6px; }
 .rejected-stage { display: inline-block; padding: 4px 8px; border-radius: 6px; }
 .empty { color: var(--color-gray); font-size: 13px; }
 @media (max-width: 700px) { .pipeline-header { align-items: flex-start; flex-direction: column; } }

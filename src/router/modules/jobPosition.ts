@@ -2,6 +2,7 @@ import { useLocale } from '@/hooks/useLocale'
 import {
   ROUTER_JOB_POSITION,
   ROUTER_CANDIDATE_PIPELINE,
+  ROUTER_CANDIDATE_DETAIL,
   ROUTER_JOBS,
   ROUTER_APPLICATIONS,
   ROUTER_JOBS_DETAIL,
@@ -96,6 +97,17 @@ const jobPositionRouter: Menu.MenuOptions[] = [
       icon: 'recruitment',
       title: $t('candidatePipeline.title'),
       index: 1,
+      permissionCode: UserPermissionEnum.JPS
+    }
+  },
+  {
+    path: `/${ROUTER_CANDIDATE_PIPELINE}/:jobId/candidates/:candidateId`,
+    name: ROUTER_CANDIDATE_DETAIL,
+    component: () => import('@/views/jobPosition/CandidateDetail.vue'),
+    meta: {
+      title: $t('candidatePipeline.candidateDetail'),
+      isHide: true,
+      activeMenu: `/${ROUTER_CANDIDATE_PIPELINE}`,
       permissionCode: UserPermissionEnum.JPS
     }
   },

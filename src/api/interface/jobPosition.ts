@@ -14,6 +14,8 @@ declare namespace JobPosition {
     screening_questions: Array<Omit<ScreeningQuestion, 'id'>>
     recruitment_pipeline_rounds: RecruitmentPipeline.RoundParam[]
     evaluation_plan_rounds: InterviewProcess.RoundParam[]
+    evaluation_impact_token?: string
+    confirm_ignored_evaluation_changes?: boolean
     work_location: string
     description: string
     requisition_id: string

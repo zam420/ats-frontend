@@ -59,6 +59,8 @@ declare namespace InterviewProcess {
 
   interface RoundParam {
     id?: string | number
+    public_id?: string
+    source_id?: string
     round_type: number | string
     interviewers: (string | number)[]
     name?: string

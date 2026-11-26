@@ -47,5 +47,5 @@ export interface ScreeningFormRequest {
   owner_id?: string
   is_public?: boolean
   shared_with_user_ids?: string[] | null
-  questions: Array<Omit<ScreeningQuestion, 'id'>>
+  questions: ScreeningQuestion[]
 }

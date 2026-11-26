@@ -328,6 +328,7 @@ const buildPayload = async (): Promise<RecruitmentPipeline.SaveParam | null> => 
       state.shareMode === 'users' ? state.shareUserIds.map(String) : null
   }
   formData.rounds = processList.map((data, index) => ({
+    id: data.public_id,
     round_type: data.round_type,
     name: data.name,
     description: data.description,
@@ -386,6 +387,7 @@ const saveAs = async () => {
     )
     formData.name = value.trim()
     delete formData.id
+    formData.rounds?.forEach(round => { delete round.id })
     submit(saveAsRecruitmentPipeline, formData)
   } catch {
     // dialog cancelled
@@ -430,6 +432,7 @@ const initData = async () => {
     })
     state.processList = (result.rounds ?? []).map(data => ({
       id: data.id,
+      public_id: String(data.id),
       round_type: Number(data.round_type),
       name: data.name,
       description: data.description,
