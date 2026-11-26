@@ -3,10 +3,10 @@
     <template v-if="evaluations">
       <p v-if="!evaluations.initialized">{{ $t('candidatePipeline.noEvaluations') }}</p>
       <template v-else>
-        <p>{{ $t('candidatePipeline.overallResult') }}: {{ evaluations.decision === null ? $t('candidatePipeline.pending') : resultLabel(evaluations.decision) }}</p>
+        <p>{{ $t('candidatePipeline.overallResult') }}: {{ evaluations.decision === null ? $t('candidatePipeline.pending') : decisionLabel(evaluations.decision) }}</p>
         <div v-if="editable && evaluations.can_decide && !currentRound" class="controls">
           <el-select v-model="decision" :placeholder="$t('candidatePipeline.selectResult')" :disabled="saving">
-            <el-option :label="resultLabel(0)" :value="0" /><el-option :label="resultLabel(1)" :value="1" />
+            <el-option :label="decisionLabel(0)" :value="0" /><el-option :label="decisionLabel(1)" :value="1" />
           </el-select>
           <el-popconfirm :title="$t('candidatePipeline.confirmDecision')" @confirm="saveDecision">
             <template #reference><el-button type="primary" :disabled="decision === null || saving">{{ $t('candidatePipeline.decideResult') }}</el-button></template>
@@ -31,7 +31,7 @@
           </div>
           <div v-if="editable && currentRound?.id === round.id" class="controls">
             <el-select v-model="result" :placeholder="$t('candidatePipeline.selectResult')" :disabled="saving">
-              <el-option v-for="value in [0, 1, 2]" :key="value" :label="resultLabel(value)" :value="value" />
+              <el-option v-for="value in [0, 3, 4, 1, 2]" :key="value" :label="resultLabel(value)" :value="value" />
             </el-select>
             <el-popconfirm :title="$t('candidatePipeline.confirmRoundResult')" @confirm="saveResult(round.id)">
               <template #reference><el-button type="primary" :disabled="result === null || saving">{{ $t('candidatePipeline.recordResult') }}</el-button></template>
@@ -79,12 +79,12 @@ import {
   getCandidateEvaluations, scheduleEvaluation, changeEvaluationInterviewers, changeEvaluationStatus,
   recordEvaluationResult, addEvaluationRound, decideEvaluations
 } from '@/api/modules/candidatePipeline'
-import type { CandidateEvaluations } from '@/api/modules/candidatePipeline'
+import type { CandidateEvaluations, EvaluationRoundResult } from '@/api/modules/candidatePipeline'
 import type { ResultData } from '@/api/interface'
 import { useLocale } from '@/hooks/useLocale'
 
 type Round = CandidateEvaluations['rounds'][number]
-type Result = 0 | 1 | 2
+type Result = EvaluationRoundResult
 type Status = 0 | 2 | 3
 const props = defineProps<{ jobId: string; candidateId: string }>()
 const { $t } = useLocale()
@@ -106,7 +106,8 @@ const form = reactive<{ name: string; description: string; roundType: 0 | 1 | 2 
 const roundTypes = ['roundTypeHr', 'roundTypeFunctional', 'roundTypeExecutive', 'roundTypeCustom']
 const dialogTitle = computed(() => `candidatePipeline.${dialogMode.value === 'add' ? 'addRound' : dialogMode.value === 'schedule' ? 'schedule' : 'changeInterviewers'}`)
 const statusLabel = (value: number) => $t(`candidatePipeline.${['pending', 'scheduled', 'inProgress', 'awaitingFeedback', 'completed'][value]}`)
-const resultLabel = (value: number) => $t(`candidatePipeline.${['passed', 'failed', 'cancelled'][value]}`)
+const decisionLabel = (value: number) => $t(`candidatePipeline.${['passed', 'failed'][value]}`)
+const resultLabel = (value: number) => $t(`candidatePipeline.${['strongYes', 'strongNo', 'cancelled', 'yes', 'no'][value]}`)
 const interviewerNames = (ids: string[] | null) => ids?.length
   ? ids.map(id => evaluations.value?.interviewers.find(user => user.id === id)?.name || id).join(', ')
   : $t('candidatePipeline.noInterviewers')
@@ -124,7 +125,7 @@ const load = async () => {
       || response.result.interviewers.some(user => typeof user.id !== 'string' || typeof user.name !== 'string' || typeof user.email !== 'string')
       || response.result.rounds.some(round => typeof round.id !== 'string' || !Number.isInteger(round.order)
         || !Number.isInteger(round.status) || round.status < 0 || round.status > 4
-        || (round.result !== null && (!Number.isInteger(round.result) || round.result < 0 || round.result > 2))
+        || (round.result !== null && (!Number.isInteger(round.result) || round.result < 0 || round.result > 4))
         || ((round.status === 4) !== (round.result !== null))
         || (round.scheduled_at !== null && Number.isNaN(new Date(round.scheduled_at).getTime()))
         || (round.interviewers !== null && (!Array.isArray(round.interviewers)

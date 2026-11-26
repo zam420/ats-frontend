@@ -52,14 +52,26 @@
             <div class="candidate-detail"><el-icon><Clock /></el-icon><span>{{ applicationAge(candidate.created_at) }}</span></div>
             <div class="candidate-detail"><el-icon><Location /></el-icon><span>{{ candidate.current_location }}</span></div>
             <template v-if="stage.stage_type === 'EVALUATING' && candidate.evaluation">
-              <div v-if="candidate.evaluation.current_round_name" class="evaluation-detail">
-                {{ $t('candidatePipeline.currentRound') }}: {{ candidate.evaluation.current_round_name }}
+              <el-tooltip v-if="candidate.evaluation.current_round_name" placement="top">
+                <template #content>
+                  <div>{{ $t('candidatePipeline.currentRoundStatus', { status: evaluationStatus(candidate.evaluation.current_status) }) }}</div>
+                  <div v-if="candidate.evaluation.current_status !== 4">
+                    {{ $t('candidatePipeline.currentOwner', { owner: candidate.evaluation.current_owners.join(', ') || $t('candidatePipeline.noCurrentOwner') }) }}
+                  </div>
+                </template>
+                <div class="candidate-detail" tabindex="0" @keydown.stop>
+                  <el-icon><component :is="evaluationStatusIcons[candidate.evaluation.current_status]" /></el-icon>
+                  <span>{{ candidate.evaluation.current_round_name }}</span>
+                </div>
+              </el-tooltip>
+              <div class="evaluation-detail evaluation-progress" :aria-label="$t('candidatePipeline.roundProgress', { completed: candidate.evaluation.completed_rounds, total: candidate.evaluation.total_rounds })">
+                <!-- <el-progress :stroke-width="6" :percentage="evaluationPercentage(candidate.evaluation)" :color="evaluationColor(candidate.evaluation)">
+                  <span>{{ candidate.evaluation.completed_rounds }}/{{ candidate.evaluation.total_rounds }}</span>
+                </el-progress> -->
+                <el-progress type="circle" :width="34" :stroke-width="4" :percentage="evaluationPercentage(candidate.evaluation)" :color="evaluationColor(candidate.evaluation)">
+                  <span>{{ candidate.evaluation.completed_rounds }}/{{ candidate.evaluation.total_rounds }}</span>
+                </el-progress>
               </div>
-              <div class="evaluation-detail">
-                {{ $t('candidatePipeline.roundProgress', { completed: candidate.evaluation.completed_rounds, total: candidate.evaluation.total_rounds }) }}
-                · {{ evaluationStatus(candidate.evaluation.current_status) }}
-              </div>
-              <div class="evaluation-detail">{{ $t('candidatePipeline.roundResults') }}: {{ evaluationResults(candidate.evaluation) }}</div>
               <div v-if="candidate.evaluation.decision !== null" class="evaluation-detail">
                 {{ $t('candidatePipeline.overallResult') }}: {{ $t(candidate.evaluation.decision === 0 ? 'candidatePipeline.passed' : 'candidatePipeline.failed') }}
               </div>
@@ -116,7 +128,7 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowDown, Clock, Location, MoreFilled } from '@element-plus/icons-vue'
+import { ArrowDown, Calendar, ChatDotRound, CircleCheck, Clock, Loading, Location, MoreFilled, Timer } from '@element-plus/icons-vue'
 import { escape } from 'lodash-es'
 import moment from 'moment'
 import { useLocale } from '@/hooks/useLocale'
@@ -126,6 +138,7 @@ import { ROUTER_JOB_POSITION, ROUTER_CANDIDATE_PIPELINE, ROUTER_CANDIDATE_DETAIL
 import { getCandidatePipeline, getPipelineJobs, moveCandidate, rejectCandidate } from '@/api/modules/candidatePipeline'
 import type { CandidatePipeline, PipelineCandidate, PipelineJob, PipelineStageType } from '@/api/modules/candidatePipeline'
 import { applicationAgeDays } from './candidateApplicationAge'
+import { evaluationColor, evaluationPercentage } from './evaluationProgress'
 
 const route = useRoute()
 const router = useRouter()
@@ -192,14 +205,7 @@ const displayName = (candidate: PipelineCandidate) =>
   `${candidate.preferred_name || candidate.first_name} ${candidate.last_name}`
 const evaluationStatus = (status: number) =>
   $t(`candidatePipeline.${['pending', 'scheduled', 'inProgress', 'awaitingFeedback', 'completed'][status]}`)
-const evaluationResults = (evaluation: NonNullable<PipelineCandidate['evaluation']>) => {
-  const results = [
-    evaluation.passed ? $t('candidatePipeline.passedCount', { count: evaluation.passed }) : '',
-    evaluation.failed ? $t('candidatePipeline.failedCount', { count: evaluation.failed }) : '',
-    evaluation.cancelled ? $t('candidatePipeline.cancelledCount', { count: evaluation.cancelled }) : ''
-  ].filter(Boolean)
-  return results.length ? results.join(', ') : $t('candidatePipeline.pending')
-}
+const evaluationStatusIcons = [Timer, Calendar, Loading, ChatDotRound, CircleCheck]
 const rejectedStageColor = (candidate: PipelineCandidate) =>
   candidate.closed_at_stage_type ? stageColors[candidate.closed_at_stage_type].header : undefined
 const formatDate = (date: string | null) => date ? moment(date, moment.ISO_8601, true).format(DATE_FORMAT) : '-'
@@ -233,8 +239,11 @@ const loadBoard = async () => {
       for (const candidate of stage.candidates) {
         const evaluation = candidate.evaluation
         if (evaluation && (!Number.isInteger(evaluation.current_status) || evaluation.current_status < 0 || evaluation.current_status > 4
-          || [evaluation.completed_rounds, evaluation.total_rounds, evaluation.passed, evaluation.failed, evaluation.cancelled]
+          || !Array.isArray(evaluation.current_owners) || evaluation.current_owners.some(owner => typeof owner !== 'string')
+          || [evaluation.completed_rounds, evaluation.total_rounds, evaluation.strong_yes, evaluation.yes, evaluation.no, evaluation.strong_no, evaluation.cancelled]
             .some(value => !Number.isInteger(value) || value < 0)
+          || evaluation.completed_rounds > evaluation.total_rounds
+          || evaluation.strong_yes + evaluation.yes + evaluation.no + evaluation.strong_no + evaluation.cancelled !== evaluation.completed_rounds
           || (evaluation.decision !== null && evaluation.decision !== 0 && evaluation.decision !== 1))) {
           throw new Error('Invalid candidate evaluation summary')
         }
@@ -407,6 +416,10 @@ const advance = (id: string, fromIndex: number) => {
 .candidate-actions .el-icon { transform: rotate(90deg); }
 .candidate-detail { display: flex; align-items: center; gap: 6px; color: var(--color-gray); font-size: 11.8px; margin-top: 6px; }
 .evaluation-detail { font-size: 11.8px; margin-top: 6px; }
+.evaluation-progress { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.evaluation-progress :deep(.el-progress--line) { width: 100%; }
+.evaluation-progress :deep(.el-progress__text) { font-size: 11.8px !important; }
+.evaluation-progress :deep(.el-progress--circle .el-progress__text) { min-width: 0; }
 .rejected-stage { display: inline-block; padding: 4px 8px; border-radius: 6px; }
 .empty { color: var(--color-gray); font-size: 13px; }
 @media (max-width: 700px) { .pipeline-header { align-items: flex-start; flex-direction: column; } }

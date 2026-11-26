@@ -1,0 +1,23 @@
+export interface EvaluationProgress {
+  completed_rounds: number
+  total_rounds: number
+  strong_yes: number
+  yes: number
+  no: number
+  strong_no: number
+}
+
+export const evaluationPercentage = (evaluation: EvaluationProgress) =>
+  evaluation.total_rounds ? Math.round(evaluation.completed_rounds / evaluation.total_rounds * 100) : 0
+
+export const evaluationColor = (evaluation: EvaluationProgress) => {
+  const { strong_yes, yes, no, strong_no } = evaluation
+  const rated = strong_yes + yes + no + strong_no
+  if (!rated) return '#909399'
+  const score = 2 * strong_yes + yes - no - 2 * strong_no
+  if (score > rated) return '#166534'
+  if (score > 0) return '#4caf50'
+  if (score < -rated) return '#991b1b'
+  if (score < 0) return '#e57373'
+  return '#b88a00'
+}

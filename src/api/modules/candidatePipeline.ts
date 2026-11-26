@@ -19,10 +19,13 @@ export interface PipelineCandidate {
   evaluation: {
     current_round_name: string | null
     current_status: 0 | 1 | 2 | 3 | 4
+    current_owners: string[]
     completed_rounds: number
     total_rounds: number
-    passed: number
-    failed: number
+    strong_yes: number
+    yes: number
+    no: number
+    strong_no: number
     cancelled: number
     decision: 0 | 1 | null
   } | null
@@ -72,10 +75,11 @@ export interface CandidateEvaluations {
     round_type: 0 | 1 | 2 | 3
     interviewers: string[] | null
     status: 0 | 1 | 2 | 3 | 4
-    result: 0 | 1 | 2 | null
+    result: EvaluationRoundResult | null
     scheduled_at: string | null
   }[]
 }
+export type EvaluationRoundResult = 0 | 1 | 2 | 3 | 4
 
 const candidateUrl = (jobId: string, candidateId: string) =>
   `api/pipeline/${encodeURIComponent(jobId)}/candidates/${encodeURIComponent(candidateId)}`
@@ -94,7 +98,7 @@ export const changeEvaluationInterviewers = (jobId: string, candidateId: string,
   http.post<boolean>(`${roundUrl(jobId, candidateId, roundId)}/interviewers`, { interviewers })
 export const changeEvaluationStatus = (jobId: string, candidateId: string, roundId: string, status: 0 | 2 | 3) =>
   http.post<boolean>(`${roundUrl(jobId, candidateId, roundId)}/status`, { status })
-export const recordEvaluationResult = (jobId: string, candidateId: string, roundId: string, result: 0 | 1 | 2) =>
+export const recordEvaluationResult = (jobId: string, candidateId: string, roundId: string, result: EvaluationRoundResult) =>
   http.post<boolean>(`${roundUrl(jobId, candidateId, roundId)}/result`, { result })
 export const addEvaluationRound = (jobId: string, candidateId: string, data: {
   name: string; description: string | null; round_type: 0 | 1 | 2 | 3; interviewers: string[]
