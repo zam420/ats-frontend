@@ -3,11 +3,11 @@
     <header class="pipeline-header">
       <div>
         <h1>{{ $t('candidatePipeline.title') }}</h1>
-        <el-dropdown v-if="board" :disabled="moving || rejectSubmitting || !jobs.length" trigger="click" @command="selectJob">
-          <button class="job-switcher job-subtitle" type="button">{{ board.job_title }} <el-icon><ArrowDown /></el-icon></button>
+        <el-dropdown v-if="board" :disabled="moving || rejectSubmitting || !jobs.length"         trigger="hover" @command="selectJob" @visible-change="jobMenuOpen = $event">
+                  <button class="job-switcher job-subtitle" type="button">{{ board.job_title }} <el-icon><ArrowUp v-if="jobMenuOpen" /><ArrowDown v-else /></el-icon></button>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item v-for="job in jobs" :key="job.id" :command="job.id">{{ job.title }}</el-dropdown-item>
+              <el-dropdown-item v-for="job in jobs" :key="job.id" :command="job.id" :class="{ 'is-current-option': job.id === jobId }">{{ job.title }}</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -30,7 +30,7 @@
         <div class="candidates-container">
           <p v-if="!stage.candidates.length" class="empty">{{ $t('candidatePipeline.empty') }}</p>
           <article v-for="candidate in stage.candidates" :key="candidate.id" class="candidate"
-            role="link" tabindex="0" @click="openCandidate(candidate.id)" @keydown.enter.prevent="openCandidate(candidate.id)"
+            role="link" tabindex="0" @click="openCandidate(candidate.id, stage.stage_type)" @keydown.enter.prevent="openCandidate(candidate.id, stage.stage_type)"
             :draggable="!moving && index < board.stages.length - 1"
             @dragstart="dragStart($event, candidate.id, index)" @dragend="dragging = null">
             <div class="candidate-heading">
@@ -140,7 +140,7 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowDown, Calendar, ChatDotRound, CircleCheck, Clock, Loading, Location, MoreFilled, Timer } from '@element-plus/icons-vue'
+import { ArrowDown, ArrowUp, Calendar, ChatDotRound, CircleCheck, Clock, Loading, Location, MoreFilled, Timer } from '@element-plus/icons-vue'
 import { escape } from 'lodash-es'
 import moment from 'moment'
 import { useLocale } from '@/hooks/useLocale'
@@ -192,6 +192,7 @@ const loadRejectedCandidates = async () => {
 }
 const activeTab = ref('pipeline')
 const moving = ref(false)
+const jobMenuOpen = ref(false)
 const rejectDialogOpen = ref(false)
 const rejectSubmitting = ref(false)
 const rejectTarget = ref<{ id: string; name: string; stageId: string; jobId: string }>()
@@ -320,10 +321,10 @@ onBeforeUnmount(() => {
 const selectJob = (id: string) => {
   if (!moving.value && !rejectSubmitting.value && id !== jobId.value) router.push({ name: ROUTER_CANDIDATE_PIPELINE, params: { jobId: id }, state: { candidatePipelineFromSidebar: fromSidebar.value } })
 }
-const openCandidate = (candidateId: string) => {
+const openCandidate = (candidateId: string, stageType: PipelineStageType) => {
   if (!board.value || moving.value || rejectSubmitting.value || dragging.value) return
   void router.push({ name: ROUTER_CANDIDATE_DETAIL, params: { jobId: board.value.job_id, candidateId },
-    state: { candidatePipelineFromSidebar: fromSidebar.value } })
+    state: { candidatePipelineFromSidebar: fromSidebar.value, candidateEvaluationTab: stageType === 'EVALUATING' } })
 }
 const handleCandidateAction = (command: string, candidate: PipelineCandidate, index: number, stageId: string) => {
   if (moving.value || rejectSubmitting.value || !board.value) return
@@ -412,11 +413,11 @@ const advance = (id: string, fromIndex: number) => {
 
 <style lang="less" scoped>
 .pipeline-page { height: 100%; overflow: auto; padding: 2em 1.5em; }
-.job-switcher { border: 0; background: none; padding: 0; color: inherit; cursor: pointer; display: inline-flex; gap: 5px; align-items: center; font: inherit; }
+.job-switcher { outline: none; border: 0; background: none; padding: 0; color: inherit; cursor: pointer; display: inline-flex; gap: 5px; align-items: center; font: inherit; }
 .pipeline-header { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; }
 .pipeline-header h1 { font-size: 24px; margin: 0 0 8px; }
 .pipeline-header p { color: var(--color-gray); margin: 0; }
-.job-subtitle { font-size: 16px; font-weight: 500; }
+.job-subtitle { font-size: 14px; font-weight: 500; }
 .actions { display: flex; white-space: nowrap; }
 .board { display: flex; gap: 8px; overflow-x: auto; align-items: stretch; padding-bottom: 20px; }
 .stage { flex: 0 0 225px; border-radius: 8px; min-height: 600px; box-shadow: inset 0 0 0 1px #e3edf7; }
@@ -442,6 +443,7 @@ const advance = (id: string, fromIndex: number) => {
 @media (max-width: 700px) { .pipeline-header { align-items: flex-start; flex-direction: column; } }
 </style>
 <style lang="less">
+.el-dropdown-menu__item.is-current-option { color: var(--el-color-primary); background: var(--el-dropdown-menuItem-hover-fill); cursor: default; }
 .candidate-card-tooltip.el-fade-in-linear-enter-active,
 .candidate-card-tooltip.el-fade-in-linear-leave-active { transition-duration: 0.03s; }
 .rejection-reason-tooltip { max-width: 400px; white-space: pre-wrap; }

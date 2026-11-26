@@ -630,6 +630,7 @@ auth: {
     roundProgress: '已完成 {completed}/{total} 轮',
     roundResults: '轮次结果',
     noRoundResults: '没有评估轮次',
+    closeTypes: ['已拒绝', '已取消录用', '未入职'],
     passedCount: '{count} 轮通过',
     failedCount: '{count} 轮未通过',
     cancelledCount: '{count} 轮已取消',

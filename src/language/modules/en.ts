@@ -630,6 +630,7 @@ export default {
     roundProgress: '{completed}/{total} rounds completed',
     roundResults: 'Round results',
     noRoundResults: 'No evaluation rounds',
+    closeTypes: ['Rejected', 'Offer cancelled', 'Not joined'],
     passedCount: '{count} passed',
     failedCount: '{count} failed',
     cancelledCount: '{count} cancelled',

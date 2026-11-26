@@ -1,9 +1,20 @@
 <template>
   <main class="candidate-page">
-    <header>
+    <header class="pipeline-header">
       <div>
-        <h1>{{ application ? `${application.preferred_name || application.first_name} ${application.last_name}` : $t('candidatePipeline.candidateDetail') }}</h1>
-        <p v-if="application">{{ application.job_title }}</p>
+        <el-dropdown v-if="application && applicants.length" trigger="hover" max-height="320" @command="selectCandidate" @visible-change="menuOpen = $event">
+            <button class="candidate-switcher" type="button">
+              <h1>{{ candidateName(application) }}</h1> <el-icon><ArrowUp v-if="menuOpen" /><ArrowDown v-else /></el-icon></button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item v-for="applicant in applicants" :key="applicant.id" :command="applicant.id" :class="{ 'is-current-option': applicant.id === candidateId }">
+                {{ candidateName(applicant) }}<template v-if="applicant.closeLabel"> ({{ applicant.closeLabel }})</template>
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+        <h1 v-else>{{ application ? candidateName(application) : $t('candidatePipeline.candidateDetail') }}</h1>
+        <p v-if="application" class="job-subtitle">{{ application.job_title }}</p>
       </div>
       <el-button @click="back">{{ $t('button.back') }}</el-button>
     </header>
@@ -35,11 +46,16 @@
   </main>
 </template>
 
+<script lang="ts">
+let applicantsCache: { job: string; list: { id: string; first_name: string; last_name: string; preferred_name: string | null; closeLabel: string }[] } | undefined
+</script>
+
 <script setup lang="ts">
 import { saveAs } from 'file-saver'
-import { getCandidateApplication, getCandidateResume } from '@/api/modules/candidatePipeline'
+import { ArrowDown, ArrowUp } from '@element-plus/icons-vue'
+import { getCandidateApplication, getCandidatePipeline, getCandidateResume } from '@/api/modules/candidatePipeline'
 import type { CandidateApplication } from '@/api/modules/candidatePipeline'
-import { ROUTER_CANDIDATE_PIPELINE } from '@/router/routerName'
+import { ROUTER_CANDIDATE_DETAIL, ROUTER_CANDIDATE_PIPELINE } from '@/router/routerName'
 import { useLocale } from '@/hooks/useLocale'
 import CandidateEvaluations from './components/CandidateEvaluations.vue'
 
@@ -49,9 +65,44 @@ const { $t } = useLocale()
 const activeTab = ref('overview')
 const application = ref<CandidateApplication>()
 const downloading = ref(false)
+const menuOpen = ref(false)
 const jobId = computed(() => typeof route.params.jobId === 'string' ? route.params.jobId : '')
 const candidateId = computed(() => typeof route.params.candidateId === 'string' ? route.params.candidateId : '')
+interface Applicant { id: string; first_name: string; last_name: string; preferred_name: string | null; closeLabel: string }
+const applicants = ref<Applicant[]>([])
 let version = 0
+let applicantsJob = ''
+const candidateName = (person: { first_name: string; last_name: string; preferred_name: string | null }) =>
+  `${person.preferred_name || person.first_name} ${person.last_name}`
+const loadApplicants = async (job: string) => {
+  if (applicantsJob === job) return
+  if (window.history.state?.applicantsCached === true && applicantsCache?.job === job) {
+    applicantsJob = job
+    applicants.value = applicantsCache.list
+    return
+  }
+  applicantsJob = job
+  applicants.value = []
+  try {
+    const response = await getCandidatePipeline(job)
+    if (!response.success || !response.result || applicantsJob !== job) return
+    const labels = $t('candidatePipeline.closeTypes') as unknown as string[]
+    const all = [...response.result.stages.flatMap(stage => stage.candidates), ...response.result.rejected_candidates]
+    applicants.value = all.map(item => ({
+      id: item.id, first_name: item.first_name, last_name: item.last_name, preferred_name: item.preferred_name,
+      closeLabel: item.closed && item.application_close_type !== null ? (labels[item.application_close_type] ?? '') : ''
+    })).sort((a, b) => candidateName(a).localeCompare(candidateName(b)))
+    applicantsCache = { job, list: applicants.value }
+  } catch (error) {
+    applicantsJob = ''
+    console.error('Failed to load applicants', error)
+  }
+}
+const selectCandidate = (id: string) => {
+  if (id === candidateId.value) return
+  void router.replace({ name: ROUTER_CANDIDATE_DETAIL, params: { jobId: jobId.value, candidateId: id },
+    state: { candidatePipelineFromSidebar: window.history.state?.candidatePipelineFromSidebar === true, candidateEvaluationTab: false, applicantsCached: true } })
+}
 const formatDate = (value: string) => new Date(value).toLocaleString()
 const back = () => router.push({ name: ROUTER_CANDIDATE_PIPELINE, params: { jobId: jobId.value },
   state: { candidatePipelineFromSidebar: window.history.state?.candidatePipelineFromSidebar === true } })
@@ -59,8 +110,9 @@ const back = () => router.push({ name: ROUTER_CANDIDATE_PIPELINE, params: { jobI
 watch([jobId, candidateId], async ([job, candidate]) => {
   const current = ++version
   application.value = undefined
-  activeTab.value = 'overview'
+  activeTab.value = window.history.state?.candidateEvaluationTab === true ? 'evaluations' : 'overview'
   if (!job || !candidate) return
+  void loadApplicants(job)
   try {
     const response = await getCandidateApplication(job, candidate)
     if (!response.success || !response.result || !Array.isArray(response.result.answers)
@@ -101,9 +153,12 @@ const download = async () => {
 
 <style lang="less" scoped>
 .candidate-page { height: 100%; overflow: auto; padding: 2em 1.5em; }
-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
-h1 { margin: 0; font-size: 24px; }
-header p { color: var(--color-gray); }
+.pipeline-header { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; }
+.pipeline-header h1 { font-size: 24px; margin: 0 0 8px; }
+.pipeline-header p { color: var(--color-gray); margin: 0; }
+.candidate-switcher { outline: none; border: 0; background: none; padding: 0; color: inherit; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; font: inherit; }
+header p { color: var(--color-gray); margin: 0; }
+.job-subtitle { font-size: 14px; font-weight: 500; }
 h2 { font-size: 16px; }
 .details { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; }
 dt { color: var(--color-gray); margin-bottom: 5px; font-weight: 500;}
