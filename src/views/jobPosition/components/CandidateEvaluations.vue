@@ -82,6 +82,7 @@ import {
 import type { CandidateEvaluations, EvaluationRoundResult } from '@/api/modules/candidatePipeline'
 import type { ResultData } from '@/api/interface'
 import { useLocale } from '@/hooks/useLocale'
+import { evaluationRoundResultKeys } from '../evaluationProgress'
 
 type Round = CandidateEvaluations['rounds'][number]
 type Result = EvaluationRoundResult
@@ -107,7 +108,7 @@ const roundTypes = ['roundTypeHr', 'roundTypeFunctional', 'roundTypeExecutive', 
 const dialogTitle = computed(() => `candidatePipeline.${dialogMode.value === 'add' ? 'addRound' : dialogMode.value === 'schedule' ? 'schedule' : 'changeInterviewers'}`)
 const statusLabel = (value: number) => $t(`candidatePipeline.${['pending', 'scheduled', 'inProgress', 'awaitingFeedback', 'completed'][value]}`)
 const decisionLabel = (value: number) => $t(`candidatePipeline.${['passed', 'failed'][value]}`)
-const resultLabel = (value: number) => $t(`candidatePipeline.${['strongYes', 'strongNo', 'cancelled', 'yes', 'no'][value]}`)
+const resultLabel = (value: number) => $t(`candidatePipeline.${evaluationRoundResultKeys[value]}`)
 const interviewerNames = (ids: string[] | null) => ids?.length
   ? ids.map(id => evaluations.value?.interviewers.find(user => user.id === id)?.name || id).join(', ')
   : $t('candidatePipeline.noInterviewers')

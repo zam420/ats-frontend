@@ -54,17 +54,25 @@
                 <div class="candidate-detail"><el-icon><Clock /></el-icon><span>{{ applicationAge(candidate.created_at) }}</span></div>
                 <div class="candidate-detail"><el-icon><Location /></el-icon><span>{{ candidate.current_location }}</span></div>
               </div>
-              <div v-if="stage.stage_type === 'EVALUATING' && candidate.evaluation" class="evaluation-detail evaluation-progress" :aria-label="$t('candidatePipeline.roundProgress', { completed: candidate.evaluation.completed_rounds, total: candidate.evaluation.total_rounds })">
-                <!-- <el-progress :stroke-width="6" :percentage="evaluationPercentage(candidate.evaluation)" :color="evaluationColor(candidate.evaluation)">
-                  <span>{{ candidate.evaluation.completed_rounds }}/{{ candidate.evaluation.total_rounds }}</span>
-                </el-progress> -->
-                <el-progress type="circle" :width="34" :stroke-width="4" :percentage="evaluationPercentage(candidate.evaluation)" :color="evaluationColor(candidate.evaluation)">
-                  <span>{{ candidate.evaluation.completed_rounds }}/{{ candidate.evaluation.total_rounds }}</span>
-                </el-progress>
-              </div>
+              <el-tooltip v-if="stage.stage_type === 'EVALUATING' && candidate.evaluation" placement="top" :hide-after="10" popper-class="candidate-card-tooltip">
+                <template #content>
+                  <div v-for="(round, roundIndex) in candidate.evaluation.round_results" :key="roundIndex">
+                    {{ round.name }}: {{ round.result === null ? $t('candidatePipeline.pending') : $t(`candidatePipeline.${evaluationRoundResultKeys[round.result]}`) }}
+                  </div>
+                  <div v-if="!candidate.evaluation.round_results.length">{{ $t('candidatePipeline.noRoundResults') }}</div>
+                </template>
+                <div class="evaluation-detail evaluation-progress" tabindex="0" @keydown.stop :aria-label="$t('candidatePipeline.roundProgress', { completed: candidate.evaluation.completed_rounds, total: candidate.evaluation.total_rounds })">
+                  <!-- <el-progress :stroke-width="6" :percentage="evaluationPercentage(candidate.evaluation)" :color="evaluationColor(candidate.evaluation)">
+                    <span>{{ candidate.evaluation.completed_rounds }}/{{ candidate.evaluation.total_rounds }}</span>
+                  </el-progress> -->
+                  <el-progress type="circle" :width="34" :stroke-width="4" :percentage="evaluationPercentage(candidate.evaluation)" :color="evaluationColor(candidate.evaluation)">
+                    <span>{{ candidate.evaluation.completed_rounds }}/{{ candidate.evaluation.total_rounds }}</span>
+                  </el-progress>
+                </div>
+              </el-tooltip>
             </div>
             <template v-if="stage.stage_type === 'EVALUATING' && candidate.evaluation">
-              <el-tooltip v-if="candidate.evaluation.current_round_name" placement="top">
+              <el-tooltip v-if="candidate.evaluation.current_round_name" placement="top" :hide-after="10" popper-class="candidate-card-tooltip">
                 <template #content>
                   <div>{{ $t('candidatePipeline.currentRoundStatus', { status: evaluationStatus(candidate.evaluation.current_status) }) }}</div>
                   <div v-if="candidate.evaluation.current_status !== 4">
@@ -142,7 +150,7 @@ import { ROUTER_JOB_POSITION, ROUTER_CANDIDATE_PIPELINE, ROUTER_CANDIDATE_DETAIL
 import { getCandidatePipeline, getPipelineJobs, moveCandidate, rejectCandidate } from '@/api/modules/candidatePipeline'
 import type { CandidatePipeline, PipelineCandidate, PipelineJob, PipelineStageType } from '@/api/modules/candidatePipeline'
 import { applicationAgeDays } from './candidateApplicationAge'
-import { evaluationColor, evaluationPercentage } from './evaluationProgress'
+import { evaluationColor, evaluationPercentage, evaluationRoundResultKeys } from './evaluationProgress'
 
 const route = useRoute()
 const router = useRouter()
@@ -248,6 +256,9 @@ const loadBoard = async () => {
             .some(value => !Number.isInteger(value) || value < 0)
           || evaluation.completed_rounds > evaluation.total_rounds
           || evaluation.strong_yes + evaluation.yes + evaluation.no + evaluation.strong_no + evaluation.cancelled !== evaluation.completed_rounds
+          || !Array.isArray(evaluation.round_results) || evaluation.round_results.length !== evaluation.total_rounds
+          || evaluation.round_results.some(round => typeof round.name !== 'string'
+            || (round.result !== null && (!Number.isInteger(round.result) || round.result < 0 || round.result > 4)))
           || (evaluation.decision !== null && evaluation.decision !== 0 && evaluation.decision !== 1))) {
           throw new Error('Invalid candidate evaluation summary')
         }
@@ -431,5 +442,7 @@ const advance = (id: string, fromIndex: number) => {
 @media (max-width: 700px) { .pipeline-header { align-items: flex-start; flex-direction: column; } }
 </style>
 <style lang="less">
+.candidate-card-tooltip.el-fade-in-linear-enter-active,
+.candidate-card-tooltip.el-fade-in-linear-leave-active { transition-duration: 0.03s; }
 .rejection-reason-tooltip { max-width: 400px; white-space: pre-wrap; }
 </style>

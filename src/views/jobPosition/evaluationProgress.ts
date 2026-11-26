@@ -7,6 +7,8 @@ export interface EvaluationProgress {
   strong_no: number
 }
 
+export const evaluationRoundResultKeys = ['strongYes', 'strongNo', 'cancelled', 'yes', 'no'] as const
+
 export const evaluationPercentage = (evaluation: EvaluationProgress) =>
   evaluation.total_rounds ? Math.round(evaluation.completed_rounds / evaluation.total_rounds * 100) : 0
 

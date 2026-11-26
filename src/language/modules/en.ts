@@ -629,6 +629,7 @@ export default {
     retryEvaluations: 'Retry loading evaluations',
     roundProgress: '{completed}/{total} rounds completed',
     roundResults: 'Round results',
+    noRoundResults: 'No evaluation rounds',
     passedCount: '{count} passed',
     failedCount: '{count} failed',
     cancelledCount: '{count} cancelled',

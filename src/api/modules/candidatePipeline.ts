@@ -27,6 +27,7 @@ export interface PipelineCandidate {
     no: number
     strong_no: number
     cancelled: number
+    round_results: { name: string; result: EvaluationRoundResult | null }[]
     decision: 0 | 1 | null
   } | null
 }

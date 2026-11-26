@@ -629,6 +629,7 @@ auth: {
     retryEvaluations: '重新加载评估',
     roundProgress: '已完成 {completed}/{total} 轮',
     roundResults: '轮次结果',
+    noRoundResults: '没有评估轮次',
     passedCount: '{count} 轮通过',
     failedCount: '{count} 轮未通过',
     cancelledCount: '{count} 轮已取消',
