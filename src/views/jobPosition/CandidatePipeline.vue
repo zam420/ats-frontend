@@ -49,8 +49,20 @@
                 </template>
               </el-dropdown>
             </div>
-            <div class="candidate-detail"><el-icon><Clock /></el-icon><span>{{ applicationAge(candidate.created_at) }}</span></div>
-            <div class="candidate-detail"><el-icon><Location /></el-icon><span>{{ candidate.current_location }}</span></div>
+            <div class="candidate-meta">
+              <div class="candidate-meta-details">
+                <div class="candidate-detail"><el-icon><Clock /></el-icon><span>{{ applicationAge(candidate.created_at) }}</span></div>
+                <div class="candidate-detail"><el-icon><Location /></el-icon><span>{{ candidate.current_location }}</span></div>
+              </div>
+              <div v-if="stage.stage_type === 'EVALUATING' && candidate.evaluation" class="evaluation-detail evaluation-progress" :aria-label="$t('candidatePipeline.roundProgress', { completed: candidate.evaluation.completed_rounds, total: candidate.evaluation.total_rounds })">
+                <!-- <el-progress :stroke-width="6" :percentage="evaluationPercentage(candidate.evaluation)" :color="evaluationColor(candidate.evaluation)">
+                  <span>{{ candidate.evaluation.completed_rounds }}/{{ candidate.evaluation.total_rounds }}</span>
+                </el-progress> -->
+                <el-progress type="circle" :width="34" :stroke-width="4" :percentage="evaluationPercentage(candidate.evaluation)" :color="evaluationColor(candidate.evaluation)">
+                  <span>{{ candidate.evaluation.completed_rounds }}/{{ candidate.evaluation.total_rounds }}</span>
+                </el-progress>
+              </div>
+            </div>
             <template v-if="stage.stage_type === 'EVALUATING' && candidate.evaluation">
               <el-tooltip v-if="candidate.evaluation.current_round_name" placement="top">
                 <template #content>
@@ -64,14 +76,6 @@
                   <span>{{ candidate.evaluation.current_round_name }}</span>
                 </div>
               </el-tooltip>
-              <div class="evaluation-detail evaluation-progress" :aria-label="$t('candidatePipeline.roundProgress', { completed: candidate.evaluation.completed_rounds, total: candidate.evaluation.total_rounds })">
-                <!-- <el-progress :stroke-width="6" :percentage="evaluationPercentage(candidate.evaluation)" :color="evaluationColor(candidate.evaluation)">
-                  <span>{{ candidate.evaluation.completed_rounds }}/{{ candidate.evaluation.total_rounds }}</span>
-                </el-progress> -->
-                <el-progress type="circle" :width="34" :stroke-width="4" :percentage="evaluationPercentage(candidate.evaluation)" :color="evaluationColor(candidate.evaluation)">
-                  <span>{{ candidate.evaluation.completed_rounds }}/{{ candidate.evaluation.total_rounds }}</span>
-                </el-progress>
-              </div>
               <div v-if="candidate.evaluation.decision !== null" class="evaluation-detail">
                 {{ $t('candidatePipeline.overallResult') }}: {{ $t(candidate.evaluation.decision === 0 ? 'candidatePipeline.passed' : 'candidatePipeline.failed') }}
               </div>
@@ -414,9 +418,11 @@ const advance = (id: string, fromIndex: number) => {
 .candidate-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; font-size: 12.5px;font-weight: 600;}
 .candidate-actions { border: 0; padding: 0; background: none; cursor: pointer; color: var(--color-gray); font-size: 18px; }
 .candidate-actions .el-icon { transform: rotate(90deg); }
+.candidate-meta { display: flex; align-items: center; gap: 8px; }
+.candidate-meta-details { flex: 1; min-width: 0; }
 .candidate-detail { display: flex; align-items: center; gap: 6px; color: var(--color-gray); font-size: 11.8px; margin-top: 6px; }
 .evaluation-detail { font-size: 11.8px; margin-top: 6px; }
-.evaluation-progress { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.evaluation-progress { flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
 .evaluation-progress :deep(.el-progress--line) { width: 100%; }
 .evaluation-progress :deep(.el-progress__text) { font-size: 11.8px !important; }
 .evaluation-progress :deep(.el-progress--circle .el-progress__text) { min-width: 0; }
