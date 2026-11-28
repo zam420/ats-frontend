@@ -319,7 +319,7 @@ const submitFeedback = async (submit: boolean) => {
     }, submit)
     if (!response.success || response.result !== true) throw new Error('Feedback was not accepted')
     if (!disposed) {
-      if (submit) feedbackOpen.value = false
+      feedbackOpen.value = false
       ElMessage.success($t(submit ? 'candidatePipeline.feedbackSubmitted' : 'candidatePipeline.feedbackDraftSaved'))
       if (submit) await load()
     }
