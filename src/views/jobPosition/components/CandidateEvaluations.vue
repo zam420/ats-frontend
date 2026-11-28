@@ -55,7 +55,7 @@
               </div>
               <div class="feedback-action">
                 <el-link v-if="round.status > 1 && item.feedback" href="#" type="primary" :underline="false" :disabled="feedbackLoading" @click.prevent="openFeedback(round, item.id)">{{ $t('candidatePipeline.viewFeedback') }}</el-link>
-                <el-link v-else-if="round.status === 3 && round.can_enter_feedback && item.id === evaluations.current_user_id" href="#" type="primary" :underline="false" :disabled="saving || feedbackLoading" @click.prevent="openFeedback(round)">{{ $t('candidatePipeline.submitFeedback') }}</el-link>
+                <el-button v-else-if="round.status === 3 && round.can_enter_feedback && item.id === evaluations.current_user_id" class="btn-primary-gradient" size="small" :disabled="saving || feedbackLoading" @click="openFeedback(round)">{{ $t('candidatePipeline.submitFeedback') }}</el-button>
               </div>
               <span v-if="round.status > 1 && item.feedback && item.feedback.result !== null" class="result-tag" :class="{ 'light-result': item.feedback.result >= 2 }" :style="{ backgroundColor: evaluationResultColor(item.feedback.result) }">{{ resultLabel(item.feedback.result) }}</span>
             </div>
@@ -407,7 +407,7 @@ small { color: var(--color-gray); font-weight: normal; }
 .feedback-action :deep(.el-link__inner) { text-decoration: underline; font-weight: 600;}
 .status-text, .date-with-icon { display: inline-flex; align-items: center; gap: 4px; }
 .feedback-submitted, .feedback-submitted small { color: #166534; }
-.result-tag { display: inline-block; color: #fff; border-radius: 6px; padding: 3px 8px; font-size: 13px; font-weight: 500; width: fit-content; }
+.result-tag { display: inline-block; color: #fff; border-radius: 16px; padding: 5px 16px; font-size: 13px; font-weight: 500; width: fit-content; }
 // .result-tag.light-result { color: #161616; }s
 @media (max-width: 700px) { .interviewer-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .duration { display: inline-flex; align-items: center; gap: 4px; margin-left: 12px; }
