@@ -41,7 +41,7 @@
             </div>
             <div class="controls">
               <el-button v-if="editable && currentRound?.id === round.id && (round.status === 0 || round.status === 1)" :disabled="saving" @click="openInterviewers(round)">{{ $t('candidatePipeline.changeInterviewers') }}</el-button>
-              <el-button v-if="editable && currentRound?.id === round.id && round.status !== 4" :disabled="saving" @click="openSchedule(round)">{{ $t(round.status === 3 ? 'candidatePipeline.reschedule' : 'candidatePipeline.schedule') }}</el-button>
+              <el-button v-if="editable && currentRound?.id === round.id && round.status !== 4 && canSchedule(round)" :disabled="saving" @click="openSchedule(round)">{{ $t(round.status === 3 ? 'candidatePipeline.reschedule' : 'candidatePipeline.schedule') }}</el-button>
             </div>
           </div>
           <div>
@@ -190,6 +190,8 @@ const interviewerName = (id: string) => evaluations.value?.interviewers.find(use
 const interviewerRows = (round: Round) => (round.interviewers ?? []).map(id => ({
   id, feedback: round.submitted_feedback.find(item => item.interviewer_id === id)
 }))
+const canSchedule = (round: Round) => (round.interviewers?.length ?? 0) <= 1
+  || !round.submitted_interviewers.some(id => round.interviewers?.includes(id))
 const formatDate = (date: string) => new Date(date).toLocaleString()
 const statusDate = (round: Round) => round.status === 1 ? round.scheduled_at : round.status > 1 ? round.status_changed_at : null
 const formatStatusDate = (round: Round) => {
