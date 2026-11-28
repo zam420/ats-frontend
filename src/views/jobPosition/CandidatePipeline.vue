@@ -19,7 +19,7 @@
       </div>
     </header>
     <p v-if="jobsLoaded && !jobs.length && !jobId" class="empty">{{ $t('candidatePipeline.noJobs') }}</p>
-    <el-tabs v-if="board" v-model="activeTab">
+    <el-tabs v-if="board" v-model="activeTab" class="ats-tabs">
       <el-tab-pane name="pipeline" :label="$t('candidatePipeline.pipelineTab', { count: board.pipeline_count })">
     <div class="board">
       <section v-for="(stage, index) in board.stages" :key="stage.id" class="stage"
@@ -75,7 +75,7 @@
               <el-tooltip v-if="candidate.evaluation.current_round_name" placement="top" :hide-after="10" popper-class="candidate-card-tooltip">
                 <template #content>
                   <div>{{ $t('candidatePipeline.currentRoundStatus', { status: evaluationStatus(candidate.evaluation.current_status) }) }}</div>
-                  <div v-if="candidate.evaluation.current_status !== 4">
+                  <div v-if="candidate.evaluation.current_status !== 5">
                     {{ $t('candidatePipeline.currentOwner', { owner: candidate.evaluation.current_owners.join(', ') || $t('candidatePipeline.noCurrentOwner') }) }}
                   </div>
                 </template>
@@ -140,7 +140,7 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowDown, ArrowUp, Calendar, ChatDotRound, CircleCheck, Clock, Loading, Location, MoreFilled, Timer } from '@element-plus/icons-vue'
+import { ArrowDown, ArrowUp, Calendar, ChatDotRound, CircleCheck, Clock, Location, MoreFilled, Timer, WarningFilled } from '@element-plus/icons-vue'
 import { escape } from 'lodash-es'
 import moment from 'moment'
 import { useLocale } from '@/hooks/useLocale'
@@ -226,8 +226,8 @@ const jobId = computed(() => typeof route.params.jobId === 'string' && route.par
 const displayName = (candidate: PipelineCandidate) =>
   `${candidate.preferred_name || candidate.first_name} ${candidate.last_name}`
 const evaluationStatus = (status: number) =>
-  $t(`candidatePipeline.${['pending', 'scheduled', 'inProgress', 'awaitingFeedback', 'completed'][status]}`)
-const evaluationStatusIcons = [Timer, Calendar, Loading, ChatDotRound, CircleCheck]
+  $t(`candidatePipeline.${['pending', 'scheduled', '', 'awaitingFeedback', 'conflictingFeedback', 'completed'][status]}`)
+const evaluationStatusIcons = [Timer, Calendar, undefined, ChatDotRound, WarningFilled, CircleCheck]
 const rejectedStageColor = (candidate: PipelineCandidate) =>
   candidate.closed_at_stage_type ? stageColors[candidate.closed_at_stage_type].header : undefined
 const formatDate = (date: string | null) => date ? moment(date, moment.ISO_8601, true).format(DATE_FORMAT) : '-'
@@ -260,7 +260,7 @@ const loadBoard = async () => {
       for (const candidate of stage.candidates) applicationAgeDays(candidate.created_at, now.value)
       for (const candidate of stage.candidates) {
         const evaluation = candidate.evaluation
-        if (evaluation && (!Number.isInteger(evaluation.current_status) || evaluation.current_status < 0 || evaluation.current_status > 4
+        if (evaluation && (![0, 1, 3, 4, 5].includes(evaluation.current_status)
           || !Array.isArray(evaluation.current_owners) || evaluation.current_owners.some(owner => typeof owner !== 'string')
           || [evaluation.completed_rounds, evaluation.total_rounds, evaluation.strong_yes, evaluation.yes, evaluation.no, evaluation.strong_no, evaluation.cancelled]
             .some(value => !Number.isInteger(value) || value < 0)
@@ -428,6 +428,8 @@ const advance = (id: string, fromIndex: number) => {
 .pipeline-header p { color: var(--color-gray); margin: 0; }
 .job-subtitle { font-size: 14px; font-weight: 500; }
 .actions { display: flex; white-space: nowrap; }
+.ats-tabs :deep(.el-tabs__header) { margin-bottom: 15px;}
+.ats-tabs :deep(.el-tabs__item) { font-size:12px; font-weight: 600;}
 .board { display: flex; gap: 8px; overflow-x: auto; align-items: stretch; padding-bottom: 20px; }
 .stage { flex: 0 0 225px; border-radius: 8px; min-height: 650px; box-shadow: inset 0 0 0 1px #e3edf7; }
 .stage-header { margin-bottom: 10px; padding: 14px 10px; border-radius: 6px; }

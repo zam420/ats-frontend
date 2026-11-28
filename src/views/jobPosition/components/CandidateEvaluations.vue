@@ -18,9 +18,9 @@
             <template #reference><el-button type="primary" :disabled="decision === null || saving">{{ $t('candidatePipeline.decideResult') }}</el-button></template>
           </el-popconfirm>
         </div>
-        <section v-for="round in evaluations.rounds" :key="round.id" class="round" :class="{ 'round-completed': round.status === 4, 'round-current': currentRound?.id === round.id }">
-          <span class="round-status-icon" :class="{ 'round-status-completed': round.status === 4, 'round-status-current': currentRound?.id === round.id }" aria-hidden="true">
-            <el-icon><Check v-if="round.status === 4" /><CaretRight v-else-if="currentRound?.id === round.id" /><Clock v-else /></el-icon>
+        <section v-for="round in evaluations.rounds" :key="round.id" class="round" :class="{ 'round-completed': round.status === 5, 'round-current': currentRound?.id === round.id }">
+          <span class="round-status-icon" :class="{ 'round-status-completed': round.status === 5, 'round-status-current': currentRound?.id === round.id }" aria-hidden="true">
+            <el-icon><Check v-if="round.status === 5" /><CaretRight v-else-if="currentRound?.id === round.id" /><Clock v-else /></el-icon>
           </span>
           <div class="round-header">
             <div class="round-header-details">
@@ -41,7 +41,7 @@
             </div>
             <div class="controls">
               <el-button v-if="editable && currentRound?.id === round.id && (round.status === 0 || round.status === 1)" :disabled="saving" @click="openInterviewers(round)">{{ $t('candidatePipeline.changeInterviewers') }}</el-button>
-              <el-button v-if="editable && currentRound?.id === round.id" :disabled="saving" @click="openSchedule(round)">{{ $t('candidatePipeline.schedule') }}</el-button>
+              <el-button v-if="editable && currentRound?.id === round.id && round.status !== 4" :disabled="saving" @click="openSchedule(round)">{{ $t(round.status === 3 ? 'candidatePipeline.reschedule' : 'candidatePipeline.schedule') }}</el-button>
             </div>
           </div>
           <div>
@@ -63,11 +63,13 @@
               <span v-if="round.status > 1 && item.feedback && item.feedback.result !== null" class="result-tag result-tag-interviewer" :class="{ 'light-result': item.feedback.result >= 2 }" :style="{ backgroundColor: evaluationResultColor(item.feedback.result) }">{{ resultLabel(item.feedback.result) }}</span>
             </div>
           </div>
-          <div v-if="editable && currentRound?.id === round.id" class="controls">
-            <el-select v-model="status" :placeholder="$t('candidatePipeline.updateStatus')" :disabled="saving">
-              <el-option v-for="value in [0, 2, 3]" :key="value" :label="statusLabel(value)" :value="value" />
+          <div v-if="editable && currentRound?.id === round.id && round.status === 4 && evaluations.can_resolve_conflict" class="controls">
+            <el-select v-model="conflictResult" :placeholder="$t('candidatePipeline.selectResult')" :disabled="saving">
+              <el-option v-for="value in [0, 3, 4, 1]" :key="value" :label="resultLabel(value)" :value="value" />
             </el-select>
-            <el-button :disabled="status === null || saving" @click="saveStatus(round.id)">{{ $t('candidatePipeline.updateStatus') }}</el-button>
+            <el-popconfirm :title="$t('candidatePipeline.confirmRoundResult')" @confirm="saveConflictResult(round.id)">
+              <template #reference><el-button type="primary" :disabled="conflictResult === null || saving">{{ $t('candidatePipeline.resolveConflict') }}</el-button></template>
+            </el-popconfirm>
           </div>
         </section>
       </template>
@@ -145,8 +147,8 @@
 <script setup lang="ts">
 import { Calendar, CaretRight, Check, CircleCheck, Clock, Timer } from '@element-plus/icons-vue'
 import {
-  getCandidateEvaluations, scheduleEvaluation, changeEvaluationInterviewers, changeEvaluationStatus,
-  addEvaluationRound, decideEvaluations, getEvaluationFeedback, getSubmittedEvaluationFeedback, saveEvaluationFeedback
+  getCandidateEvaluations, scheduleEvaluation, changeEvaluationInterviewers,
+  addEvaluationRound, decideEvaluations, getEvaluationFeedback, getSubmittedEvaluationFeedback, saveEvaluationFeedback, recordEvaluationResult
 } from '@/api/modules/candidatePipeline'
 import type { CandidateEvaluations, EvaluationRoundResult } from '@/api/modules/candidatePipeline'
 import type { ResultData } from '@/api/interface'
@@ -155,16 +157,15 @@ import { evaluationRoundResultKeys, evaluationColor, evaluationPercentage, evalu
 
 type Round = CandidateEvaluations['rounds'][number]
 type Result = EvaluationRoundResult
-type Status = 0 | 2 | 3
 const props = defineProps<{ jobId: string; candidateId: string }>()
 const { $t } = useLocale()
 const evaluations = ref<CandidateEvaluations>()
 const loading = ref(false)
 const loadFailed = ref(false)
 const saving = ref(false)
-const currentRound = computed(() => evaluations.value?.rounds.find(round => round.status !== 4))
+const currentRound = computed(() => evaluations.value?.rounds.find(round => round.status !== 5))
 const editable = computed(() => evaluations.value?.can_manage && evaluations.value.decision === null)
-const status = ref<Status | null>(null)
+const conflictResult = ref<Result | null>(null)
 const decision = ref<0 | 1 | null>(null)
 const dialogOpen = ref(false)
 const feedbackOpen = ref(false)
@@ -182,7 +183,7 @@ const form = reactive<{ name: string; description: string; roundType: 0 | 1 | 2 
 })
 const roundTypes = ['roundTypeHr', 'roundTypeFunctional', 'roundTypeExecutive', 'roundTypeCustom']
 const dialogTitle = computed(() => `candidatePipeline.${dialogMode.value === 'add' ? 'addRound' : dialogMode.value === 'schedule' ? 'schedule' : 'changeInterviewers'}`)
-const statusLabel = (value: number) => $t(`candidatePipeline.${['pending', 'scheduled', 'inProgress', 'awaitingFeedback', 'completed'][value]}`)
+const statusLabel = (value: number) => $t(`candidatePipeline.${['pending', 'scheduled', '', 'awaitingFeedback', 'conflictingFeedback', 'completed'][value]}`)
 const decisionLabel = (value: number) => $t(`candidatePipeline.${['passed', 'failed'][value]}`)
 const resultLabel = (value: number) => $t(`candidatePipeline.${evaluationRoundResultKeys[value]}`)
 const interviewerName = (id: string) => evaluations.value?.interviewers.find(user => user.id === id)?.name || id
@@ -203,7 +204,7 @@ const progress = computed(() => {
   const rounds = evaluations.value?.rounds ?? []
   return {
     total_rounds: rounds.length,
-    completed_rounds: rounds.filter(round => round.status === 4).length,
+    completed_rounds: rounds.filter(round => round.status === 5).length,
     strong_yes: rounds.filter(round => round.result === 0).length,
     strong_no: rounds.filter(round => round.result === 1).length,
     yes: rounds.filter(round => round.result === 3).length,
@@ -220,11 +221,11 @@ const load = async () => {
     if (!response.success || !response.result || !Array.isArray(response.result.rounds)
       || !Array.isArray(response.result.interviewers) || typeof response.result.can_manage !== 'boolean'
       || typeof response.result.current_user_id !== 'string'
-      || typeof response.result.can_decide !== 'boolean' || typeof response.result.initialized !== 'boolean'
+      || typeof response.result.can_decide !== 'boolean' || typeof response.result.can_resolve_conflict !== 'boolean' || typeof response.result.initialized !== 'boolean'
       || (response.result.decision !== null && response.result.decision !== 0 && response.result.decision !== 1)
       || response.result.interviewers.some(user => typeof user.id !== 'string' || typeof user.name !== 'string' || typeof user.email !== 'string')
       || response.result.rounds.some(round => typeof round.id !== 'string' || !Number.isInteger(round.order)
-        || !Number.isInteger(round.status) || round.status < 0 || round.status > 4
+        || ![0, 1, 3, 4, 5].includes(round.status)
         || typeof round.can_enter_feedback !== 'boolean'
         || !Array.isArray(round.submitted_interviewers) || round.submitted_interviewers.some(id => typeof id !== 'string')
         || !Array.isArray(round.submitted_feedback) || round.submitted_feedback.some(item =>
@@ -234,7 +235,7 @@ const load = async () => {
         || (round.duration_minutes !== null && (!Number.isInteger(round.duration_minutes) || round.duration_minutes <= 0))
         || (round.status_changed_at !== null && Number.isNaN(new Date(round.status_changed_at).getTime()))
         || (round.result !== null && (!Number.isInteger(round.result) || round.result < 0 || round.result > 4))
-        || ((round.status === 4) !== (round.result !== null))
+        || ((round.status === 5) !== (round.result !== null))
         || (round.scheduled_at !== null && Number.isNaN(new Date(round.scheduled_at).getTime()))
         || (round.interviewers !== null && (!Array.isArray(round.interviewers)
           || round.interviewers.some(id => typeof id !== 'string'))))) {
@@ -266,7 +267,7 @@ const mutate = async (action: () => Promise<ResultData<boolean>>) => {
     if (!response.success || response.result !== true) throw new Error('Evaluation update was not accepted')
     if (!disposed) {
       dialogOpen.value = false
-      status.value = null
+      conflictResult.value = null
       decision.value = null
       ElMessage.success($t('candidatePipeline.evaluationSaved'))
       await load()
@@ -378,9 +379,9 @@ const submitDialog = () => {
     void mutate(() => changeEvaluationInterviewers(props.jobId, props.candidateId, roundId, form.interviewers))
   }
 }
-const saveStatus = (roundId: string) => {
-  const value = status.value
-  if (value !== null) void mutate(() => changeEvaluationStatus(props.jobId, props.candidateId, roundId, value))
+const saveConflictResult = (roundId: string) => {
+  const value = conflictResult.value
+  if (value !== null) void mutate(() => recordEvaluationResult(props.jobId, props.candidateId, roundId, value))
 }
 const saveDecision = () => {
   const value = decision.value

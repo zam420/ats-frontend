@@ -18,7 +18,7 @@ export interface PipelineCandidate {
   closed_at_stage_type: PipelineStageType | null
   evaluation: {
     current_round_name: string | null
-    current_status: 0 | 1 | 2 | 3 | 4
+    current_status: EvaluationRoundStatus
     current_owners: string[]
     completed_rounds: number
     total_rounds: number
@@ -67,6 +67,7 @@ export interface CandidateEvaluations {
   decision: 0 | 1 | null
   can_manage: boolean
   can_decide: boolean
+  can_resolve_conflict: boolean
   current_user_id: string
   interviewers: { id: string; name: string; email: string }[]
   rounds: {
@@ -76,7 +77,7 @@ export interface CandidateEvaluations {
     description: string | null
     round_type: 0 | 1 | 2 | 3
     interviewers: string[] | null
-    status: 0 | 1 | 2 | 3 | 4
+    status: EvaluationRoundStatus
     result: EvaluationRoundResult | null
     scheduled_at: string | null
     duration_minutes: number | null
@@ -86,6 +87,7 @@ export interface CandidateEvaluations {
     can_enter_feedback: boolean
   }[]
 }
+export type EvaluationRoundStatus = 0 | 1 | 3 | 4 | 5
 export type EvaluationRoundResult = 0 | 1 | 2 | 3 | 4
 export interface EvaluationFeedback {
   result: EvaluationRoundResult | null
@@ -111,7 +113,7 @@ export const scheduleEvaluation = (jobId: string, candidateId: string, roundId: 
   http.post<boolean>(`${roundUrl(jobId, candidateId, roundId)}/schedule`, { scheduled_at: scheduledAt, duration_minutes: durationMinutes })
 export const changeEvaluationInterviewers = (jobId: string, candidateId: string, roundId: string, interviewers: string[]) =>
   http.post<boolean>(`${roundUrl(jobId, candidateId, roundId)}/interviewers`, { interviewers })
-export const changeEvaluationStatus = (jobId: string, candidateId: string, roundId: string, status: 0 | 2 | 3) =>
+export const changeEvaluationStatus = (jobId: string, candidateId: string, roundId: string, status: 0 | 3) =>
   http.post<boolean>(`${roundUrl(jobId, candidateId, roundId)}/status`, { status })
 export const recordEvaluationResult = (jobId: string, candidateId: string, roundId: string, result: EvaluationRoundResult) =>
   http.post<boolean>(`${roundUrl(jobId, candidateId, roundId)}/result`, { result })

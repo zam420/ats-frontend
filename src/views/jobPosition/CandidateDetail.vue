@@ -19,7 +19,7 @@
       </div>
       <el-button @click="back">{{ $t('button.back') }}</el-button>
     </header>
-    <el-tabs v-if="application" v-model="activeTab">
+    <el-tabs v-if="application" v-model="activeTab" class="ats-tabs">
       <el-tab-pane name="overview" :label="$t('candidatePipeline.overview')">
         <dl class="details">
           <div><dt>{{ $t('candidatePipeline.firstName') }}</dt><dd>{{ application.first_name }}</dd></div>
@@ -172,6 +172,8 @@ const download = async () => {
 header p { color: var(--color-gray); margin: 0; }
 .job-subtitle { font-size: 14px; font-weight: 500; }
 h2 { font-size: 16px; }
+.ats-tabs :deep(.el-tabs__header) { margin-bottom: 15px;}
+.ats-tabs :deep(.el-tabs__item) { font-size:12px; font-weight: 600;}
 .details { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; }
 dt { color: var(--color-gray); margin-bottom: 5px; font-weight: 500;}
 dd { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
