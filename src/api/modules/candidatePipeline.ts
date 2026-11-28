@@ -1,6 +1,11 @@
 import http from '@/api'
 
 export interface PipelineJob { id: string; title: string }
+export interface CandidateListItem {
+  id: string
+  name: string
+  application_close_type: 0 | 1 | 2 | null
+}
 export interface PipelineCandidate {
   id: string
   first_name: string
@@ -99,14 +104,16 @@ export interface EvaluationFeedback {
 export type EvaluationFeedbackInput = Omit<EvaluationFeedback, 'submitted'>
 
 const candidateUrl = (jobId: string, candidateId: string) =>
-  `api/pipeline/${encodeURIComponent(jobId)}/candidates/${encodeURIComponent(candidateId)}`
+  `api/pipeline/${encodeURIComponent(jobId)}/candidate/${encodeURIComponent(candidateId)}`
 export const getCandidateApplication = (jobId: string, candidateId: string) =>
   http.get<CandidateApplication>(candidateUrl(jobId, candidateId), undefined, { preserveHtml: true })
+export const getCandidateList = (jobId: string) =>
+  http.get<CandidateListItem[]>(`api/candidate/list/${encodeURIComponent(jobId)}`)
 export const getCandidateResume = (jobId: string, candidateId: string) =>
   http.getFile(`${candidateUrl(jobId, candidateId)}/resume`)
 export const getCandidateEvaluations = (jobId: string, candidateId: string) =>
-  http.get<CandidateEvaluations>(`${candidateUrl(jobId, candidateId)}/evaluations`)
-const evaluationsUrl = (jobId: string, candidateId: string) => `${candidateUrl(jobId, candidateId)}/evaluations`
+  http.get<CandidateEvaluations>(`${candidateUrl(jobId, candidateId)}/evaluation`)
+const evaluationsUrl = (jobId: string, candidateId: string) => `${candidateUrl(jobId, candidateId)}/evaluation`
 const roundUrl = (jobId: string, candidateId: string, roundId: string) =>
   `${evaluationsUrl(jobId, candidateId)}/rounds/${encodeURIComponent(roundId)}`
 export const scheduleEvaluation = (jobId: string, candidateId: string, roundId: string, scheduledAt: string, durationMinutes: number) =>
@@ -134,10 +141,10 @@ export const getPipelineJobs = () => http.get<PipelineJob[]>('api/pipeline/jobs'
 export const getCandidatePipeline = (jobId: string) =>
   http.get<CandidatePipeline>(`api/pipeline/${encodeURIComponent(jobId)}`)
 export const moveCandidate = (jobId: string, candidateId: string, fromStageId: string, toStageId: string) =>
-  http.post<boolean>(`api/pipeline/${encodeURIComponent(jobId)}/candidates/${encodeURIComponent(candidateId)}/move`, {
+  http.post<boolean>(`${candidateUrl(jobId, candidateId)}/move`, {
     from_stage_id: fromStageId, to_stage_id: toStageId
   })
 export const rejectCandidate = (jobId: string, candidateId: string, stageId: string, reason: string, considerForOtherOpenings: boolean) =>
-  http.post<boolean>(`api/pipeline/${encodeURIComponent(jobId)}/candidates/${encodeURIComponent(candidateId)}/reject`, {
+  http.post<boolean>(`${candidateUrl(jobId, candidateId)}/reject`, {
     stage_id: stageId, reason, consider_for_other_openings: considerForOtherOpenings
   })

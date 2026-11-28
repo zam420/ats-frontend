@@ -101,7 +101,7 @@ const jobPositionRouter: Menu.MenuOptions[] = [
     }
   },
   {
-    path: `/${ROUTER_CANDIDATE_PIPELINE}/:jobId/candidates/:candidateId`,
+    path: `/${ROUTER_JOB_POSITION}/:jobId/candidate/:candidateId`,
     name: ROUTER_CANDIDATE_DETAIL,
     component: () => import('@/views/jobPosition/CandidateDetail.vue'),
     meta: {

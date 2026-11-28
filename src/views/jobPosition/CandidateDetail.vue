@@ -9,7 +9,7 @@
                     <el-input v-model="search" class="dropdown-search" size="small" clearable :placeholder="$t('button.search')" @keydown.stop />
             <el-dropdown-menu>
                       <el-dropdown-item v-for="applicant in filteredApplicants" :key="applicant.id" :command="applicant.id" :class="{ 'is-current-option': applicant.id === candidateId }">
-                {{ candidateName(applicant) }}<template v-if="applicant.closeLabel"> ({{ applicant.closeLabel }})</template>
+                {{ applicant.name }}<template v-if="applicant.closeLabel"> ({{ applicant.closeLabel }})</template>
               </el-dropdown-item>
             </el-dropdown-menu>
           </template>
@@ -48,13 +48,13 @@
 </template>
 
 <script lang="ts">
-let applicantsCache: { job: string; list: { id: string; first_name: string; last_name: string; preferred_name: string | null; closeLabel: string }[] } | undefined
+let applicantsCache: { job: string; list: { id: string; name: string; closeLabel: string }[] } | undefined
 </script>
 
 <script setup lang="ts">
 import { saveAs } from 'file-saver'
 import { ArrowDown, ArrowUp } from '@element-plus/icons-vue'
-import { getCandidateApplication, getCandidatePipeline, getCandidateResume } from '@/api/modules/candidatePipeline'
+import { getCandidateApplication, getCandidateList, getCandidateResume } from '@/api/modules/candidatePipeline'
 import type { CandidateApplication } from '@/api/modules/candidatePipeline'
 import { ROUTER_CANDIDATE_DETAIL, ROUTER_CANDIDATE_PIPELINE } from '@/router/routerName'
 import { useLocale } from '@/hooks/useLocale'
@@ -74,11 +74,11 @@ const onMenu = (open: boolean) => {
 }
 const filteredApplicants = computed(() => {
   const keyword = search.value.trim().toLowerCase()
-  return keyword ? applicants.value.filter(item => `${candidateName(item)} ${item.closeLabel}`.toLowerCase().includes(keyword)) : applicants.value
+  return keyword ? applicants.value.filter(item => `${item.name} ${item.closeLabel}`.toLowerCase().includes(keyword)) : applicants.value
 })
 const jobId = computed(() => typeof route.params.jobId === 'string' ? route.params.jobId : '')
 const candidateId = computed(() => typeof route.params.candidateId === 'string' ? route.params.candidateId : '')
-interface Applicant { id: string; first_name: string; last_name: string; preferred_name: string | null; closeLabel: string }
+interface Applicant { id: string; name: string; closeLabel: string }
 const applicants = ref<Applicant[]>([])
 let version = 0
 let applicantsJob = ''
@@ -94,18 +94,24 @@ const loadApplicants = async (job: string) => {
   applicantsJob = job
   applicants.value = []
   try {
-    const response = await getCandidatePipeline(job)
-    if (!response.success || !response.result || applicantsJob !== job) return
-    const labels = $t('candidatePipeline.closeTypes') as unknown as string[]
-    const all = [...response.result.stages.flatMap(stage => stage.candidates), ...response.result.rejected_candidates]
-    applicants.value = all.map(item => ({
-      id: item.id, first_name: item.first_name, last_name: item.last_name, preferred_name: item.preferred_name,
-      closeLabel: item.closed && item.application_close_type !== null ? (labels[item.application_close_type] ?? '') : ''
-    })).sort((a, b) => candidateName(a).localeCompare(candidateName(b)))
+    const response = await getCandidateList(job)
+    if (applicantsJob !== job) return
+    if (!response.success || !Array.isArray(response.result) || response.result.some(item =>
+      typeof item.id !== 'string' || typeof item.name !== 'string'
+      || (item.application_close_type !== null && ![0, 1, 2].includes(item.application_close_type)))) {
+      throw new Error('Invalid candidate list')
+    }
+    applicants.value = response.result.map(item => ({
+      id: item.id, name: item.name,
+      closeLabel: item.application_close_type === null ? '' : $t(`candidatePipeline.closeTypes.${item.application_close_type}`)
+    })).sort((a, b) => a.name.localeCompare(b.name))
     applicantsCache = { job, list: applicants.value }
   } catch (error) {
-    applicantsJob = ''
-    console.error('Failed to load applicants', error)
+    if (applicantsJob === job) {
+      applicantsJob = ''
+      console.error('Failed to load applicants', error)
+      ElMessage.error($t('candidatePipeline.candidateListLoadError'))
+    }
   }
 }
 const selectCandidate = (id: string) => {
