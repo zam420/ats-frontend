@@ -157,7 +157,7 @@ import { evaluationRoundResultKeys, evaluationColor, evaluationPercentage, evalu
 
 type Round = CandidateEvaluations['rounds'][number]
 type Result = EvaluationRoundResult
-const props = defineProps<{ jobId: string; candidateId: string }>()
+const props = defineProps<{ candidateId: string }>()
 const { $t } = useLocale()
 const evaluations = ref<CandidateEvaluations>()
 const loading = ref(false)
@@ -217,7 +217,7 @@ const load = async () => {
   loading.value = true
   loadFailed.value = false
   try {
-    const response = await getCandidateEvaluations(props.jobId, props.candidateId)
+    const response = await getCandidateEvaluations(props.candidateId)
     if (!response.success || !response.result || !Array.isArray(response.result.rounds)
       || !Array.isArray(response.result.interviewers) || typeof response.result.can_manage !== 'boolean'
       || typeof response.result.current_user_id !== 'string'
@@ -292,8 +292,8 @@ const openFeedback = async (round: Round, interviewerId?: string) => {
   feedbackLoading.value = true
   try {
     const response = interviewerId
-      ? await getSubmittedEvaluationFeedback(props.jobId, props.candidateId, round.id, interviewerId)
-      : await getEvaluationFeedback(props.jobId, props.candidateId, round.id)
+      ? await getSubmittedEvaluationFeedback(props.candidateId, round.id, interviewerId)
+      : await getEvaluationFeedback(props.candidateId, round.id)
     if (!response.success || !response.result) throw new Error('Invalid feedback')
     if (interviewerId && !response.result.submitted) throw new Error('Feedback has not been submitted')
     if (!disposed && feedbackRoundId.value === round.id) {
@@ -317,7 +317,7 @@ const submitFeedback = async (submit: boolean) => {
   if (submit && feedback.result === null) { ElMessage.error($t('candidatePipeline.feedbackResultRequired')); return }
   saving.value = true
   try {
-    const response = await saveEvaluationFeedback(props.jobId, props.candidateId, feedbackRoundId.value, {
+    const response = await saveEvaluationFeedback(props.candidateId, feedbackRoundId.value, {
       result: feedback.result, overall_feedback: feedback.overall_feedback.trim() || null,
       strengths: feedback.strengths.trim() || null, areas_for_improvement: feedback.areas_for_improvement.trim() || null
     }, submit)
@@ -361,7 +361,7 @@ const openAdd = () => {
 const submitDialog = () => {
   if (dialogMode.value === 'add') {
     if (!form.name.trim()) { ElMessage.error($t('candidatePipeline.requiredEvaluationFields')); return }
-    void mutate(() => addEvaluationRound(props.jobId, props.candidateId, {
+    void mutate(() => addEvaluationRound(props.candidateId, {
       name: form.name.trim(), description: form.description.trim() || null,
       round_type: form.roundType, interviewers: form.interviewers
     }))
@@ -373,19 +373,19 @@ const submitDialog = () => {
     const roundId = selectedRound.value
     const scheduledAt = form.scheduledAt.toISOString()
     const duration = form.durationMinutes
-    void mutate(() => scheduleEvaluation(props.jobId, props.candidateId, roundId, scheduledAt, duration))
+    void mutate(() => scheduleEvaluation(props.candidateId, roundId, scheduledAt, duration))
   } else if (selectedRound.value) {
     const roundId = selectedRound.value
-    void mutate(() => changeEvaluationInterviewers(props.jobId, props.candidateId, roundId, form.interviewers))
+    void mutate(() => changeEvaluationInterviewers(props.candidateId, roundId, form.interviewers))
   }
 }
 const saveConflictResult = (roundId: string) => {
   const value = conflictResult.value
-  if (value !== null) void mutate(() => recordEvaluationResult(props.jobId, props.candidateId, roundId, value))
+  if (value !== null) void mutate(() => recordEvaluationResult(props.candidateId, roundId, value))
 }
 const saveDecision = () => {
   const value = decision.value
-  if (value !== null) void mutate(() => decideEvaluations(props.jobId, props.candidateId, value))
+  if (value !== null) void mutate(() => decideEvaluations(props.candidateId, value))
 }
 </script>
 

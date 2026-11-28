@@ -40,7 +40,7 @@
         </dl>
       </el-tab-pane>
       <el-tab-pane name="evaluations" :label="$t('candidatePipeline.evaluations')" lazy>
-        <CandidateEvaluations :key="`${jobId}-${candidateId}`" :job-id="jobId" :candidate-id="candidateId" />
+        <CandidateEvaluations :key="`${jobId}-${candidateId}`" :candidate-id="candidateId" />
       </el-tab-pane>
       <el-tab-pane v-if="false" name="notes" :label="$t('candidatePipeline.notes')" />
     </el-tabs>
@@ -132,8 +132,9 @@ watch([jobId, candidateId], async ([job, candidate]) => {
   if (!job || !candidate) return
   void loadApplicants(job)
   try {
-    const response = await getCandidateApplication(job, candidate)
+    const response = await getCandidateApplication(candidate)
     if (!response.success || !response.result || !Array.isArray(response.result.answers)
+      || response.result.job_id !== job
       || response.result.answers.some(answer => typeof answer.question !== 'string'
         || !Array.isArray(answer.values) || answer.values.some(value => typeof value !== 'string'))) {
       throw new Error('Invalid candidate details')
@@ -155,7 +156,7 @@ const download = async () => {
   const filename = application.value.resume_name
   downloading.value = true
   try {
-    const response = await getCandidateResume(jobId.value, candidateId.value)
+    const response = await getCandidateResume(candidateId.value)
     if (!(response instanceof Blob) || response.type !== 'application/octet-stream') throw new Error('Invalid resume response')
     if (current === version) saveAs(response, filename)
   } catch (error) {
