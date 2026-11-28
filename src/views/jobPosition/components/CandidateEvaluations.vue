@@ -400,7 +400,7 @@ small { color: var(--color-gray); font-weight: normal; }
 .progress-bar { flex: 1; min-width: 60px; }
 .round-header .controls { margin-left: auto; }
 .round-status-label { font-weight: 600; }
-.interviwer-header { font-weight: 600; margin-top: 16px; margin-bottom: 2px; }
+.interviwer-header { font-weight: 600; margin-top: 16px; }
 .interviewer-row { display: grid; grid-template-columns: minmax(100px, 1fr) minmax(150px, 1fr) minmax(120px, auto) auto; align-items: center; gap: 10px; margin-bottom: 8px; font-weight: normal; }
 .interviewer-name { overflow-wrap: anywhere; }
 .interviewer-status { display: flex; flex-direction: column; gap: 3px; }
