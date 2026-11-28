@@ -7,7 +7,8 @@ export interface EvaluationProgress {
   strong_no: number
 }
 
-export const evaluationRoundResultKeys = ['strongYes', 'strongNo', 'cancelled', 'yes', 'no'] as const
+export const evaluationEnumKey = (name: string) =>
+  `candidatePipeline.${name.toLowerCase().replace(/_([a-z])/g, (_, letter: string) => letter.toUpperCase())}`
 
 export const evaluationPercentage = (evaluation: EvaluationProgress) =>
   evaluation.total_rounds ? Math.round(evaluation.completed_rounds / evaluation.total_rounds * 100) : 0

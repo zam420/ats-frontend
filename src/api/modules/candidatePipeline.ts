@@ -24,6 +24,7 @@ export interface PipelineCandidate {
   evaluation: {
     current_round_name: string | null
     current_status: EvaluationRoundStatus
+    current_status_name: string
     current_owners: string[]
     completed_rounds: number
     total_rounds: number
@@ -32,7 +33,7 @@ export interface PipelineCandidate {
     no: number
     strong_no: number
     cancelled: number
-    round_results: { name: string; result: EvaluationRoundResult | null }[]
+    round_results: { name: string; result: EvaluationRoundResult | null; result_name: string | null }[]
     decision: 0 | 1 | null
   } | null
 }
@@ -75,6 +76,7 @@ export interface CandidateEvaluations {
   can_decide: boolean
   can_resolve_conflict: boolean
   current_user_id: string
+  result_options: { id: EvaluationRoundResult; name: string }[]
   interviewers: { id: string; name: string; email: string }[]
   rounds: {
     id: string
@@ -84,12 +86,14 @@ export interface CandidateEvaluations {
     round_type: 0 | 1 | 2 | 3
     interviewers: string[] | null
     status: EvaluationRoundStatus
+    status_name: string
     result: EvaluationRoundResult | null
+    result_name: string | null
     scheduled_at: string | null
     duration_minutes: number | null
     status_changed_at: string | null
     submitted_interviewers: string[]
-    submitted_feedback: { interviewer_id: string; result: EvaluationRoundResult | null; submitted_at: string | null }[]
+    submitted_feedback: { interviewer_id: string; result: EvaluationRoundResult | null; result_name: string | null; submitted_at: string | null }[]
     can_enter_feedback: boolean
   }[]
 }
@@ -97,12 +101,13 @@ export type EvaluationRoundStatus = 0 | 1 | 3 | 4 | 5
 export type EvaluationRoundResult = 0 | 1 | 2 | 3 | 4
 export interface EvaluationFeedback {
   result: EvaluationRoundResult | null
+  result_name: string | null
   overall_feedback: string | null
   strengths: string | null
   areas_for_improvement: string | null
   submitted: boolean
 }
-export type EvaluationFeedbackInput = Omit<EvaluationFeedback, 'submitted'>
+export type EvaluationFeedbackInput = Omit<EvaluationFeedback, 'submitted' | 'result_name'>
 
 const candidateUrl = (jobId: string, candidateId: string) =>
   `api/pipeline/${encodeURIComponent(jobId)}/candidate/${encodeURIComponent(candidateId)}`
@@ -138,7 +143,7 @@ export const saveEvaluationFeedback = (candidateId: string, roundId: string,
   data: EvaluationFeedbackInput, submit: boolean) =>
   http.post<boolean>(`${roundUrl(candidateId, roundId)}/feedback/${submit ? 'submit' : 'draft'}`, data)
 
-export const getPipelineJobs = () => http.get<PipelineJob[]>('api/pipeline/jobs')
+export const getPipelineJobs = () => http.get<PipelineJob[]>('api/pipeline/jobs/list')
 export const getCandidatePipeline = (jobId: string) =>
   http.get<CandidatePipeline>(`api/pipeline/${encodeURIComponent(jobId)}`)
 export const moveCandidate = (jobId: string, candidateId: string, fromStageId: string, toStageId: string) =>

@@ -26,10 +26,10 @@
             <div class="round-header-details">
               <div class="round-title">
                 <h2>{{ round.name }} </h2>
-                <span v-if="round.result !== null" class="result-tag" :class="{ 'light-result': round.result >= 2 }" :style="{ backgroundColor: evaluationResultColor(round.result) }">{{ resultLabel(round.result) }}</span>
+                <span v-if="round.result !== null && round.result_name !== null" class="result-tag" :class="{ 'light-result': round.result >= 2 }" :style="{ backgroundColor: evaluationResultColor(round.result) }">{{ $t(evaluationEnumKey(round.result_name)) }}</span>
               </div>
               <p>
-                <span class="round-status-label">{{ statusLabel(round.status) }}</span><template v-if="statusDate(round)">:</template>
+                <span class="round-status-label">{{ $t(evaluationEnumKey(round.status_name)) }}</span><template v-if="statusDate(round)">:</template>
                 <span v-if="statusDate(round)" class="date-with-icon">
                   <el-icon v-if="round.status === 1"><Calendar /></el-icon> {{ formatStatusDate(round) }}
                 </span>
@@ -60,12 +60,12 @@
                 <el-link v-if="round.status > 1 && item.feedback" href="#" type="primary" :underline="false" :disabled="feedbackLoading" @click.prevent="openFeedback(round, item.id)">{{ $t('candidatePipeline.viewFeedback') }}</el-link>
                 <el-button v-else-if="round.status === 3 && round.can_enter_feedback && item.id === evaluations.current_user_id" class="btn-primary-gradient" size="small" :disabled="saving || feedbackLoading" @click="openFeedback(round)">{{ $t('candidatePipeline.submitFeedback') }}</el-button>
               </div>
-              <span v-if="round.status > 1 && item.feedback && item.feedback.result !== null" class="result-tag result-tag-interviewer" :class="{ 'light-result': item.feedback.result >= 2 }" :style="{ backgroundColor: evaluationResultColor(item.feedback.result) }">{{ resultLabel(item.feedback.result) }}</span>
+              <span v-if="round.status > 1 && item.feedback && item.feedback.result !== null && item.feedback.result_name !== null" class="result-tag result-tag-interviewer" :class="{ 'light-result': item.feedback.result >= 2 }" :style="{ backgroundColor: evaluationResultColor(item.feedback.result) }">{{ $t(evaluationEnumKey(item.feedback.result_name)) }}</span>
             </div>
           </div>
           <div v-if="editable && currentRound?.id === round.id && round.status === 4 && evaluations.can_resolve_conflict" class="controls">
             <el-select v-model="conflictResult" :placeholder="$t('candidatePipeline.selectResult')" :disabled="saving">
-              <el-option v-for="value in [0, 3, 4, 1]" :key="value" :label="resultLabel(value)" :value="value" />
+              <el-option v-for="option in evaluations.result_options" :key="option.id" :label="$t(evaluationEnumKey(option.name))" :value="option.id" />
             </el-select>
             <el-popconfirm :title="$t('candidatePipeline.confirmRoundResult')" @confirm="saveConflictResult(round.id)">
               <template #reference><el-button type="primary" :disabled="conflictResult === null || saving">{{ $t('candidatePipeline.resolveConflict') }}</el-button></template>
@@ -82,7 +82,7 @@
       :close-on-click-modal="!saving" :close-on-press-escape="!saving" :show-close="!saving">
       <dl v-if="feedbackReadOnly" v-loading="feedbackLoading" class="feedback-view">
         <dt>{{ $t('candidatePipeline.feedbackResult') }}</dt>
-        <dd><span v-if="feedback.result !== null" class="result-tag" :class="{ 'light-result': feedback.result >= 2 }" :style="{ backgroundColor: evaluationResultColor(feedback.result) }">{{ resultLabel(feedback.result) }}</span>
+        <dd><span v-if="feedback.result !== null && feedback.result_name !== null" class="result-tag" :class="{ 'light-result': feedback.result >= 2 }" :style="{ backgroundColor: evaluationResultColor(feedback.result) }">{{ $t(evaluationEnumKey(feedback.result_name)) }}</span>
         </dd>
         <dt>{{ $t('candidatePipeline.feedbackOverall') }}</dt><dd>{{ feedback.overall_feedback || '-' }}</dd>
         <dt>{{ $t('candidatePipeline.feedbackStrengths') }}</dt><dd>{{ feedback.strengths || '-' }}</dd>
@@ -91,7 +91,7 @@
       <el-form v-else v-loading="feedbackLoading" label-position="top" :disabled="saving">
         <el-form-item :label="$t('candidatePipeline.feedbackResult')" required>
           <el-radio-group v-model="feedback.result">
-            <el-radio v-for="value in [0, 3, 4, 1]" :key="value" :label="value">{{ resultLabel(value) }}</el-radio>
+            <el-radio v-for="option in evaluations?.result_options" :key="option.id" :label="option.id">{{ $t(evaluationEnumKey(option.name)) }}</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item :label="$t('candidatePipeline.feedbackOverall')">
@@ -153,7 +153,7 @@ import {
 import type { CandidateEvaluations, EvaluationRoundResult } from '@/api/modules/candidatePipeline'
 import type { ResultData } from '@/api/interface'
 import { useLocale } from '@/hooks/useLocale'
-import { evaluationRoundResultKeys, evaluationColor, evaluationPercentage, evaluationResultColor } from '../evaluationProgress'
+import { evaluationEnumKey, evaluationColor, evaluationPercentage, evaluationResultColor } from '../evaluationProgress'
 
 type Round = CandidateEvaluations['rounds'][number]
 type Result = EvaluationRoundResult
@@ -173,8 +173,8 @@ const feedbackLoading = ref(false)
 const feedbackReadOnly = ref(false)
 const feedbackRoundId = ref('')
 const feedbackRoundName = ref('')
-const feedback = reactive<{ result: Result | null; overall_feedback: string; strengths: string; areas_for_improvement: string }>({
-  result: null, overall_feedback: '', strengths: '', areas_for_improvement: ''
+const feedback = reactive<{ result: Result | null; result_name: string | null; overall_feedback: string; strengths: string; areas_for_improvement: string }>({
+  result: null, result_name: null, overall_feedback: '', strengths: '', areas_for_improvement: ''
 })
 const dialogMode = ref<'schedule' | 'interviewers' | 'add'>('add')
 const selectedRound = ref<string>()
@@ -183,9 +183,7 @@ const form = reactive<{ name: string; description: string; roundType: 0 | 1 | 2 
 })
 const roundTypes = ['roundTypeHr', 'roundTypeFunctional', 'roundTypeExecutive', 'roundTypeCustom']
 const dialogTitle = computed(() => `candidatePipeline.${dialogMode.value === 'add' ? 'addRound' : dialogMode.value === 'schedule' ? 'schedule' : 'changeInterviewers'}`)
-const statusLabel = (value: number) => $t(`candidatePipeline.${['pending', 'scheduled', '', 'awaitingFeedback', 'conflictingFeedback', 'completed'][value]}`)
 const decisionLabel = (value: number) => $t(`candidatePipeline.${['passed', 'failed'][value]}`)
-const resultLabel = (value: number) => $t(`candidatePipeline.${evaluationRoundResultKeys[value]}`)
 const interviewerName = (id: string) => evaluations.value?.interviewers.find(user => user.id === id)?.name || id
 const interviewerRows = (round: Round) => (round.interviewers ?? []).map(id => ({
   id, feedback: round.submitted_feedback.find(item => item.interviewer_id === id)
@@ -223,20 +221,26 @@ const load = async () => {
     if (!response.success || !response.result || !Array.isArray(response.result.rounds)
       || !Array.isArray(response.result.interviewers) || typeof response.result.can_manage !== 'boolean'
       || typeof response.result.current_user_id !== 'string'
+      || !Array.isArray(response.result.result_options) || response.result.result_options.some(option =>
+        ![0, 1, 3, 4].includes(option.id) || typeof option.name !== 'string' || !option.name)
+      || response.result.result_options.length !== 4 || new Set(response.result.result_options.map(option => option.id)).size !== 4
       || typeof response.result.can_decide !== 'boolean' || typeof response.result.can_resolve_conflict !== 'boolean' || typeof response.result.initialized !== 'boolean'
       || (response.result.decision !== null && response.result.decision !== 0 && response.result.decision !== 1)
       || response.result.interviewers.some(user => typeof user.id !== 'string' || typeof user.name !== 'string' || typeof user.email !== 'string')
       || response.result.rounds.some(round => typeof round.id !== 'string' || !Number.isInteger(round.order)
         || ![0, 1, 3, 4, 5].includes(round.status)
+        || typeof round.status_name !== 'string' || !round.status_name
         || typeof round.can_enter_feedback !== 'boolean'
         || !Array.isArray(round.submitted_interviewers) || round.submitted_interviewers.some(id => typeof id !== 'string')
         || !Array.isArray(round.submitted_feedback) || round.submitted_feedback.some(item =>
           typeof item.interviewer_id !== 'string'
           || (item.result !== null && (!Number.isInteger(item.result) || item.result < 0 || item.result > 4))
+          || (item.result === null ? item.result_name !== null : typeof item.result_name !== 'string' || !item.result_name)
           || (item.submitted_at !== null && (typeof item.submitted_at !== 'string' || Number.isNaN(new Date(item.submitted_at).getTime()))))
         || (round.duration_minutes !== null && (!Number.isInteger(round.duration_minutes) || round.duration_minutes <= 0))
         || (round.status_changed_at !== null && Number.isNaN(new Date(round.status_changed_at).getTime()))
         || (round.result !== null && (!Number.isInteger(round.result) || round.result < 0 || round.result > 4))
+        || (round.result === null ? round.result_name !== null : typeof round.result_name !== 'string' || !round.result_name)
         || ((round.status === 5) !== (round.result !== null))
         || (round.scheduled_at !== null && Number.isNaN(new Date(round.scheduled_at).getTime()))
         || (round.interviewers !== null && (!Array.isArray(round.interviewers)
@@ -289,7 +293,7 @@ const openFeedback = async (round: Round, interviewerId?: string) => {
   feedbackRoundId.value = round.id
   feedbackRoundName.value = round.name
   feedbackReadOnly.value = interviewerId !== undefined
-  Object.assign(feedback, { result: null, overall_feedback: '', strengths: '', areas_for_improvement: '' })
+  Object.assign(feedback, { result: null, result_name: null, overall_feedback: '', strengths: '', areas_for_improvement: '' })
   feedbackOpen.value = true
   feedbackLoading.value = true
   try {
@@ -297,10 +301,12 @@ const openFeedback = async (round: Round, interviewerId?: string) => {
       ? await getSubmittedEvaluationFeedback(props.candidateId, round.id, interviewerId)
       : await getEvaluationFeedback(props.candidateId, round.id)
     if (!response.success || !response.result) throw new Error('Invalid feedback')
+    if (response.result.result === null ? response.result.result_name !== null
+      : typeof response.result.result_name !== 'string' || !response.result.result_name) throw new Error('Invalid feedback result name')
     if (interviewerId && !response.result.submitted) throw new Error('Feedback has not been submitted')
     if (!disposed && feedbackRoundId.value === round.id) {
       const saved = response.result
-      Object.assign(feedback, { result: saved.result, overall_feedback: saved.overall_feedback ?? '',
+      Object.assign(feedback, { result: saved.result, result_name: saved.result_name, overall_feedback: saved.overall_feedback ?? '',
         strengths: saved.strengths ?? '', areas_for_improvement: saved.areas_for_improvement ?? '' })
     }
   } catch (error) {

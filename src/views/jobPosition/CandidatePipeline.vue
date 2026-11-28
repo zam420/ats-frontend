@@ -57,7 +57,7 @@
               <el-tooltip v-if="stage.stage_type === 'EVALUATING' && candidate.evaluation" placement="top" :hide-after="10" popper-class="candidate-card-tooltip">
                 <template #content>
                   <div v-for="(round, roundIndex) in candidate.evaluation.round_results" :key="roundIndex">
-                    {{ round.name }}: {{ round.result === null ? $t('candidatePipeline.pending') : $t(`candidatePipeline.${evaluationRoundResultKeys[round.result]}`) }}
+                    {{ round.name }}: {{ round.result_name === null ? $t('candidatePipeline.pending') : $t(evaluationEnumKey(round.result_name)) }}
                   </div>
                   <div v-if="!candidate.evaluation.round_results.length">{{ $t('candidatePipeline.noRoundResults') }}</div>
                 </template>
@@ -74,7 +74,7 @@
             <template v-if="stage.stage_type === 'EVALUATING' && candidate.evaluation">
               <el-tooltip v-if="candidate.evaluation.current_round_name" placement="top" :hide-after="10" popper-class="candidate-card-tooltip">
                 <template #content>
-                  <div>{{ $t('candidatePipeline.currentRoundStatus', { status: evaluationStatus(candidate.evaluation.current_status) }) }}</div>
+                  <div>{{ $t('candidatePipeline.currentRoundStatus', { status: $t(evaluationEnumKey(candidate.evaluation.current_status_name)) }) }}</div>
                   <div v-if="candidate.evaluation.current_status !== 5">
                     {{ $t('candidatePipeline.currentOwner', { owner: candidate.evaluation.current_owners.join(', ') || $t('candidatePipeline.noCurrentOwner') }) }}
                   </div>
@@ -150,7 +150,7 @@ import { ROUTER_JOB_POSITION, ROUTER_CANDIDATE_PIPELINE, ROUTER_CANDIDATE_DETAIL
 import { getCandidatePipeline, getPipelineJobs, moveCandidate, rejectCandidate } from '@/api/modules/candidatePipeline'
 import type { CandidatePipeline, PipelineCandidate, PipelineJob, PipelineStageType } from '@/api/modules/candidatePipeline'
 import { applicationAgeDays } from './candidateApplicationAge'
-import { evaluationColor, evaluationPercentage, evaluationRoundResultKeys } from './evaluationProgress'
+import { evaluationColor, evaluationPercentage, evaluationEnumKey } from './evaluationProgress'
 
 const route = useRoute()
 const router = useRouter()
@@ -225,8 +225,6 @@ const jobId = computed(() => typeof route.params.jobId === 'string' && route.par
   : typeof route.query.job === 'string' ? route.query.job : '')
 const displayName = (candidate: PipelineCandidate) =>
   `${candidate.preferred_name || candidate.first_name} ${candidate.last_name}`
-const evaluationStatus = (status: number) =>
-  $t(`candidatePipeline.${['pending', 'scheduled', '', 'awaitingFeedback', 'conflictingFeedback', 'completed'][status]}`)
 const evaluationStatusIcons = [Timer, Calendar, undefined, ChatDotRound, WarningFilled, CircleCheck]
 const rejectedStageColor = (candidate: PipelineCandidate) =>
   candidate.closed_at_stage_type ? stageColors[candidate.closed_at_stage_type].header : undefined
@@ -261,6 +259,7 @@ const loadBoard = async () => {
       for (const candidate of stage.candidates) {
         const evaluation = candidate.evaluation
         if (evaluation && (![0, 1, 3, 4, 5].includes(evaluation.current_status)
+          || typeof evaluation.current_status_name !== 'string' || !evaluation.current_status_name
           || !Array.isArray(evaluation.current_owners) || evaluation.current_owners.some(owner => typeof owner !== 'string')
           || [evaluation.completed_rounds, evaluation.total_rounds, evaluation.strong_yes, evaluation.yes, evaluation.no, evaluation.strong_no, evaluation.cancelled]
             .some(value => !Number.isInteger(value) || value < 0)
@@ -268,7 +267,8 @@ const loadBoard = async () => {
           || evaluation.strong_yes + evaluation.yes + evaluation.no + evaluation.strong_no + evaluation.cancelled !== evaluation.completed_rounds
           || !Array.isArray(evaluation.round_results) || evaluation.round_results.length !== evaluation.total_rounds
           || evaluation.round_results.some(round => typeof round.name !== 'string'
-            || (round.result !== null && (!Number.isInteger(round.result) || round.result < 0 || round.result > 4)))
+            || (round.result !== null && (!Number.isInteger(round.result) || round.result < 0 || round.result > 4))
+            || (round.result === null ? round.result_name !== null : typeof round.result_name !== 'string' || !round.result_name))
           || (evaluation.decision !== null && evaluation.decision !== 0 && evaluation.decision !== 1))) {
           throw new Error('Invalid candidate evaluation summary')
         }
