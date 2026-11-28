@@ -23,3 +23,12 @@ export const evaluationColor = (evaluation: EvaluationProgress) => {
   if (score < 0) return '#e57373'
   return '#b88a00'
 }
+
+export const evaluationResultColor = (result: 0 | 1 | 2 | 3 | 4) => evaluationColor({
+  total_rounds: 1,
+  completed_rounds: 1,
+  strong_yes: result === 0 ? 1 : 0,
+  strong_no: result === 1 ? 1 : 0,
+  yes: result === 3 ? 1 : 0,
+  no: result === 4 ? 1 : 0
+})

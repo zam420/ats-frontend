@@ -111,7 +111,7 @@ const loadApplicants = async (job: string) => {
 const selectCandidate = (id: string) => {
   if (id === candidateId.value) return
   void router.replace({ name: ROUTER_CANDIDATE_DETAIL, params: { jobId: jobId.value, candidateId: id },
-    state: { candidatePipelineFromSidebar: window.history.state?.candidatePipelineFromSidebar === true, candidateEvaluationTab: false, applicantsCached: true } })
+    state: { candidatePipelineFromSidebar: window.history.state?.candidatePipelineFromSidebar === true, candidateDetailTab: activeTab.value, applicantsCached: true } })
 }
 const formatDate = (value: string) => new Date(value).toLocaleString()
 const back = () => router.push({ name: ROUTER_CANDIDATE_PIPELINE, params: { jobId: jobId.value },
@@ -120,7 +120,9 @@ const back = () => router.push({ name: ROUTER_CANDIDATE_PIPELINE, params: { jobI
 watch([jobId, candidateId], async ([job, candidate]) => {
   const current = ++version
   application.value = undefined
-  activeTab.value = window.history.state?.candidateEvaluationTab === true ? 'evaluations' : 'overview'
+  const savedTab = window.history.state?.candidateDetailTab
+  activeTab.value = savedTab === 'overview' || savedTab === 'evaluations' || savedTab === 'notes'
+    ? savedTab : window.history.state?.candidateEvaluationTab === true ? 'evaluations' : 'overview'
   if (!job || !candidate) return
   void loadApplicants(job)
   try {

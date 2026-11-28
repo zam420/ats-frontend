@@ -1,6 +1,6 @@
 import { strict as assert } from 'node:assert'
 import { test } from 'node:test'
-import { evaluationColor, evaluationPercentage } from '../src/views/jobPosition/evaluationProgress.ts'
+import { evaluationColor, evaluationPercentage, evaluationResultColor } from '../src/views/jobPosition/evaluationProgress.ts'
 
 const progress = (strong_yes, yes, no, strong_no, completed_rounds = 0, total_rounds = 4) =>
   ({ strong_yes, yes, no, strong_no, completed_rounds, total_rounds })
@@ -25,4 +25,12 @@ test('mixed results use the weighted average, not just the most frequent rating'
   assert.equal(evaluationColor(progress(1, 0, 2, 0)), '#b88a00')
   assert.equal(evaluationColor(progress(0, 0, 1, 2)), '#991b1b')
   assert.equal(evaluationColor(progress(1, 0, 0, 2)), '#e57373')
+})
+
+test('individual result colors match a progress bar for the same result', () => {
+  assert.equal(evaluationResultColor(0), evaluationColor(progress(1, 0, 0, 0)))
+  assert.equal(evaluationResultColor(1), evaluationColor(progress(0, 0, 0, 1)))
+  assert.equal(evaluationResultColor(2), evaluationColor(progress(0, 0, 0, 0)))
+  assert.equal(evaluationResultColor(3), evaluationColor(progress(0, 1, 0, 0)))
+  assert.equal(evaluationResultColor(4), evaluationColor(progress(0, 0, 1, 0)))
 })

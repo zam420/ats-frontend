@@ -67,6 +67,7 @@ export interface CandidateEvaluations {
   decision: 0 | 1 | null
   can_manage: boolean
   can_decide: boolean
+  current_user_id: string
   interviewers: { id: string; name: string; email: string }[]
   rounds: {
     id: string
@@ -78,9 +79,22 @@ export interface CandidateEvaluations {
     status: 0 | 1 | 2 | 3 | 4
     result: EvaluationRoundResult | null
     scheduled_at: string | null
+    duration_minutes: number | null
+    status_changed_at: string | null
+    submitted_interviewers: string[]
+    submitted_feedback: { interviewer_id: string; result: EvaluationRoundResult | null; submitted_at: string | null }[]
+    can_enter_feedback: boolean
   }[]
 }
 export type EvaluationRoundResult = 0 | 1 | 2 | 3 | 4
+export interface EvaluationFeedback {
+  result: EvaluationRoundResult | null
+  overall_feedback: string | null
+  strengths: string | null
+  areas_for_improvement: string | null
+  submitted: boolean
+}
+export type EvaluationFeedbackInput = Omit<EvaluationFeedback, 'submitted'>
 
 const candidateUrl = (jobId: string, candidateId: string) =>
   `api/pipeline/${encodeURIComponent(jobId)}/candidates/${encodeURIComponent(candidateId)}`
@@ -93,8 +107,8 @@ export const getCandidateEvaluations = (jobId: string, candidateId: string) =>
 const evaluationsUrl = (jobId: string, candidateId: string) => `${candidateUrl(jobId, candidateId)}/evaluations`
 const roundUrl = (jobId: string, candidateId: string, roundId: string) =>
   `${evaluationsUrl(jobId, candidateId)}/rounds/${encodeURIComponent(roundId)}`
-export const scheduleEvaluation = (jobId: string, candidateId: string, roundId: string, scheduledAt: string, interviewers: string[]) =>
-  http.post<boolean>(`${roundUrl(jobId, candidateId, roundId)}/schedule`, { scheduled_at: scheduledAt, interviewers })
+export const scheduleEvaluation = (jobId: string, candidateId: string, roundId: string, scheduledAt: string, durationMinutes: number) =>
+  http.post<boolean>(`${roundUrl(jobId, candidateId, roundId)}/schedule`, { scheduled_at: scheduledAt, duration_minutes: durationMinutes })
 export const changeEvaluationInterviewers = (jobId: string, candidateId: string, roundId: string, interviewers: string[]) =>
   http.post<boolean>(`${roundUrl(jobId, candidateId, roundId)}/interviewers`, { interviewers })
 export const changeEvaluationStatus = (jobId: string, candidateId: string, roundId: string, status: 0 | 2 | 3) =>
@@ -106,6 +120,13 @@ export const addEvaluationRound = (jobId: string, candidateId: string, data: {
 }) => http.post<boolean>(`${evaluationsUrl(jobId, candidateId)}/rounds`, data)
 export const decideEvaluations = (jobId: string, candidateId: string, decision: 0 | 1) =>
   http.post<boolean>(`${evaluationsUrl(jobId, candidateId)}/decision`, { decision })
+export const getEvaluationFeedback = (jobId: string, candidateId: string, roundId: string) =>
+  http.get<EvaluationFeedback>(`${roundUrl(jobId, candidateId, roundId)}/feedback`)
+export const getSubmittedEvaluationFeedback = (jobId: string, candidateId: string, roundId: string, interviewerId: string) =>
+  http.get<EvaluationFeedback>(`${roundUrl(jobId, candidateId, roundId)}/feedback/${encodeURIComponent(interviewerId)}`)
+export const saveEvaluationFeedback = (jobId: string, candidateId: string, roundId: string,
+  data: EvaluationFeedbackInput, submit: boolean) =>
+  http.post<boolean>(`${roundUrl(jobId, candidateId, roundId)}/feedback/${submit ? 'submit' : 'draft'}`, data)
 
 export const getPipelineJobs = () => http.get<PipelineJob[]>('api/pipeline/jobs')
 export const getCandidatePipeline = (jobId: string) =>
