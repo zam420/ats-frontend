@@ -339,8 +339,8 @@ const submitFeedback = async (submit: boolean) => {
 const openSchedule = (round: Round) => {
   dialogMode.value = 'schedule'
   selectedRound.value = round.id
-  form.scheduledAt = round.scheduled_at ? new Date(round.scheduled_at) : null
-  form.durationMinutes = round.duration_minutes ?? undefined
+  form.scheduledAt = new Date()
+  form.durationMinutes = 60
   dialogOpen.value = true
 }
 const openInterviewers = (round: Round) => {
