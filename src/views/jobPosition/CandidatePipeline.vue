@@ -85,7 +85,7 @@
                 </div>
               </el-tooltip>
               <div v-if="candidate.evaluation.decision !== null" class="evaluation-detail">
-                {{ $t('candidatePipeline.overallResult') }}: {{ $t(candidate.evaluation.decision === 0 ? 'candidatePipeline.passed' : 'candidatePipeline.failed') }}
+                {{ $t('candidatePipeline.overallResult') }}: {{ $t(candidate.evaluation.decision === 0 ? 'candidatePipeline.hire' : 'candidatePipeline.noHire') }}
               </div>
             </template>
             <div v-else-if="stage.stage_type === 'EVALUATING'" class="evaluation-detail">{{ $t('candidatePipeline.noEvaluations') }}</div>

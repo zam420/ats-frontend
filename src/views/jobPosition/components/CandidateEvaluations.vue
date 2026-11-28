@@ -150,7 +150,7 @@ import {
   getCandidateEvaluations, scheduleEvaluation, changeEvaluationInterviewers,
   addEvaluationRound, decideEvaluations, getEvaluationFeedback, getSubmittedEvaluationFeedback, saveEvaluationFeedback, recordEvaluationResult
 } from '@/api/modules/candidatePipeline'
-import type { CandidateEvaluations, EvaluationRoundResult } from '@/api/modules/candidatePipeline'
+import type { CandidateEvaluations, CandidateEvaluationResult, EvaluationRoundResult } from '@/api/modules/candidatePipeline'
 import type { ResultData } from '@/api/interface'
 import { useLocale } from '@/hooks/useLocale'
 import { evaluationEnumKey, evaluationColor, evaluationPercentage, evaluationResultColor } from '../evaluationProgress'
@@ -173,7 +173,7 @@ const feedbackLoading = ref(false)
 const feedbackReadOnly = ref(false)
 const feedbackRoundId = ref('')
 const feedbackRoundName = ref('')
-const feedback = reactive<{ result: Result | null; result_name: string | null; overall_feedback: string; strengths: string; areas_for_improvement: string }>({
+const feedback = reactive<{ result: CandidateEvaluationResult | null; result_name: string | null; overall_feedback: string; strengths: string; areas_for_improvement: string }>({
   result: null, result_name: null, overall_feedback: '', strengths: '', areas_for_improvement: ''
 })
 const dialogMode = ref<'schedule' | 'interviewers' | 'add'>('add')
@@ -183,7 +183,7 @@ const form = reactive<{ name: string; description: string; roundType: 0 | 1 | 2 
 })
 const roundTypes = ['roundTypeHr', 'roundTypeFunctional', 'roundTypeExecutive', 'roundTypeCustom']
 const dialogTitle = computed(() => `candidatePipeline.${dialogMode.value === 'add' ? 'addRound' : dialogMode.value === 'schedule' ? 'schedule' : 'changeInterviewers'}`)
-const decisionLabel = (value: number) => $t(`candidatePipeline.${['passed', 'failed'][value]}`)
+const decisionLabel = (value: number) => $t(`candidatePipeline.${['hire', 'noHire'][value]}`)
 const interviewerName = (id: string) => evaluations.value?.interviewers.find(user => user.id === id)?.name || id
 const interviewerRows = (round: Round) => (round.interviewers ?? []).map(id => ({
   id, feedback: round.submitted_feedback.find(item => item.interviewer_id === id)
@@ -234,7 +234,7 @@ const load = async () => {
         || !Array.isArray(round.submitted_interviewers) || round.submitted_interviewers.some(id => typeof id !== 'string')
         || !Array.isArray(round.submitted_feedback) || round.submitted_feedback.some(item =>
           typeof item.interviewer_id !== 'string'
-          || (item.result !== null && (!Number.isInteger(item.result) || item.result < 0 || item.result > 4))
+          || (item.result !== null && ![0, 1, 3, 4].includes(item.result))
           || (item.result === null ? item.result_name !== null : typeof item.result_name !== 'string' || !item.result_name)
           || (item.submitted_at !== null && (typeof item.submitted_at !== 'string' || Number.isNaN(new Date(item.submitted_at).getTime()))))
         || (round.duration_minutes !== null && (!Number.isInteger(round.duration_minutes) || round.duration_minutes <= 0))
@@ -301,6 +301,7 @@ const openFeedback = async (round: Round, interviewerId?: string) => {
       ? await getSubmittedEvaluationFeedback(props.candidateId, round.id, interviewerId)
       : await getEvaluationFeedback(props.candidateId, round.id)
     if (!response.success || !response.result) throw new Error('Invalid feedback')
+    if (response.result.result !== null && ![0, 1, 3, 4].includes(response.result.result)) throw new Error('Invalid feedback result')
     if (response.result.result === null ? response.result.result_name !== null
       : typeof response.result.result_name !== 'string' || !response.result.result_name) throw new Error('Invalid feedback result name')
     if (interviewerId && !response.result.submitted) throw new Error('Feedback has not been submitted')
