@@ -54,8 +54,8 @@
                 <small v-if="round.status > 1 && item.feedback?.submitted_at">{{ formatDate(item.feedback.submitted_at) }}</small>
               </div>
               <div class="feedback-action">
-                <el-button v-if="round.status > 1 && item.feedback" size="small" :disabled="feedbackLoading" @click="openFeedback(round, item.id)">{{ $t('candidatePipeline.viewFeedback') }}</el-button>
-                <el-button v-else-if="round.status === 3 && round.can_enter_feedback && item.id === evaluations.current_user_id" size="small" type="primary" :disabled="saving || feedbackLoading" @click="openFeedback(round)">{{ $t('candidatePipeline.submitFeedback') }}</el-button>
+                <el-link v-if="round.status > 1 && item.feedback" href="#" type="primary" :underline="false" :disabled="feedbackLoading" @click.prevent="openFeedback(round, item.id)">{{ $t('candidatePipeline.viewFeedback') }}</el-link>
+                <el-link v-else-if="round.status === 3 && round.can_enter_feedback && item.id === evaluations.current_user_id" href="#" type="primary" :underline="false" :disabled="saving || feedbackLoading" @click.prevent="openFeedback(round)">{{ $t('candidatePipeline.submitFeedback') }}</el-link>
               </div>
               <span v-if="round.status > 1 && item.feedback && item.feedback.result !== null" class="result-tag" :class="{ 'light-result': item.feedback.result >= 2 }" :style="{ backgroundColor: evaluationResultColor(item.feedback.result) }">{{ resultLabel(item.feedback.result) }}</span>
             </div>
@@ -401,9 +401,10 @@ small { color: var(--color-gray); font-weight: normal; }
 .round-header .controls { margin-left: auto; }
 .round-status-label { font-weight: 600; }
 .interviwer-header { font-weight: 600; margin-top: 16px; }
-.interviewer-row { display: grid; grid-template-columns: minmax(100px, 1fr) minmax(150px, 1fr) minmax(120px, auto) auto; align-items: center; gap: 10px; margin-bottom: 8px; font-weight: normal; }
+.interviewer-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: center; gap: 10px; margin-bottom: 8px; font-weight: 500; }
 .interviewer-name { overflow-wrap: anywhere; }
 .interviewer-status { display: flex; flex-direction: column; gap: 3px; }
+.feedback-action :deep(.el-link__inner) { text-decoration: underline; font-weight: 600;}
 .status-text, .date-with-icon { display: inline-flex; align-items: center; gap: 4px; }
 .feedback-submitted, .feedback-submitted small { color: #166534; }
 .result-tag { display: inline-block; color: #fff; border-radius: 6px; padding: 3px 8px; font-size: 13px; font-weight: 500; width: fit-content; }
