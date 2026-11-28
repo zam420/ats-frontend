@@ -33,7 +33,7 @@ export interface PipelineCandidate {
     no: number
     strong_no: number
     cancelled: number
-    round_results: { name: string; result: EvaluationRoundResult | null; result_name: string | null }[]
+    round_results: { name: string; result: EvaluationResult | null; result_name: string | null; status: EvaluationRoundStatus }[]
     decision: 0 | 1 | null
   } | null
 }
@@ -76,7 +76,7 @@ export interface CandidateEvaluations {
   can_decide: boolean
   can_resolve_conflict: boolean
   current_user_id: string
-  result_options: { id: CandidateEvaluationResult; name: string }[]
+  result_options: { id: EvaluationResult; name: string }[]
   interviewers: { id: string; name: string; email: string }[]
   rounds: {
     id: string
@@ -87,21 +87,20 @@ export interface CandidateEvaluations {
     interviewers: string[] | null
     status: EvaluationRoundStatus
     status_name: string
-    result: EvaluationRoundResult | null
+    result: EvaluationResult | null
     result_name: string | null
     scheduled_at: string | null
     duration_minutes: number | null
     status_changed_at: string | null
     submitted_interviewers: string[]
-    submitted_feedback: { interviewer_id: string; result: CandidateEvaluationResult | null; result_name: string | null; submitted_at: string | null }[]
+    submitted_feedback: { interviewer_id: string; result: EvaluationResult | null; result_name: string | null; submitted_at: string | null }[]
     can_enter_feedback: boolean
   }[]
 }
-export type EvaluationRoundStatus = 0 | 1 | 3 | 4 | 5
-export type EvaluationRoundResult = 0 | 1 | 2 | 3 | 4
-export type CandidateEvaluationResult = 0 | 1 | 3 | 4
+export type EvaluationRoundStatus = 0 | 1 | 3 | 4 | 5 | 6
+export type EvaluationResult = 0 | 1 | 3 | 4
 export interface EvaluationFeedback {
-  result: CandidateEvaluationResult | null
+  result: EvaluationResult | null
   result_name: string | null
   overall_feedback: string | null
   strengths: string | null
@@ -125,11 +124,13 @@ export const getCandidateEvaluations = (candidateId: string) =>
   http.get<CandidateEvaluations>(evaluationsUrl(candidateId))
 export const scheduleEvaluation = (candidateId: string, roundId: string, scheduledAt: string, durationMinutes: number) =>
   http.post<boolean>(`${roundUrl(candidateId, roundId)}/schedule`, { scheduled_at: scheduledAt, duration_minutes: durationMinutes })
+export const cancelEvaluationRound = (candidateId: string, roundId: string) =>
+  http.post<boolean>(`${roundUrl(candidateId, roundId)}/cancel`)
 export const changeEvaluationInterviewers = (candidateId: string, roundId: string, interviewers: string[]) =>
   http.post<boolean>(`${roundUrl(candidateId, roundId)}/interviewers`, { interviewers })
 export const changeEvaluationStatus = (candidateId: string, roundId: string, status: 0 | 3) =>
   http.post<boolean>(`${roundUrl(candidateId, roundId)}/status`, { status })
-export const recordEvaluationResult = (candidateId: string, roundId: string, result: EvaluationRoundResult) =>
+export const recordEvaluationResult = (candidateId: string, roundId: string, result: EvaluationResult) =>
   http.post<boolean>(`${roundUrl(candidateId, roundId)}/result`, { result })
 export const addEvaluationRound = (candidateId: string, data: {
   name: string; description: string | null; round_type: 0 | 1 | 2 | 3; interviewers: string[]

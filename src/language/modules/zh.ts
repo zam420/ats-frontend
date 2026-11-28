@@ -606,6 +606,8 @@ auth: {
     noInterviewers: '尚未选择面试官',
     schedule: '安排',
     reschedule: '重新安排',
+    cancelRound: '取消轮次',
+    confirmCancelRound: '取消此轮面试？',
     changeInterviewers: '更换面试官',
     viewFeedback: '查看反馈',
     feedbackLater: '反馈功能将在以后提供。',

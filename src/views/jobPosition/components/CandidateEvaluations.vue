@@ -20,7 +20,7 @@
         </div>
         <section v-for="round in evaluations.rounds" :key="round.id" class="round" :class="{ 'round-completed': round.status === 5, 'round-current': currentRound?.id === round.id }">
           <span class="round-status-icon" :class="{ 'round-status-completed': round.status === 5, 'round-status-current': currentRound?.id === round.id }" aria-hidden="true">
-            <el-icon><Check v-if="round.status === 5" /><CaretRight v-else-if="currentRound?.id === round.id" /><Clock v-else /></el-icon>
+            <el-icon><Check v-if="round.status === 5" /><Close v-else-if="round.status === 6" /><CaretRight v-else-if="currentRound?.id === round.id" /><Clock v-else /></el-icon>
           </span>
           <div class="round-header">
             <div class="round-header-details">
@@ -35,12 +35,13 @@
                 </span>
                 <span v-if="round.status === 1 && round.duration_minutes" class="duration"><el-icon><Timer /></el-icon> {{ $t('candidatePipeline.durationMinutes', { count: round.duration_minutes }) }}</span>
               </p>
-              <p v-if="round.status > 1 && round.scheduled_at">{{ $t('candidatePipeline.interviewedAt') }}: {{ formatDate(round.scheduled_at) }}
+              <p v-if="round.status > 1 && round.status !== 6 && round.scheduled_at">{{ $t('candidatePipeline.interviewedAt') }}: {{ formatDate(round.scheduled_at) }}
                 <span v-if="round.duration_minutes" class="duration"><el-icon><Timer /></el-icon> {{ $t('candidatePipeline.durationMinutes', { count: round.duration_minutes }) }}</span>
               </p>
             </div>
             <div class="controls">
               <el-button v-if="editable && currentRound?.id === round.id && (round.status === 0 || round.status === 1)" :disabled="saving" @click="openInterviewers(round)">{{ $t('candidatePipeline.changeInterviewers') }}</el-button>
+              <el-button v-if="editable && currentRound?.id === round.id && round.status !== 4 && canSchedule(round)" :disabled="saving" @click="openCancelRound(round)">{{ $t('candidatePipeline.cancelRound') }}</el-button>
               <el-button v-if="editable && currentRound?.id === round.id && round.status !== 4 && canSchedule(round)" :disabled="saving" @click="openSchedule(round)">{{ $t(round.status === 3 ? 'candidatePipeline.reschedule' : 'candidatePipeline.schedule') }}</el-button>
             </div>
           </div>
@@ -52,7 +53,7 @@
               <div class="interviewer-status" :class="{ 'feedback-submitted': round.status > 1 && item.feedback }">
                 <span class="status-text">
                   <el-icon><CircleCheck v-if="round.status > 1 && item.feedback" /><Clock v-else /></el-icon>
-                  {{ round.status <= 1 ? $t('candidatePipeline.pending') : item.feedback ? $t('candidatePipeline.feedbackSubmitted') : $t('candidatePipeline.feedbackPending') }}
+                  {{ round.status === 6 && !item.feedback ? $t('candidatePipeline.cancelled') : round.status <= 1 ? $t('candidatePipeline.pending') : item.feedback ? $t('candidatePipeline.feedbackSubmitted') : $t('candidatePipeline.feedbackPending') }}
                 </span>
                 <small v-if="round.status > 1 && item.feedback?.submitted_at">{{ formatDate(item.feedback.submitted_at) }}</small>
               </div>
@@ -110,9 +111,10 @@
         <el-button v-if="!feedbackReadOnly" type="primary" :loading="saving" :disabled="feedbackLoading" @click="submitFeedback(true)">{{ $t('candidatePipeline.submitFeedback') }}</el-button>
       </template>
     </el-dialog>
-    <el-dialog v-model="dialogOpen" :title="$t(dialogTitle)" width="min(500px, 90vw)"
+    <el-dialog v-model="dialogOpen" :title="$t(dialogTitle)" width="min(500px, 90vw)" :align-center="true"
       :close-on-click-modal="!saving" :close-on-press-escape="!saving" :show-close="!saving">
       <el-form label-position="top" :disabled="saving" @submit.prevent="submitDialog">
+        <p v-if="dialogMode === 'cancel'">{{ $t('candidatePipeline.confirmCancelRound') }}</p>
         <template v-if="dialogMode === 'add'">
           <el-form-item :label="$t('candidatePipeline.roundName')" required><el-input v-model="form.name" maxlength="30" /></el-form-item>
           <el-form-item :label="$t('candidatePipeline.roundDescription')"><el-input v-model="form.description" maxlength="100" type="textarea" /></el-form-item>
@@ -128,7 +130,7 @@
         <el-form-item v-if="dialogMode === 'schedule'" :label="$t('candidatePipeline.interviewDuration')" required>
           <el-input-number v-model="form.durationMinutes" :min="1" :precision="0" />
         </el-form-item>
-        <el-form-item v-if="dialogMode !== 'schedule'" :label="$t('candidatePipeline.interviewer')">
+        <el-form-item v-if="dialogMode === 'add' || dialogMode === 'interviewers'" :label="$t('candidatePipeline.interviewer')">
           <el-select v-model="form.interviewers" class="interviewer-select full-width" multiple collapse-tags :max-collapse-tags="2" collapse-tags-tooltip filterable clearable @mouseover="showFullTagText">
             <el-option v-for="user in evaluations?.interviewers ?? []" :key="user.id" :value="user.id" :label="`${user.name} (${user.email})`" class="form-select-li">
               <el-checkbox :value="form.interviewers.includes(user.id)" style="pointer-events: none"><span class="title">{{ user.name }}</span><span>{{ user.email }}</span></el-checkbox>
@@ -145,25 +147,25 @@
 </template>
 
 <script setup lang="ts">
-import { Calendar, CaretRight, Check, CircleCheck, Clock, Timer } from '@element-plus/icons-vue'
+import { Calendar, CaretRight, Check, CircleCheck, Clock, Close, Timer } from '@element-plus/icons-vue'
 import {
-  getCandidateEvaluations, scheduleEvaluation, changeEvaluationInterviewers,
+  getCandidateEvaluations, scheduleEvaluation, cancelEvaluationRound, changeEvaluationInterviewers,
   addEvaluationRound, decideEvaluations, getEvaluationFeedback, getSubmittedEvaluationFeedback, saveEvaluationFeedback, recordEvaluationResult
 } from '@/api/modules/candidatePipeline'
-import type { CandidateEvaluations, CandidateEvaluationResult, EvaluationRoundResult } from '@/api/modules/candidatePipeline'
+import type { CandidateEvaluations, EvaluationResult } from '@/api/modules/candidatePipeline'
 import type { ResultData } from '@/api/interface'
 import { useLocale } from '@/hooks/useLocale'
 import { evaluationEnumKey, evaluationColor, evaluationPercentage, evaluationResultColor } from '../evaluationProgress'
 
 type Round = CandidateEvaluations['rounds'][number]
-type Result = EvaluationRoundResult
+type Result = EvaluationResult
 const props = defineProps<{ candidateId: string }>()
 const { $t } = useLocale()
 const evaluations = ref<CandidateEvaluations>()
 const loading = ref(false)
 const loadFailed = ref(false)
 const saving = ref(false)
-const currentRound = computed(() => evaluations.value?.rounds.find(round => round.status !== 5))
+const currentRound = computed(() => evaluations.value?.rounds.find(round => round.status !== 5 && round.status !== 6))
 const editable = computed(() => evaluations.value?.can_manage && evaluations.value.decision === null)
 const conflictResult = ref<Result | null>(null)
 const decision = ref<0 | 1 | null>(null)
@@ -173,16 +175,16 @@ const feedbackLoading = ref(false)
 const feedbackReadOnly = ref(false)
 const feedbackRoundId = ref('')
 const feedbackRoundName = ref('')
-const feedback = reactive<{ result: CandidateEvaluationResult | null; result_name: string | null; overall_feedback: string; strengths: string; areas_for_improvement: string }>({
+const feedback = reactive<{ result: EvaluationResult | null; result_name: string | null; overall_feedback: string; strengths: string; areas_for_improvement: string }>({
   result: null, result_name: null, overall_feedback: '', strengths: '', areas_for_improvement: ''
 })
-const dialogMode = ref<'schedule' | 'interviewers' | 'add'>('add')
+const dialogMode = ref<'schedule' | 'interviewers' | 'add' | 'cancel'>('add')
 const selectedRound = ref<string>()
 const form = reactive<{ name: string; description: string; roundType: 0 | 1 | 2 | 3; scheduledAt: Date | null; durationMinutes: number | undefined; interviewers: string[] }>({
   name: '', description: '', roundType: 3, scheduledAt: null, durationMinutes: undefined, interviewers: []
 })
 const roundTypes = ['roundTypeHr', 'roundTypeFunctional', 'roundTypeExecutive', 'roundTypeCustom']
-const dialogTitle = computed(() => `candidatePipeline.${dialogMode.value === 'add' ? 'addRound' : dialogMode.value === 'schedule' ? 'schedule' : 'changeInterviewers'}`)
+const dialogTitle = computed(() => `candidatePipeline.${dialogMode.value === 'add' ? 'addRound' : dialogMode.value === 'schedule' ? 'schedule' : dialogMode.value === 'cancel' ? 'cancelRound' : 'changeInterviewers'}`)
 const decisionLabel = (value: number) => $t(`candidatePipeline.${['hire', 'noHire'][value]}`)
 const interviewerName = (id: string) => evaluations.value?.interviewers.find(user => user.id === id)?.name || id
 const interviewerRows = (round: Round) => (round.interviewers ?? []).map(id => ({
@@ -204,7 +206,7 @@ const progress = computed(() => {
   const rounds = evaluations.value?.rounds ?? []
   return {
     total_rounds: rounds.length,
-    completed_rounds: rounds.filter(round => round.status === 5).length,
+    completed_rounds: rounds.filter(round => round.status === 5 || round.status === 6).length,
     strong_yes: rounds.filter(round => round.result === 0).length,
     strong_no: rounds.filter(round => round.result === 1).length,
     yes: rounds.filter(round => round.result === 3).length,
@@ -228,7 +230,7 @@ const load = async () => {
       || (response.result.decision !== null && response.result.decision !== 0 && response.result.decision !== 1)
       || response.result.interviewers.some(user => typeof user.id !== 'string' || typeof user.name !== 'string' || typeof user.email !== 'string')
       || response.result.rounds.some(round => typeof round.id !== 'string' || !Number.isInteger(round.order)
-        || ![0, 1, 3, 4, 5].includes(round.status)
+        || ![0, 1, 3, 4, 5, 6].includes(round.status)
         || typeof round.status_name !== 'string' || !round.status_name
         || typeof round.can_enter_feedback !== 'boolean'
         || !Array.isArray(round.submitted_interviewers) || round.submitted_interviewers.some(id => typeof id !== 'string')
@@ -239,7 +241,7 @@ const load = async () => {
           || (item.submitted_at !== null && (typeof item.submitted_at !== 'string' || Number.isNaN(new Date(item.submitted_at).getTime()))))
         || (round.duration_minutes !== null && (!Number.isInteger(round.duration_minutes) || round.duration_minutes <= 0))
         || (round.status_changed_at !== null && Number.isNaN(new Date(round.status_changed_at).getTime()))
-        || (round.result !== null && (!Number.isInteger(round.result) || round.result < 0 || round.result > 4))
+        || (round.result !== null && ![0, 1, 3, 4].includes(round.result))
         || (round.result === null ? round.result_name !== null : typeof round.result_name !== 'string' || !round.result_name)
         || ((round.status === 5) !== (round.result !== null))
         || (round.scheduled_at !== null && Number.isNaN(new Date(round.scheduled_at).getTime()))
@@ -353,6 +355,11 @@ const openSchedule = (round: Round) => {
   form.durationMinutes = 60
   dialogOpen.value = true
 }
+const openCancelRound = (round: Round) => {
+  dialogMode.value = 'cancel'
+  selectedRound.value = round.id
+  dialogOpen.value = true
+}
 const openInterviewers = (round: Round) => {
   dialogMode.value = 'interviewers'
   selectedRound.value = round.id
@@ -383,7 +390,10 @@ const submitDialog = () => {
     const scheduledAt = form.scheduledAt.toISOString()
     const duration = form.durationMinutes
     void mutate(() => scheduleEvaluation(props.candidateId, roundId, scheduledAt, duration))
-  } else if (selectedRound.value) {
+  } else if (dialogMode.value === 'cancel' && selectedRound.value) {
+    const roundId = selectedRound.value
+    void mutate(() => cancelEvaluationRound(props.candidateId, roundId))
+  } else if (dialogMode.value === 'interviewers' && selectedRound.value) {
     const roundId = selectedRound.value
     void mutate(() => changeEvaluationInterviewers(props.candidateId, roundId, form.interviewers))
   }

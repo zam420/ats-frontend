@@ -606,6 +606,8 @@ export default {
     noInterviewers: 'No interviewers selected',
     schedule: 'Schedule',
     reschedule: 'Reschedule',
+    cancelRound: 'Cancel Round',
+    confirmCancelRound: 'Cancel this round?',
     changeInterviewers: 'Change Interviewer(s)',
     viewFeedback: 'View Feedback',
     feedbackLater: 'Feedback will be available later.',

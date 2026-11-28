@@ -45,7 +45,6 @@ test('mixed results use the weighted average, not just the most frequent rating'
 test('individual result colors match a progress bar for the same result', () => {
   assert.equal(evaluationResultColor(0), evaluationColor(progress(1, 0, 0, 0)))
   assert.equal(evaluationResultColor(1), evaluationColor(progress(0, 0, 0, 1)))
-  assert.equal(evaluationResultColor(2), evaluationColor(progress(0, 0, 0, 0)))
   assert.equal(evaluationResultColor(3), evaluationColor(progress(0, 1, 0, 0)))
   assert.equal(evaluationResultColor(4), evaluationColor(progress(0, 0, 1, 0)))
 })

@@ -25,7 +25,7 @@ export const evaluationColor = (evaluation: EvaluationProgress) => {
   return '#b88a00'
 }
 
-export const evaluationResultColor = (result: 0 | 1 | 2 | 3 | 4) => evaluationColor({
+export const evaluationResultColor = (result: 0 | 1 | 3 | 4) => evaluationColor({
   total_rounds: 1,
   completed_rounds: 1,
   strong_yes: result === 0 ? 1 : 0,
