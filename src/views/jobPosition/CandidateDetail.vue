@@ -42,7 +42,7 @@
       <el-tab-pane name="evaluations" :label="$t('candidatePipeline.evaluations')" lazy>
         <CandidateEvaluations :key="`${jobId}-${candidateId}`" :job-id="jobId" :candidate-id="candidateId" />
       </el-tab-pane>
-      <el-tab-pane name="notes" :label="$t('candidatePipeline.notes')" />
+      <el-tab-pane v-if="false" name="notes" :label="$t('candidatePipeline.notes')" />
     </el-tabs>
   </main>
 </template>
@@ -121,7 +121,7 @@ watch([jobId, candidateId], async ([job, candidate]) => {
   const current = ++version
   application.value = undefined
   const savedTab = window.history.state?.candidateDetailTab
-  activeTab.value = savedTab === 'overview' || savedTab === 'evaluations' || savedTab === 'notes'
+  activeTab.value = savedTab === 'overview' || savedTab === 'evaluations'
     ? savedTab : window.history.state?.candidateEvaluationTab === true ? 'evaluations' : 'overview'
   if (!job || !candidate) return
   void loadApplicants(job)
