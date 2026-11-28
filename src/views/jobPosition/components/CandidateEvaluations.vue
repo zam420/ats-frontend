@@ -18,11 +18,14 @@
             <template #reference><el-button type="primary" :disabled="decision === null || saving">{{ $t('candidatePipeline.decideResult') }}</el-button></template>
           </el-popconfirm>
         </div>
-        <section v-for="round in evaluations.rounds" :key="round.id" class="round">
+        <section v-for="round in evaluations.rounds" :key="round.id" class="round" :class="{ 'round-completed': round.status === 4, 'round-current': currentRound?.id === round.id }">
+          <span class="round-status-icon" :class="{ 'round-status-completed': round.status === 4, 'round-status-current': currentRound?.id === round.id }" aria-hidden="true">
+            <el-icon><Check v-if="round.status === 4" /><CaretRight v-else-if="currentRound?.id === round.id" /><Clock v-else /></el-icon>
+          </span>
           <div class="round-header">
             <div class="round-header-details">
               <div class="round-title">
-                <h2>{{ round.name }} <small v-if="currentRound?.id === round.id">{{ $t('candidatePipeline.currentRound') }}</small></h2>
+                <h2>{{ round.name }} </h2>
                 <span v-if="round.result !== null" class="result-tag" :class="{ 'light-result': round.result >= 2 }" :style="{ backgroundColor: evaluationResultColor(round.result) }">{{ resultLabel(round.result) }}</span>
               </div>
               <p>
@@ -57,7 +60,7 @@
                 <el-link v-if="round.status > 1 && item.feedback" href="#" type="primary" :underline="false" :disabled="feedbackLoading" @click.prevent="openFeedback(round, item.id)">{{ $t('candidatePipeline.viewFeedback') }}</el-link>
                 <el-button v-else-if="round.status === 3 && round.can_enter_feedback && item.id === evaluations.current_user_id" class="btn-primary-gradient" size="small" :disabled="saving || feedbackLoading" @click="openFeedback(round)">{{ $t('candidatePipeline.submitFeedback') }}</el-button>
               </div>
-              <span v-if="round.status > 1 && item.feedback && item.feedback.result !== null" class="result-tag" :class="{ 'light-result': item.feedback.result >= 2 }" :style="{ backgroundColor: evaluationResultColor(item.feedback.result) }">{{ resultLabel(item.feedback.result) }}</span>
+              <span v-if="round.status > 1 && item.feedback && item.feedback.result !== null" class="result-tag result-tag-interviewer" :class="{ 'light-result': item.feedback.result >= 2 }" :style="{ backgroundColor: evaluationResultColor(item.feedback.result) }">{{ resultLabel(item.feedback.result) }}</span>
             </div>
           </div>
           <div v-if="editable && currentRound?.id === round.id" class="controls">
@@ -140,7 +143,7 @@
 </template>
 
 <script setup lang="ts">
-import { Calendar, CircleCheck, Clock, Timer } from '@element-plus/icons-vue'
+import { Calendar, CaretRight, Check, CircleCheck, Clock, Timer } from '@element-plus/icons-vue'
 import {
   getCandidateEvaluations, scheduleEvaluation, changeEvaluationInterviewers, changeEvaluationStatus,
   addEvaluationRound, decideEvaluations, getEvaluationFeedback, getSubmittedEvaluationFeedback, saveEvaluationFeedback
@@ -389,7 +392,14 @@ const saveDecision = () => {
 @import '@/styles/interviewer-select.less';
 h2 { font-size: 16px; }
 small { color: var(--color-gray); font-weight: normal; }
-.round { margin: 16px 0; padding: 14px; border: 1px solid #e3edf7; border-radius: 6px; }
+.round { position: relative; margin: 16px 0 16px 34px; padding: 14px; border: 1px solid #e3edf7; border-radius: 6px; }
+.round:not(:last-of-type)::before { content: ''; position: absolute; left: -24px; top: 25px; width: 2px; height: calc(100% + 16px); background: #909399; }
+.round-completed:not(:last-of-type)::before { background: #009b49; }
+.round-current:not(:last-of-type)::before { background: #d99a00; }
+.round-status-icon { position: absolute; z-index: 1; top: 14px; left: -34px; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: #909399; color: #fff; font-size: 13px; }
+.round-status-icon :deep(svg) { stroke: currentColor; stroke-width: 32px; stroke-linejoin: round; }
+.round-status-completed { background: #009b49; }
+.round-status-current { background: #d99a00; }
 .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0px 0; }
 .controls :deep(.el-button + .el-button) { margin-left: 0; }
 .progress-header { display: flex; align-items: center; gap: 76px; flex-wrap: wrap; }
@@ -408,7 +418,7 @@ small { color: var(--color-gray); font-weight: normal; }
 .status-text, .date-with-icon { display: inline-flex; align-items: center; gap: 4px; }
 .feedback-submitted, .feedback-submitted small { color: #166534; }
 .result-tag { display: inline-block; color: #fff; border-radius: 16px; padding: 5px 16px; font-size: 13px; font-weight: 500; width: fit-content; }
-// .result-tag.light-result { color: #161616; }s
+.result-tag-interviewer { padding: 3px 14px; font-size: 12.3px;}
 @media (max-width: 700px) { .interviewer-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .duration { display: inline-flex; align-items: center; gap: 4px; margin-left: 12px; }
 .full-width { width: 100%; }
